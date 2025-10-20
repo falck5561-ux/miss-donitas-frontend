@@ -1,0 +1,352 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400;700&display=swap');
+
+/* =================================== */
+/* === PALETA DE COLORES Y TEMAS === */
+/* =================================== */
+:root {
+  /* --- TEMA CLARO --- */
+  --cafe-dark: #4a2c2a;
+  --cafe-medium: #8d6e63;
+  --cafe-light: #d7ccc8;
+  --crema: #fdfaf6;
+  --texto-principal: #372423;
+  --texto-secundario: #5d4037;
+  
+  --bs-body-bg: var(--crema);
+  --bs-body-color: var(--texto-principal);
+  --bs-border-color: var(--cafe-light);
+  --bs-card-bg: #ffffff;
+  --bs-tertiary-bg: #f5f5f5;
+}
+
+[data-bs-theme="dark"] {
+  /* --- TEMA OSCURO --- */
+  --cafe-dark: #1a1a1a;
+  --cafe-medium: #3c3c3c;
+  --cafe-light: #585858;
+  --crema: #212121;
+  --texto-principal: #f5f5f5;
+  --texto-secundario: #bdbdbd;
+
+  --bs-body-bg: #121212;
+  --bs-body-color: var(--texto-principal);
+  --bs-border-color: #424242;
+  --bs-card-bg: #1e1e1e;
+  --bs-tertiary-bg: #2a2a2a;
+}
+
+/* ============================ */
+/* === ESTILOS GENERALES === */
+/* ============================ */
+body {
+  font-family: 'Lato', sans-serif;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  padding-top: 80px; /* Ajusta este valor si la barra es más gruesa */
+}
+h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
+  font-family: 'Playfair Display', serif;
+}
+.section-padding {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+/* ========================================= */
+/* === NAVBAR Y OFFCANVAS (VERSIÓN FINAL) === */
+/* ========================================= */
+
+/* --- 1. ESTILOS BASE Y DE ESCRITORIO (PANTALLAS > 992px) --- */
+.navbar {
+  background: rgba(26, 26, 26, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background-color 0.3s ease;
+  padding-top: 1rem; /* Aumenta el padding para hacerla más gruesa */
+  padding-bottom: 1rem; /* Aumenta el padding para hacerla más gruesa */
+}
+.navbar-brand span {
+  font-family: 'Playfair Display', serif;
+  color: #fff;
+}
+.nav-link {
+    color: #c0c0c0 !important;
+    font-weight: 500;
+    margin: 0 0.5rem;
+    position: relative;
+    transition: color 0.3s;
+}
+.nav-link:hover, .nav-link.active {
+    color: white !important;
+}
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--cafe-medium);
+}
+.navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.75)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* --- 2. ESTILOS PARA MÓVIL (PANTALLAS < 992px) --- */
+@media (max-width: 991.98px) {
+  /* Hacemos la barra superior sólida en móvil */
+  .navbar {
+    background-color: #181818;
+    backdrop-filter: none;
+    padding-top: 0.75rem; /* Ajuste para móvil, puede ser más delgado */
+    padding-bottom: 0.75rem; /* Ajuste para móvil */
+  }
+}
+
+/* --- 3. ESTILOS PARA EL MENÚ LATERAL (OFFCANVAS) --- */
+.offcanvas {
+  background-color: #181818 !important;
+  border-left: 1px solid #333;
+}
+.offcanvas-header {
+  border-bottom: 1px solid #333;
+  padding: 1rem 1.5rem;
+}
+.offcanvas-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  color: #fff;
+}
+.offcanvas-body {
+  padding: 0;
+}
+.offcanvas-body .navbar-nav {
+  padding-top: 1rem;
+}
+.offcanvas-body .nav-link {
+  font-size: 1.2rem !important;
+  color: #dcdcdc !important;
+  padding: 1rem 1.5rem !important;
+  margin: 0 !important;
+  text-align: left;
+  border-bottom: 1px solid #282828;
+}
+.offcanvas-body .nav-item:last-of-type .nav-link {
+  border-bottom: none;
+}
+.offcanvas-body .nav-link:hover {
+  color: #fff !important;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+.offcanvas-body .nav-link.active {
+   color: white !important;
+   font-weight: bold;
+}
+.offcanvas-body .nav-link.active::after {
+  display: none;
+}
+.offcanvas-footer {
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #333;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* ===================== */
+/* === PESTAÑAS (TABS) === */
+/* ===================== */
+.nav-tabs {
+  border-bottom-color: var(--bs-border-color);
+}
+.nav-tabs .nav-link {
+  color: var(--texto-secundario) !important;
+  font-weight: 500;
+  border-color: transparent;
+  border-bottom: 3px solid transparent;
+}
+.nav-tabs .nav-link.active {
+  color: var(--texto-principal) !important;
+  font-weight: bold;
+  border-color: var(--bs-border-color) var(--bs-border-color) var(--bs-body-bg);
+  border-bottom-color: var(--cafe-medium);
+}
+
+/* ======================= */
+/* === TARJETAS (CARDS) === */
+/* ======================= */
+.card {
+  background-color: var(--bs-card-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 15px;
+  overflow: hidden;
+  transition: all 0.2s ease-in-out;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+/* --- ESTILO PARA TARJETAS EN OFERTA (CORREGIDO) --- */
+.card.en-oferta {
+  border: 2px solid #dc3545; /* Borde rojo */
+}
+.discount-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  background-color: #dc3545;
+  color: white;
+  padding: 0.35em 0.65em;
+  font-size: .8em;
+  font-weight: 700;
+  border-radius: 50rem;
+}
+
+/* ================= */
+/* === TABLAS === */
+/* ================= */
+.table {
+  --bs-table-bg: var(--bs-card-bg);
+  --bs-table-color: var(--bs-body-color);
+  --bs-table-border-color: var(--bs-border-color);
+  --bs-table-hover-bg: var(--bs-tertiary-bg);
+  --bs-table-striped-bg: var(--bs-tertiary-bg);
+  --bs-table-hover-color: var(--texto-principal) !important;
+}
+
+.table thead th {
+  background-color: var(--cafe-dark);
+  border-color: var(--cafe-medium);
+}
+
+[data-bs-theme="light"] .table thead th {
+  color: var(--crema);
+}
+
+[data-bs-theme="dark"] .table thead th {
+  color: var(--texto-principal);
+}
+
+/* ========================================= */
+/* === BOTÓN DE CARRITO FLOTANTE === */
+/* ========================================= */
+.boton-carrito-flotante {
+  position: fixed;
+  z-index: 1000;
+  bottom: 20px;
+  right: 20px;
+  
+  background-color: var(--cafe-medium); 
+  color: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  font-size: 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.boton-carrito-flotante:hover {
+  transform: scale(1.1);
+  background-color: var(--cafe-dark);
+}
+
+.badge-carrito {
+  position: absolute;
+  top: 0;
+  right: 0;
+  
+  background-color: #dc3545;
+  color: white;
+  
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 0.25em 0.5em;
+  border-radius: 50%;
+  
+  transform: translate(25%, -25%);
+}
+
+/* ======================= */
+/* === OTROS ESTILOS === */
+/* ======================= */
+.btn-primary {
+  background-color: var(--cafe-medium);
+  border-color: var(--cafe-medium);
+}
+.btn-primary:hover {
+  background-color: var(--cafe-dark);
+  border-color: var(--cafe-dark);
+}
+
+.hero-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #fff;
+  padding: 10px;
+  border: 4px solid var(--cafe-light);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.pac-container {
+  z-index: 9999 !important;
+}
+
+.no-recompensas-box {
+  background-color: #f8f9fa;
+  color: var(--texto-secundario);
+  border: 2px dashed var(--cafe-light);
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.no-recompensas-box h3 {
+  color: var(--texto-principal);
+}
+
+[data-bs-theme="dark"] .no-recompensas-box {
+  background-color: var(--bs-tertiary-bg);
+  color: var(--texto-secundario);
+  border: 2px dashed var(--bs-border-color);
+}
+
+[data-bs-theme="dark"] .no-recompensas-box h3 {
+  color: var(--texto-principal);
+}
+
+.detalle-pedido-productos {
+  background-color: var(--bs-tertiary-bg);
+  padding: 1.5rem;
+  margin: 0.5rem 0;
+  border-radius: 8px;
+  border: 1px solid var(--bs-border-color);
+}
+
+.detalle-pedido-productos h5 {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.detalle-pedido-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 0.95rem;
+}

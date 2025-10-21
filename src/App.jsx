@@ -95,6 +95,26 @@ function App() {
           </Routes>
         )}
       </div>
+
+      {/* --- INICIO DE LA MODIFICACIÓN --- */}
+      {/* Aquí se agrega el footer con tu nombre y contacto */}
+      {/* Le añado un margen superior 'mt-5' para separarlo del contenido */}
+      <footer className="text-center py-4 px-3 mt-5">
+        <p className="mb-1">
+          &copy; {new Date().getFullYear()} Miss Donitas. Todos los derechos reservados.
+        </p>
+        <p className="mb-0 text-body-secondary" style={{ fontSize: '0.9rem' }}>
+          Desarrollado con ❤️ por Josue Perez Ponce. Contacto: 
+          <a 
+            href="mailto:Jperezponce@gmail.com" 
+            className="text-body-secondary"
+          >
+            Jperezponce@gmail.com
+          </a>
+        </p>
+      </footer>
+      {/* --- FIN DE LA MODIFICACIÓN --- */}
+      
     </BrowserRouter>
   );
 }

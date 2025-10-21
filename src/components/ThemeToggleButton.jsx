@@ -1,15 +1,19 @@
 // Archivo: src/components/ThemeToggleButton.jsx
-import React, { useContext } from 'react';
-import ThemeContext from '../context/ThemeContext';
+import React from 'react';
+// 1. Importamos el hook 'useTheme' que definimos en el contexto. Es más limpio.
+import { useTheme } from '../context/ThemeContext'; 
 
-// ... en src/components/ThemeToggleButton.jsx
 function ThemeToggleButton() {
-  const { theme, toggleTheme } = useContext(ThemeContext);
+  // 2. Usamos el hook para obtener el tema y la función de cambio
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    // -- CAMBIO AQUÍ --
     <button className="btn btn-outline-light ms-3" onClick={toggleTheme}>
-      {theme === 'light' ? '🌙' : '☀️'}
+      {/* 3. Lógica actualizada:
+        Si el tema actual es 'dona', mostramos el ícono para cambiar a 'picante' (🌶️).
+        Si el tema actual es 'picante', mostramos el ícono para cambiar a 'dona' (🍩).
+      */}
+      {theme === 'dona' ? '🌶️' : '🍩'}
     </button>
   );
 }

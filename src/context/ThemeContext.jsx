@@ -1,24 +1,26 @@
-// Archivo: src/context/ThemeContext.jsx
-import React, { createContext, useState, useEffect, useContext } from 'react'; // <--- 1. AÑADE useContext AQUÍ
+import React, { createContext, useState, useEffect, useContext } from 'react';
 
 const ThemeContext = createContext();
 
-// 2. AÑADE Y EXPORTA EL HOOK useTheme AQUÍ
-// Esta es la línea que soluciona el error de despliegue.
 export const useTheme = () => {
   return useContext(ThemeContext);
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark'); // Cambiado a 'dark' por defecto
+  // --- CAMBIO 1 ---
+  // El tema por defecto ahora es 'dona' (en lugar de 'dark' o 'light')
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dona');
 
   useEffect(() => {
+    // Esto sigue funcionando igual, pero ahora pasará 'dona' o 'picante'
     document.documentElement.setAttribute('data-bs-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+    // --- CAMBIO 2 ---
+    // Cambiamos la lógica para alternar entre 'dona' y 'picante'
+    setTheme(prevTheme => (prevTheme === 'dona' ? 'picante' : 'dona'));
   };
 
   return (
@@ -28,5 +30,4 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-// Ya no es necesario exportar el contexto por defecto, pero no hace daño
 export default ThemeContext;

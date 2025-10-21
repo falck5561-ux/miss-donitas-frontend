@@ -8,7 +8,12 @@ import MapSelector from '../components/MapSelector';
 import apiClient from '../services/api';
 import { useCart } from '../context/CartContext';
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || "pk_test_51SFnF0ROWvZ0m785J38J20subms9zeVw92xxsdct2OVzHbIXF8Kueajcp4jxJblwBhozD1xDljC2UG1qDNOGOxTX00UiDpoLCI");
+// ==== INICIO DE LA CORRECCIÓN ====
+// Esta es la línea que faltaba. Carga Stripe con tu clave pública.
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+// ==== FIN DE LA CORRECCIÓN ====
+
+const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const styles = {
   recompensasContainer: { padding: '1rem 0' },
@@ -499,14 +504,33 @@ function ClientePage() {
         </motion.div>
       )}
 
+      {/* ================================================== */}
+      {/* === INICIO DEL BLOQUE DE CÓDIGO MODIFICADO === */}
+      {/* ================================================== */}
       {!loading && activeTab === 'recompensas' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <h2>Mis Recompensas</h2>
           {misRecompensas?.length === 0 ? (
-            <div className="no-recompensas-box">
-              <h3>Aún no tienes recompensas</h3>
-              <p>¡Sigue comprando para ganar bebidas gratis y más sorpresas!</p>
+            
+            <div className="recompensas-container">
+              <div className="recompensas-caja-vacia">
+                
+                {/* Asegúrate de que esta ruta sea correcta.
+                  Debe apuntar al icono en tu carpeta 'public'.
+                  Si lo llamaste 'favicon.png' o 'dona-icon.png', ajústalo aquí.
+                */}
+                <img 
+                  src="/dona-icon.png" 
+                  alt="Icono de Donita" 
+                  className="recompensas-icono" 
+                />
+                
+                <h3>Aún no tienes recompensas</h3>
+                <p>¡Sigue comprando para ganar bebidas gratis y más sorpresas!</p>
+            
+              </div>
             </div>
+
           ) : (
             <div className="row g-4">
               {misRecompensas?.map(recompensa => (
@@ -527,6 +551,10 @@ function ClientePage() {
           )}
         </motion.div>
       )}
+      {/* ================================================ */}
+      {/* === FIN DEL BLOQUE DE CÓDIGO MODIFICADO === */}
+      {/* ================================================ */}
+
 
       {showPaymentModal && clientSecret && (
         <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 
+// El nombre del componente se mantiene como DinoGame
 function DinoGame() {
   const canvasRef = useRef(null);
 
@@ -21,7 +22,7 @@ function DinoGame() {
     let score = 0;
     let gameSpeed = 3;
     let isGameOver = false;
-    let player, obstacles;
+    let player, obstacles; // 'player' sigue usando la clase Player
     let keys = {};
 
     // === EVENTOS ===
@@ -30,144 +31,161 @@ function DinoGame() {
     document.addEventListener('keydown', keyDown);
     document.addEventListener('keyup', keyUp);
 
-    canvas.addEventListener('touchstart', () => {
-      if (isGameOver) init();
-      else if (player.isGrounded) player.jump();
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Evitar el scroll en móviles
+        if (isGameOver) init();
+        else if (player.isGrounded) player.jump();
     });
 
     canvas.addEventListener('click', () => {
-      if (isGameOver) init();
-      else if (player.isGrounded) player.jump();
+        if (isGameOver) init();
+        else if (player.isGrounded) player.jump();
     });
 
-    // === ERIZO ===
+    // === JUGADOR (AHORA ES UNA DONA) ===
+    // La clase se sigue llamando 'Player' para no romper nada
     class Player {
-      constructor(x, y, w, h) {
-        this.x = x;
-        this.y = y;
-        this.w = w;
-        this.h = h;
-        this.dy = 0;
-        this.jumpForce = 9;
-        this.gravity = 0.4;
-        this.isGrounded = true;
-        this.originalY = y;
-      }
-
-      jump() {
-        this.dy = -this.jumpForce;
-        this.isGrounded = false;
-      }
-
-      draw() {
-        const cx = this.x + this.w / 2;
-        const cy = this.y + this.h / 2;
-
-        // Detecta modo oscuro/claro
-        const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        // Cuerpo
-        const grad = ctx.createRadialGradient(cx, cy, 5, cx, cy, this.w / 1.5);
-        grad.addColorStop(0, dark ? '#70513D' : '#8B5E3C');
-        grad.addColorStop(1, dark ? '#3E2A1F' : '#5C3B25');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, this.w / 2, this.h / 2, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Carita
-        ctx.fillStyle = dark ? '#E8DCC5' : '#FFF9EE';
-        ctx.beginPath();
-        ctx.ellipse(cx + this.w / 4, cy, this.w / 3.5, this.h / 3.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Ojo
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.arc(cx + this.w / 3, cy - 4, 2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Nariz
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.arc(cx + this.w / 2.1, cy, 2.2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      update() {
-        if ((keys['Space'] || keys['Enter'] || keys['ArrowUp']) && this.isGrounded) {
-          this.jump();
+        constructor(x, y, size) { // Usamos 'size' (radio) para la dona
+            this.x = x;
+            this.y = y;
+            this.size = size; // El tamaño es el radio exterior
+            this.w = size * 2; // Ancho para colisiones
+            this.h = size * 2; // Alto para colisiones
+            this.dy = 0;
+            this.jumpForce = 9;
+            this.gravity = 0.4;
+            this.isGrounded = true;
+            this.originalY = y;
         }
 
-        this.dy += this.gravity;
-        this.y += this.dy;
-
-        if (this.y + this.h >= this.originalY) {
-          this.y = this.originalY - this.h;
-          this.dy = 0;
-          this.isGrounded = true;
+        jump() {
+            this.dy = -this.jumpForce;
+            this.isGrounded = false;
         }
 
-        this.draw();
-      }
+        // --- ESTÉTICA CAMBIADA ---
+        draw() {
+            const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const donutColor = dark ? '#A6895C' : '#FFDDC1'; // Color masa
+            const glazeColor = dark ? '#D9A4A4' : '#FF99AA'; // Glaseado rosa
+            const sprinklesColors = ['#A3D9FF', '#FFD479', '#B7FF7C', '#FF7C85'];
+            const holeSize = this.size * 0.4; // Tamaño del agujero
+            const cx = this.x + this.size; // Centro X
+            const cy = this.y + this.size; // Centro Y
 
-      get hitbox() {
-        // Caja de colisión más ajustada al cuerpo visible
-        return {
-          x: this.x + this.w * 0.15,
-          y: this.y + this.h * 0.15,
-          w: this.w * 0.7,
-          h: this.h * 0.7,
-        };
-      }
+            // Dibuja el cuerpo de la donita
+            ctx.beginPath();
+            ctx.arc(cx, cy, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = donutColor;
+            ctx.fill();
+
+            // Dibuja el glaseado
+            ctx.beginPath();
+            ctx.arc(cx, cy, this.size * 0.9, 0, Math.PI * 2);
+            ctx.fillStyle = glazeColor;
+            ctx.fill();
+
+            // Dibuja los sprinkles
+            for (let i = 0; i < 8; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * (this.size * 0.7 - holeSize) + holeSize + (this.size * 0.1);
+                const sx = cx + Math.cos(angle) * radius;
+                const sy = cy + Math.sin(angle) * radius;
+                ctx.fillStyle = sprinklesColors[Math.floor(Math.random() * sprinklesColors.length)];
+                ctx.beginPath();
+                ctx.ellipse(sx, sy, 3, 1.5, angle, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Dibuja el agujero
+            ctx.beginPath();
+            ctx.arc(cx, cy, holeSize, 0, Math.PI * 2);
+            ctx.fillStyle = dark ? '#2B2B2B' : '#F7F3EF'; // Color del fondo
+            ctx.fill();
+        }
+
+        update() {
+            if ((keys['Space'] || keys['Enter'] || keys['ArrowUp']) && this.isGrounded) {
+            this.jump();
+            }
+
+            this.dy += this.gravity;
+            this.y += this.dy;
+
+            // Ajustar la posición al suelo
+            if (this.y + this.size * 2 >= this.originalY) {
+                this.y = this.originalY - this.size * 2;
+                this.dy = 0;
+                this.isGrounded = true;
+            }
+
+            this.draw();
+        }
+
+        get hitbox() {
+            // La hitbox es un círculo para la donita
+            return {
+                x: this.x,
+                y: this.y,
+                w: this.size * 2,
+                h: this.size * 2,
+                radius: this.size
+            };
+        }
     }
 
     // === OBSTÁCULOS ===
     class Obstacle {
-      constructor(x, y, w, h) {
-        this.x = x;
-        this.y = y;
-        this.w = w;
-        this.h = h;
-      }
+        constructor(x, y, w, h) {
+            this.x = x;
+            this.y = y;
+            this.w = w;
+            this.h = h;
+        }
 
-      draw() {
-        const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        ctx.fillStyle = dark ? '#8b6f56' : '#c8a478';
-        ctx.fillRect(this.x, this.y, this.w, this.h);
+        // --- ESTÉTICA CAMBIADA ---
+        draw() {
+            const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            ctx.fillStyle = dark ? '#70513D' : '#8B5E3C'; // Color del tronco
+            ctx.fillRect(this.x, this.y, this.w, this.h);
 
-        // Detalle superior
-        ctx.fillStyle = dark ? '#a78b73' : '#e2c6a4';
-        ctx.fillRect(this.x, this.y, this.w, 3);
-      }
+            // Detalle superior
+            ctx.fillStyle = dark ? '#5C3B25' : '#5C3B25';
+            ctx.fillRect(this.x, this.y, this.w, 3);
+        }
 
-      update() {
-        this.x -= gameSpeed;
-        this.draw();
-      }
+        update() {
+            this.x -= gameSpeed;
+            this.draw();
+        }
 
-      get hitbox() {
-        return { x: this.x, y: this.y, w: this.w, h: this.h };
-      }
+        get hitbox() {
+            return { x: this.x, y: this.y, w: this.w, h: this.h };
+        }
     }
 
     // === FUNCIONES ===
     function spawnObstacle() {
-      const size = Math.random() > 0.5 ? 25 : 40;
-      const obstacle = new Obstacle(GAME_WIDTH, GAME_HEIGHT - size - 2, 15, size);
-      obstacles.push(obstacle);
+        const size = Math.random() > 0.5 ? 25 : 40; // Tamaños originales
+        const obstacle = new Obstacle(GAME_WIDTH, GAME_HEIGHT - size - 2, 15, size);
+        obstacles.push(obstacle);
     }
 
-    function checkCollision(p, o) {
-      const a = p.hitbox;
-      const b = o.hitbox;
-      return (
-        a.x < b.x + b.w &&
-        a.x + a.w > b.x &&
-        a.y < b.y + b.h &&
-        a.y + a.h > b.y
-      );
+    // --- LÓGICA DE COLISIÓN AJUSTADA ---
+    function checkCollision(player, obstacle) {
+        // Colisión de círculo (donita) con rectángulo (obstáculo)
+        const circle = { x: player.x + player.size, y: player.y + player.size, r: player.size * 0.8 }; // Radio indulgente
+
+        const closestX = Math.max(obstacle.x, Math.min(circle.x, obstacle.x + obstacle.w));
+        const closestY = Math.max(obstacle.y, Math.min(circle.y, obstacle.y + obstacle.h));
+
+        const distanceX = circle.x - closestX;
+        const distanceY = circle.y - closestY;
+
+        const distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
+        return distanceSquared < (circle.r * circle.r);
     }
+
 
     function drawScore() {
       ctx.fillStyle = window.matchMedia('(prefers-color-scheme: dark)').matches ? '#E0E0E0' : '#333';
@@ -186,19 +204,20 @@ function DinoGame() {
       GAME_HEIGHT = canvas.height;
 
       const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      ctx.fillStyle = dark ? '#1E1E1E' : '#F7F3EF';
+      ctx.fillStyle = dark ? '#2B2B2B' : '#F7F3EF'; // Fondo suave
       ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-      ctx.fillStyle = dark ? '#A6895C' : '#D9C7A4';
+      ctx.fillStyle = dark ? '#A6895C' : '#D9C7A4'; // Tierra
       ctx.fillRect(0, GAME_HEIGHT - 2, GAME_WIDTH, 2);
 
       player.update();
 
       if (isGameOver) {
-        ctx.fillStyle = dark ? '#FFF9EE' : '#2B2B2B';
+        // --- ESTÉTICA CAMBIADA ---
+        ctx.fillStyle = dark ? '#FFDDC1' : '#FF99AA'; // Color de texto de donita
         ctx.font = '24px Poppins, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('🦔 Game Over 🦔', GAME_WIDTH / 2, GAME_HEIGHT / 2);
+        ctx.fillText('🍩 Game Over 🍩', GAME_WIDTH / 2, GAME_HEIGHT / 2); // Mensaje de donita
         ctx.font = '16px Poppins, sans-serif';
         ctx.fillText('Presiona Espacio, Enter o toca para reiniciar', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30);
         return;
@@ -208,6 +227,7 @@ function DinoGame() {
       if (obstacleTimer <= 0) {
         spawnObstacle();
         obstacleTimer = 100 + Math.random() * 150 - gameSpeed * 10;
+        obstacleTimer = Math.max(50, obstacleTimer); // Evitar timers negativos
       }
 
       for (let i = obstacles.length - 1; i >= 0; i--) {
@@ -227,7 +247,10 @@ function DinoGame() {
       score = 0;
       gameSpeed = 3;
       obstacles = [];
-      player = new Player(25, GAME_HEIGHT - 30, 30, 30);
+      // Aquí creamos la instancia de 'Player' usando el nuevo constructor
+      const playerSize = 15; // Radio de la donita (30px de diámetro)
+      player = new Player(25, GAME_HEIGHT - playerSize * 2, playerSize);
+
 
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
       animate();
@@ -252,14 +275,15 @@ function DinoGame() {
         fontFamily: 'Poppins, sans-serif',
       }}
     >
+      {/* --- ESTÉTICA CAMBIADA --- */}
       <h2>¡Oops! Parece que no hay conexión.</h2>
-      <p className="lead">Mientras vuelve el internet, ¡juega con el erizo! 🦔</p>
+      <p className="lead">Mientras vuelve el internet, ¡juega con la Donita Saltarina! 🍩</p>
       <div className="mt-4 d-flex justify-content-center">
         <canvas
           ref={canvasRef}
           style={{
             borderRadius: '12px',
-            border: '2px solid #bca788',
+            border: '2px solid #FF99AA', // Borde rosa
             background: 'transparent',
             touchAction: 'none',
           }}
@@ -272,4 +296,5 @@ function DinoGame() {
   );
 }
 
-export default DinoGame;
+// El export default se mantiene como DinoGame
+export default DinoGame;    

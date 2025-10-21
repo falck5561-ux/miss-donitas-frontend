@@ -1,12 +1,12 @@
 import React, { useContext, useRef } from 'react';
-// <-- 1. Asegúrate que 'useNavigate' está importado
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import ThemeToggleButton from './ThemeToggleButton';
 import { useInstallPWA } from '../context/InstallPwaContext';
+import { useTheme } from '../context/ThemeContext';
 
 // --- COMPONENTE DE ENLACES DEL MENÚ ---
-// (Este componente no cambia)
+// (No cambia)
 const MenuLinks = ({ onLinkClick }) => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -61,40 +61,35 @@ const MenuLinks = ({ onLinkClick }) => {
 };
 
 
-// --- COMPONENTE DE CONTROLES DE USUARIO (modo oscuro y logout) ---
-// <-- 2. Añadimos 'onControlClick' a las props
+// --- COMPONENTE DE CONTROLES DE USUARIO ---
 const UserControls = ({ isMobile = false, onControlClick }) => {
   const { user, logout } = useContext(AuthContext);
-  const buttonClass = isMobile ? "" : "ms-3";
-  const navigate = useNavigate(); // <-- 3. Usamos el hook
+  const navigate = useNavigate();
+  const buttonClass = isMobile ? "" : "ms-3"; 
 
-  // <-- 4. Creamos un handler para el botón de Login
   const handleLoginClick = (e) => {
     e.preventDefault();
-    if (onControlClick) onControlClick(); // Cierra el menú
-    setTimeout(() => navigate('/login'), 250); // Navega después
+    if (onControlClick) onControlClick();
+    setTimeout(() => navigate('/login'), 250);
   };
 
-  // <-- 5. Creamos un handler para el botón de Logout
   const handleLogoutClick = () => {
-    if (onControlClick) onControlClick(); // Cierra el menú
-    setTimeout(logout, 250); // Hace logout después
+    if (onControlClick) onControlClick();
+    setTimeout(logout, 250);
   };
 
   return (
     <>
-      {/* <-- 6. Envolvemos el botón de tema para que cierre el menú --> */}
       <span onClick={onControlClick}>
         <ThemeToggleButton />
       </span>
       
       {user ? (
-        <button onClick={handleLogoutClick} className={`btn btn-outline-secondary ${buttonClass}`}>
+        <button onClick={handleLogoutClick} className={`btn btn-outline-danger btn-sm ${buttonClass}`}>
           Cerrar Sesión
         </button>
       ) : (
-        // <-- 7. Cambiamos <Link> por <a> para usar nuestro propio handler -->
-        <a href="/login" onClick={handleLoginClick} className={`btn btn-primary ${buttonClass}`}>
+        <a href="/login" onClick={handleLoginClick} className={`btn btn-primary btn-sm ${buttonClass}`}>
           Login
         </a>
       )}
@@ -106,6 +101,7 @@ const UserControls = ({ isMobile = false, onControlClick }) => {
 // --- NAVBAR PRINCIPAL ---
 function Navbar() {
   const offcanvasRef = useRef(null);
+  const { theme } = useTheme();
 
   const handleCloseOffcanvas = () => {
     const closeButton = offcanvasRef.current?.querySelector('[data-bs-dismiss="offcanvas"]');
@@ -113,10 +109,12 @@ function Navbar() {
   };
 
   return (
-    <nav className="navbar fixed-top">
+    <nav className="navbar fixed-top navbar-light-theme">
       <div className="container">
+
+        {/* --- CAMBIO AQUÍ: Volvemos al texto "Miss Donitas" --- */}
         <Link className="navbar-brand" to="/">
-          <span>Tito Café</span>
+          <span className="navbar-brand-text">Miss Donitas</span> {/* Usamos una clase para estilo si es necesario */}
         </Link>
 
         {/* --- MENÚ DE ESCRITORIO --- */}
@@ -129,16 +127,18 @@ function Navbar() {
           </div>
         </div>
 
-        {/* --- BOTÓN DEL MENÚ MÓVIL --- */}
+        {/* --- BOTÓN DEL MENÚ MÓVIL (Mantenemos el icono temático) --- */}
         <button
-          className="navbar-toggler d-lg-none"
+          className="navbar-toggler d-lg-none border-0 btn-dona-toggler" 
           type="button"
           data-bs-toggle="offcanvas"
           data-bs-target="#offcanvasNavbar"
           aria-controls="offcanvasNavbar"
           aria-label="Toggle navigation"
         >
-          <span className="navbar-toggler-icon"></span>
+          <span style={{ fontSize: '1.8rem' }}>
+            {theme === 'dona' ? '🍩' : '🌶️'}
+          </span> 
         </button>
 
         {/* --- CONTENIDO DEL MENÚ MÓVIL (OFFCANVAS) --- */}
@@ -150,10 +150,12 @@ function Navbar() {
           ref={offcanvasRef}
         >
           <div className="offcanvas-header">
-            <h5 className="offcanvas-title" id="offcanvasNavbarLabel">Menú</h5>
+            <h5 className="offcanvas-title" id="offcanvasNavbarLabel">
+              Miss Donitas
+            </h5>
             <button
               type="button"
-              className="btn-close btn-close-white"
+              className="btn-close" 
               data-bs-dismiss="offcanvas"
               aria-label="Close"
             ></button>
@@ -165,7 +167,6 @@ function Navbar() {
             </ul>
 
             <div className="offcanvas-footer mt-auto">
-              {/* <-- 8. Pasamos la función de cierre a UserControls --> */}
               <UserControls isMobile={true} onControlClick={handleCloseOffcanvas} />
             </div>
           </div>

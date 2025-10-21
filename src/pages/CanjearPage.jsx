@@ -8,7 +8,7 @@ import MapSelector from '../components/MapSelector';
 import apiClient from '../services/api';
 import { useCart } from '../context/CartContext';
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || "pk_test_51SFnF0ROWvZ0m785J38J20subms9zeVw92xxsdct2OVzHbIXF8Kueajcp4jxJblwBhozD1xDljC2UG1qDNOGOxTX00UiDpoLCI");
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const styles = { /* Tus estilos se mantienen igual */ };
 

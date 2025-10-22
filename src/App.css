@@ -721,3 +721,96 @@ footer .text-body-secondary a {
 footer .text-body-secondary a:hover {
   text-decoration: underline;
 }
+
+/* ===================================== */
+/* === ESTILOS Y ARREGLO LOGIN MÓVIL === */
+/* ===================================== */
+
+/* Esta es la clase que se usa en LoginPage.jsx */
+.login-box {
+  /* ESTILOS PARA PC (Como tu foto) */
+  max-width: 480px; 
+  margin: 4rem auto; /* Centra la caja */
+  
+  /* Usamos tus variables de tema */
+  padding: 2.5rem;
+  background-color: var(--color-fondo-tarjeta);
+  border: 1px solid var(--color-borde);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  
+  /* Hacemos que el color de fondo y borde se anime 
+     con el cambio de tema */
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Modo Oscuro (Picante) para el Login Box */
+[data-bs-theme="picante"] .login-box {
+  box-shadow: 0 6px 15px rgba(255, 82, 82, 0.25);
+}
+
+
+/* Arreglo para pantallas de 576px o menos (celulares) */
+@media (max-width: 576px) {
+  
+  .login-box {
+    /* Ocupa el 95% de la pantalla, no un ancho fijo */
+    width: 95%; 
+    
+    /* Menos espacio interno en celular */
+    padding: 1.5rem; 
+    
+    /* Menos margen arriba/abajo en celular */
+    margin: 2rem auto; 
+  }
+
+  /* Opcional: Centrar el título en móvil si se viera mal */
+  .login-box h2 {
+    font-size: 1.8rem; /* Un poco más pequeño en cel */
+  }
+}
+
+/* ===================================== */
+/* === ESTILOS Y ARREGLO LOGIN MÓVIL === */
+/* ===================================== */
+
+.login-box {
+  max-width: 480px; 
+  margin: 4rem auto;
+  padding: 2.5rem;
+  background-color: var(--color-fondo-tarjeta);
+  border: 1px solid var(--color-borde);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+[data-bs-theme="picante"] .login-box {
+  box-shadow: 0 6px 15px rgba(255, 82, 82, 0.25);
+}
+
+.login-box button {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 1.5rem auto 0 auto;
+  text-align: center;
+}
+
+@media (max-width: 576px) {
+  .login-box {
+    width: 95%;
+    padding: 1.5rem;
+    margin: 2rem auto;
+  }
+
+  .login-box h2 {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+
+  .login-box button {
+    width: 90%;
+    margin: 1rem auto 0 auto;
+  }
+}

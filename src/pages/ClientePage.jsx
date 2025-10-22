@@ -8,13 +8,10 @@ import MapSelector from '../components/MapSelector';
 import apiClient from '../services/api';
 import { useCart } from '../context/CartContext';
 
-// ==== INICIO DE LA CORRECCIÓN ====
-// Esta es la línea que faltaba. Carga Stripe con tu clave pública.
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-// ==== FIN DE LA CORRECCIÓN ====
-
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
+// (styles y notify se quedan igual...)
 const styles = {
   recompensasContainer: { padding: '1rem 0' },
   cupon: {
@@ -57,6 +54,126 @@ const notify = (type, message) => {
   }
 };
 
+
+// ===================================================================
+// ===               INICIO DE LA CORRECCIÓN CLAVE                 ===
+// ===================================================================
+//
+// `CarritoContent` se movió FUERA de `ClientePage` y ahora recibe
+// todo lo que necesita como props. Esto evita que se vuelva a 
+// crear en cada render y soluciona el problema del "focus" del input.
+//
+// ===================================================================
+const CarritoContent = ({
+  isModal,
+  pedidoActual,
+  decrementarCantidad,
+  incrementarCantidad,
+  eliminarProducto,
+  tipoOrden,
+  setTipoOrden,
+  direccionGuardada,
+  usarDireccionGuardada,
+  handleLocationSelect,
+  direccion,
+  referencia,
+  setReferencia,
+  guardarDireccion,
+  setGuardarDireccion,
+  subtotal,
+  costoEnvio,
+  calculandoEnvio,
+  totalFinal,
+  handleContinue,
+  handleProcederAlPago,
+  paymentLoading,
+  limpiarPedidoCompleto
+}) => (
+  <>
+    <div className={isModal ? "modal-body" : "card-body"}>
+      {!isModal && (
+        <>
+          <h3 className="card-title text-center">Mi Pedido</h3>
+          <hr />
+        </>
+      )}
+      <ul className="list-group list-group-flush">
+        {pedidoActual.length === 0 && <li className="list-group-item text-center text-muted">Tu carrito está vacío</li>}
+        {pedidoActual.map((item) => (
+          <li key={item.id} className="list-group-item d-flex align-items-center justify-content-between p-1">
+            <span className="me-auto">{item.nombre}</span>
+            <div className="d-flex align-items-center">
+              <button className="btn btn-outline-secondary btn-sm" onClick={() => decrementarCantidad(item.id)}>-</button>
+              <span className="mx-2">{item.cantidad}</span>
+              <button className="btn btn-outline-secondary btn-sm" onClick={() => incrementarCantidad(item.id)}>+</button>
+            </div>
+            <span className="mx-3" style={{ minWidth: '60px', textAlign: 'right' }}>${(item.cantidad * Number(item.precio)).toFixed(2)}</span>
+            <button className="btn btn-outline-danger btn-sm" onClick={() => eliminarProducto(item.id)}>&times;</button>
+          </li>
+        ))}
+      </ul>
+      <hr />
+      <h5>Elige una opción:</h5>
+      <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "llevarModal" : "llevar"} value="llevar" checked={tipoOrden === 'llevar'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "llevarModal" : "llevar"}>Para Recoger</label></div>
+      <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "localModal" : "local"} value="local" checked={tipoOrden === 'local'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "localModal" : "local"}>Para Comer Aquí</label></div>
+      <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "domicilioModal" : "domicilio"} value="domicilio" checked={tipoOrden === 'domicilio'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "domicilioModal" : "domicilio"}>Entrega a Domicilio</label></div>
+
+      {tipoOrden === 'domicilio' && !isModal && (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3">
+          <hr />
+          {direccionGuardada && (<button className="btn btn-outline-info w-100 mb-3" onClick={usarDireccionGuardada}>Usar mi dirección guardada</button>)}
+
+          <label className="form-label">Busca tu dirección:</label>
+          <MapSelector onLocationSelect={handleLocationSelect} initialAddress={direccion} />
+
+          <div className="mt-3">
+            <label htmlFor="referenciaDesktop" className="form-label">Referencia:</label>
+            {/* Este input ahora funciona porque su componente padre (`CarritoContent`)
+              ya no se destruye en cada render.
+            */}
+            <input type="text" id="referenciaDesktop" className="form-control" value={referencia} onChange={(e) => setReferencia(e.target.value)} />
+          </div>
+
+          <div className="form-check mt-3">
+            <input className="form-check-input" type="checkbox" id="guardarDireccionDesktop" checked={guardarDireccion} onChange={(e) => setGuardarDireccion(e.target.checked)} />
+            <label className="form-check-label" htmlFor="guardarDireccionDesktop">Guardar dirección</label>
+          </div>
+        </motion.div>
+      )}
+
+      <hr />
+      <p className="d-flex justify-content-between">Subtotal: <span>${subtotal.toFixed(2)}</span></p>
+      {tipoOrden === 'domicilio' && (<motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="d-flex justify-content-between">Costo de Envío: {calculandoEnvio ? <span className="spinner-border spinner-border-sm"></span> : <span>${costoEnvio.toFixed(2)}</span>}</motion.p>)}
+      <h4>Total: ${totalFinal.toFixed(2)}</h4>
+    </div>
+
+    <div className={isModal ? "modal-footer d-grid gap-2" : "card-footer d-grid gap-2 mt-auto"}>
+      {isModal ? (
+        <button
+          className="btn btn-primary"
+          onClick={handleContinue}
+          disabled={pedidoActual.length === 0 || paymentLoading}
+        >
+          {tipoOrden === 'domicilio' ? 'Siguiente' : 'Proceder al Pago'}
+        </button>
+      ) : (
+        <button
+          className="btn btn-primary"
+          onClick={handleProcederAlPago}
+          disabled={pedidoActual.length === 0 || paymentLoading || (tipoOrden === 'domicilio' && !direccion) || calculandoEnvio}
+        >
+          {paymentLoading ? 'Iniciando...' : 'Proceder al Pago'}
+        </button>
+      )}
+      <button className="btn btn-outline-danger" onClick={limpiarPedidoCompleto}>Vaciar Carrito</button>
+    </div>
+  </>
+);
+// ===================================================================
+// ===                FIN DE LA CORRECCIÓN CLAVE                 ===
+// ===================================================================
+
+
 function ClientePage() {
   const {
     pedidoActual,
@@ -94,7 +211,6 @@ function ClientePage() {
   useEffect(() => {
     const fetchInitialData = async () => {
       if (activeTab !== 'crear') return;
-
       setLoading(true);
       setError('');
       try {
@@ -103,15 +219,12 @@ function ClientePage() {
           apiClient.get('/combos'),
           apiClient.get('/usuarios/mi-direccion')
         ]);
-
         const estandarizarItem = (item) => {
           const precioFinal = Number(item.precio);
           let precioOriginal = precioFinal;
-
           if (item.en_oferta && item.descuento_porcentaje > 0) {
             precioOriginal = precioFinal / (1 - item.descuento_porcentaje / 100);
           }
-
           return {
             ...item,
             precio: precioFinal,
@@ -119,16 +232,12 @@ function ClientePage() {
             nombre: item.nombre || item.titulo,
           };
         };
-
         const productosEstandarizados = productosRes.data.map(estandarizarItem);
         const combosEstandarizados = combosRes.data.map(estandarizarItem);
-
         setMenuItems([...productosEstandarizados, ...combosEstandarizados]);
-
         if (direccionRes.data) {
           setDireccionGuardada(direccionRes.data);
         }
-
       } catch (err) {
         console.error("Error cargando datos iniciales:", err);
         setError('No se pudieron cargar los productos en este momento.');
@@ -142,7 +251,6 @@ function ClientePage() {
   useEffect(() => {
     const fetchTabData = async () => {
       if (activeTab === 'crear') return;
-
       setLoading(true);
       setError('');
       try {
@@ -160,7 +268,6 @@ function ClientePage() {
         setLoading(false);
       }
     };
-
     fetchTabData();
   }, [activeTab]);
 
@@ -224,9 +331,7 @@ function ClientePage() {
         referencia: tipoOrden === 'domicilio' ? referencia : null
       };
       setDatosParaCheckout(pedidoData);
-
       const res = await apiClient.post('/payments/create-payment-intent', { amount: totalFinal });
-
       setShowCartModal(false);
       setModalView('cart');
       setClientSecret(res.data.clientSecret);
@@ -268,104 +373,7 @@ function ClientePage() {
   const handleToggleDetalle = (pedidoId) => { setOrdenExpandida(ordenExpandida === pedidoId ? null : pedidoId); };
   const totalItemsEnCarrito = pedidoActual.reduce((sum, item) => sum + item.cantidad, 0);
 
-  // --- COMPONENTE INTERNO REUTILIZABLE PARA MOSTRAR EL CONTENIDO DEL CARRITO ---
-  const CarritoContent = ({ isModal }) => (
-    <>
-      <div className={isModal ? "modal-body" : "card-body"}>
-        {!isModal && (
-          <>
-            <h3 className="card-title text-center">Mi Pedido</h3>
-            <hr />
-          </>
-        )}
-        <ul className="list-group list-group-flush">
-          {pedidoActual.length === 0 && <li className="list-group-item text-center text-muted">Tu carrito está vacío</li>}
-          {pedidoActual.map((item) => (
-            <li key={item.id} className="list-group-item d-flex align-items-center justify-content-between p-1">
-              <span className="me-auto">{item.nombre}</span>
-              <div className="d-flex align-items-center">
-                <button className="btn btn-outline-secondary btn-sm" onClick={() => decrementarCantidad(item.id)}>-</button>
-                <span className="mx-2">{item.cantidad}</span>
-                <button className="btn btn-outline-secondary btn-sm" onClick={() => incrementarCantidad(item.id)}>+</button>
-              </div>
-              <span className="mx-3" style={{ minWidth: '60px', textAlign: 'right' }}>${(item.cantidad * Number(item.precio)).toFixed(2)}</span>
-              <button className="btn btn-outline-danger btn-sm" onClick={() => eliminarProducto(item.id)}>&times;</button>
-            </li>
-          ))}
-        </ul>
-        <hr />
-        <h5>Elige una opción:</h5>
-        <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "llevarModal" : "llevar"} value="llevar" checked={tipoOrden === 'llevar'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "llevarModal" : "llevar"}>Para Recoger</label></div>
-        <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "localModal" : "local"} value="local" checked={tipoOrden === 'local'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "localModal" : "local"}>Para Comer Aquí</label></div>
-        <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "domicilioModal" : "domicilio"} value="domicilio" checked={tipoOrden === 'domicilio'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "domicilioModal" : "domicilio"}>Entrega a Domicilio</label></div>
-
-        {/* ============================================= */}
-        {/* === INICIO DE LA CORRECCIÓN PARA ESCRITORIO === */}
-        {/* ============================================= */}
-
-        {/* Este bloque SÓLO se mostrará si es "domicilio" Y NO estamos en el modal de móvil */}
-        {tipoOrden === 'domicilio' && !isModal && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3">
-            <hr />
-            {direccionGuardada && (<button className="btn btn-outline-info w-100 mb-3" onClick={usarDireccionGuardada}>Usar mi dirección guardada</button>)}
-
-            <label className="form-label">Busca tu dirección:</label>
-            <MapSelector onLocationSelect={handleLocationSelect} initialAddress={direccion} />
-
-            <div className="mt-3">
-              <label htmlFor="referenciaDesktop" className="form-label">Referencia:</label>
-              <input type="text" id="referenciaDesktop" className="form-control" value={referencia} onChange={(e) => setReferencia(e.target.value)} />
-            </div>
-
-            <div className="form-check mt-3">
-              <input className="form-check-input" type="checkbox" id="guardarDireccionDesktop" checked={guardarDireccion} onChange={(e) => setGuardarDireccion(e.target.checked)} />
-              <label className="form-check-label" htmlFor="guardarDireccionDesktop">Guardar dirección</label>
-            </div>
-          </motion.div>
-        )}
-
-        {/* =========================================== */}
-        {/* === FIN DE LA CORRECCIÓN PARA ESCRITORIO === */}
-        {/* =========================================== */}
-
-        <hr />
-        <p className="d-flex justify-content-between">Subtotal: <span>${subtotal.toFixed(2)}</span></p>
-        {tipoOrden === 'domicilio' && (<motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="d-flex justify-content-between">Costo de Envío: {calculandoEnvio ? <span className="spinner-border spinner-border-sm"></span> : <span>${costoEnvio.toFixed(2)}</span>}</motion.p>)}
-        <h4>Total: ${totalFinal.toFixed(2)}</h4>
-      </div>
-
-      {/* ========================================== */}
-      {/* === INICIO DE LA CORRECCIÓN DEL BOTÓN === */}
-      {/* ========================================== */}
-      <div className={isModal ? "modal-footer d-grid gap-2" : "card-footer d-grid gap-2 mt-auto"}>
-
-        {isModal ? (
-          // Lógica de botón para MODAL (móvil) - Sigue como estaba
-          <button
-            className="btn btn-primary"
-            onClick={handleContinue}
-            disabled={pedidoActual.length === 0 || paymentLoading}
-          >
-            {tipoOrden === 'domicilio' ? 'Siguiente' : 'Proceder al Pago'}
-          </button>
-        ) : (
-          // Lógica de botón para DESKTOP - Va directo al pago
-          <button
-            className="btn btn-primary"
-            onClick={handleProcederAlPago}
-            disabled={pedidoActual.length === 0 || paymentLoading || (tipoOrden === 'domicilio' && !direccion) || calculandoEnvio}
-          >
-            {paymentLoading ? 'Iniciando...' : 'Proceder al Pago'}
-          </button>
-        )}
-
-        <button className="btn btn-outline-danger" onClick={limpiarPedidoCompleto}>Vaciar Carrito</button>
-      </div>
-      {/* ======================================== */}
-      {/* === FIN DE LA CORRECCIÓN DEL BOTÓN === */}
-      {/* ======================================== */}
-    </>
-  );
+  // --- El componente CarritoContent FUE MOVIDO AFUERA ---
 
   return (
     <div>
@@ -405,7 +413,34 @@ function ClientePage() {
 
           <div className="col-md-4 d-none d-md-block">
             <div className="card shadow-sm position-sticky" style={{ top: '20px' }}>
-              <CarritoContent isModal={false} />
+              {/* Ahora llamamos a CarritoContent como un componente 
+                independiente y le pasamos todas las props.
+              */}
+              <CarritoContent
+                isModal={false}
+                pedidoActual={pedidoActual}
+                decrementarCantidad={decrementarCantidad}
+                incrementarCantidad={incrementarCantidad}
+                eliminarProducto={eliminarProducto}
+                tipoOrden={tipoOrden}
+                setTipoOrden={setTipoOrden}
+                direccionGuardada={direccionGuardada}
+                usarDireccionGuardada={usarDireccionGuardada}
+                handleLocationSelect={handleLocationSelect}
+                direccion={direccion}
+                referencia={referencia}
+                setReferencia={setReferencia}
+                guardarDireccion={guardarDireccion}
+                setGuardarDireccion={setGuardarDireccion}
+                subtotal={subtotal}
+                costoEnvio={costoEnvio}
+                calculandoEnvio={calculandoEnvio}
+                totalFinal={totalFinal}
+                handleContinue={handleContinue}
+                handleProcederAlPago={handleProcederAlPago}
+                paymentLoading={paymentLoading}
+                limpiarPedidoCompleto={limpiarPedidoCompleto}
+              />
             </div>
           </div>
         </motion.div>
@@ -426,15 +461,50 @@ function ClientePage() {
                 <button type="button" className="btn-close" onClick={() => { setShowCartModal(false); setModalView('cart'); }}></button>
               </div>
               {modalView === 'cart' ? (
-                <CarritoContent isModal={true} />
+                // Aquí también le pasamos todas las props
+                <CarritoContent
+                  isModal={true}
+                  pedidoActual={pedidoActual}
+                  decrementarCantidad={decrementarCantidad}
+                  incrementarCantidad={incrementarCantidad}
+                  eliminarProducto={eliminarProducto}
+                  tipoOrden={tipoOrden}
+                  setTipoOrden={setTipoOrden}
+                  direccionGuardada={direccionGuardada}
+                  usarDireccionGuardada={usarDireccionGuardada}
+                  handleLocationSelect={handleLocationSelect}
+                  direccion={direccion}
+                  referencia={referencia}
+                  setReferencia={setReferencia}
+                  guardarDireccion={guardarDireccion}
+                  setGuardarDireccion={setGuardarDireccion}
+                  subtotal={subtotal}
+                  costoEnvio={costoEnvio}
+                  calculandoEnvio={calculandoEnvio}
+                  totalFinal={totalFinal}
+                  handleContinue={handleContinue}
+                  handleProcederAlPago={handleProcederAlPago}
+                  paymentLoading={paymentLoading}
+                  limpiarPedidoCompleto={limpiarPedidoCompleto}
+                />
               ) : (
                 <>
                   <div className="modal-body">
                     {direccionGuardada && (<button className="btn btn-outline-info w-100 mb-3" onClick={usarDireccionGuardada}>Usar mi dirección guardada</button>)}
                     <label className="form-label">Busca tu dirección:</label>
                     <MapSelector onLocationSelect={handleLocationSelect} initialAddress={direccion} />
-                    <div className="mt-3"><label htmlFor="referenciaModal" className="form-label">Referencia:</label><input type="text" id="referenciaModal" className="form-control" value={referencia} onChange={(e) => setReferencia(e.target.value)} /></div>
-                    <div className="form-check mt-3"><input className="form-check-input" type="checkbox" id="guardarDireccionModal" checked={guardarDireccion} onChange={(e) => setGuardarDireccion(e.target.checked)} /><label className="form-check-label" htmlFor="guardarDireccionModal">Guardar dirección</label></div>
+                    <div className="mt-3">
+                      <label htmlFor="referenciaModal" className="form-label">Referencia:</label>
+                      {/* Este input también está corregido porque su 
+                        componente padre (`modalView === 'address'`) 
+                        no se redefine.
+                      */}
+                      <input type="text" id="referenciaModal" className="form-control" value={referencia} onChange={(e) => setReferencia(e.target.value)} />
+                    </div>
+                    <div className="form-check mt-3">
+                      <input className="form-check-input" type="checkbox" id="guardarDireccionModal" checked={guardarDireccion} onChange={(e) => setGuardarDireccion(e.target.checked)} />
+                      <label className="form-check-label" htmlFor="guardarDireccionModal">Guardar dirección</label>
+                    </div>
                   </div>
                   <div className="modal-footer d-flex justify-content-between">
                     <button className="btn btn-secondary" onClick={() => setModalView('cart')}>Volver</button>
@@ -447,6 +517,7 @@ function ClientePage() {
         </div>
       )}
 
+      {/* ... (El resto del código para 'ver' y 'recompensas' sigue igual) ... */}
       {!loading && activeTab === 'ver' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <h2>Mis Pedidos</h2>
@@ -504,33 +575,21 @@ function ClientePage() {
         </motion.div>
       )}
 
-      {/* ================================================== */}
-      {/* === INICIO DEL BLOQUE DE CÓDIGO MODIFICADO === */}
-      {/* ================================================== */}
       {!loading && activeTab === 'recompensas' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <h2>Mis Recompensas</h2>
           {misRecompensas?.length === 0 ? (
-            
             <div className="recompensas-container">
               <div className="recompensas-caja-vacia">
-                
-                {/* Asegúrate de que esta ruta sea correcta.
-                  Debe apuntar al icono en tu carpeta 'public'.
-                  Si lo llamaste 'favicon.png' o 'dona-icon.png', ajústalo aquí.
-                */}
-                <img 
-                  src="/dona-icon.png" 
-                  alt="Icono de Donita" 
-                  className="recompensas-icono" 
+                <img
+                  src="/dona-icon.png"
+                  alt="Icono de Donita"
+                  className="recompensas-icono"
                 />
-                
                 <h3>Aún no tienes recompensas</h3>
                 <p>¡Sigue comprando para ganar bebidas gratis y más sorpresas!</p>
-            
               </div>
             </div>
-
           ) : (
             <div className="row g-4">
               {misRecompensas?.map(recompensa => (
@@ -551,10 +610,6 @@ function ClientePage() {
           )}
         </motion.div>
       )}
-      {/* ================================================ */}
-      {/* === FIN DEL BLOQUE DE CÓDIGO MODIFICADO === */}
-      {/* ================================================ */}
-
 
       {showPaymentModal && clientSecret && (
         <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>

@@ -33,20 +33,24 @@ function HomePage() {
     navigate('/hacer-un-pedido');
   };
 
-  // --- 1. Estilo de fondo con filtro y texto blanco ---
+  /* =============================================================== */
+  /* === INICIO DE LA MODIFICACIÓN: ESTILO DEL HERO SIMPLIFICADO === */
+  /* =============================================================== */
+  // Tu App.css ya maneja el degradado, el color de texto y la sombra.
+  // El estilo en línea ahora solo necesita proveer la imagen de fondo.
   const heroStyle = {
-    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/hero-background.jpg')`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    color: 'white', // <-- Texto blanco de nuevo
-    textShadow: '2px 2px 4px rgba(0,0,0,0.7)' // <-- Sombra fuerte
+    backgroundImage: `url('/hero-background.jpg')`,
   };
+  /* =============================================================== */
+  /* === FIN DE LA MODIFICACIÓN === */
+  /* =============================================================== */
 
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       
       {/* --- INICIO DEL NUEVO HERO "ALINEACIÓN EDITORIAL" --- */}
+      {/* Se aplica el 'heroStyle' y las clases CSS. App.css se encarga del resto. */}
       <div className="hero-classic-section hero-full-width" style={heroStyle}>
         
         {/* Contenedor para alinear a la izquierda */}

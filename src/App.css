@@ -55,7 +55,7 @@
   /* Arregla .text-muted (precio original y "carrito vacío") */
   --bs-secondary-color: var(--color-texto-secundario);
 
-  /* Variables de Bootstrap para tablas (Intento anterior, puede no ser suficiente) */
+  /* Variables de Bootstrap para tablas */
   --bs-table-color: var(--color-texto-principal);
   --bs-table-bg: transparent;
   --bs-table-border-color: var(--color-borde);
@@ -76,7 +76,13 @@ body {
   padding-top: 70px;
 }
 
-h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
+h1,
+h2,
+h3,
+h4,
+h5,
+.navbar-brand,
+.display-4 {
   font-family: 'Playfair Display', serif;
   letter-spacing: 0.5px;
 }
@@ -97,7 +103,7 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
   background-color: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--bs-border-color);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   padding: 0.5rem 1rem;
 }
@@ -162,7 +168,7 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
 
 .navbar-toggler.btn-dona-toggler:hover {
   background-color: var(--color-primario-hover);
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
 
 /* --- OFFCANVAS --- */
@@ -284,14 +290,14 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
   overflow: hidden;
   margin-top: -70px;
   margin-bottom: 3rem;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 }
 
 .hero-classic-section.hero-full-width::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(0,0,0,0.5), rgba(0,0,0,0.15));
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.15));
   z-index: 0;
 }
 
@@ -309,9 +315,15 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
 }
 
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .btn-primary {
@@ -352,34 +364,41 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
 
 .card:hover {
   transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 8px 18px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
 }
 
 .card.en-oferta {
-  border: 2px solid #dc3545;
+  border: 2px solid var(--color-primario);
 }
 
+/* =============================================================== */
+/* === INICIO: MODIFICACIÓN CREATIVA DE ETIQUETA DE DESCUENTO === */
+/* =============================================================== */
 .discount-badge {
   position: absolute;
   top: 10px;
   right: 10px;
-  background-color: #dc3545;
-  color: white;
-  padding: 0.4em 0.7em;
-  font-size: 0.8em;
+  background-color: var(--color-primario); /* ¡Usa el color de tu marca! */
+  color: #fff; /* Texto blanco sobre el color de marca */
+  width: 55px; /* Ancho fijo para el círculo */
+  height: 55px; /* Alto fijo para el círculo */
+  border-radius: 50%; /* ¡La magia del círculo! */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85em; /* Ajustamos la fuente al círculo */
   font-weight: 700;
-  border-radius: 8px;
-  transform: rotate(10deg);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Sombra sutil */
+  z-index: 2; /* Nos aseguramos que esté visible */
 }
+/* ============================================================= */
+/* === FIN: MODIFICACIÓN CREATIVA DE ETIQUETA DE DESCUENTO === */
+/* ============================================================= */
+
 
 /* ======================= */
 /* === PRECIOS === */
 /* ======================= */
-/* El texto .text-muted (usado para precio original)
-    se corrige con la variable --bs-secondary-color
-    en el bloque [data-bs-theme="picante"]
-*/
 .precio-original {
   text-decoration: line-through;
   color: #9E9E9E;
@@ -407,7 +426,7 @@ footer {
   padding: 2rem 1rem;
   font-weight: 500;
   border-top: 2px solid var(--color-borde);
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
 }
 
 [data-bs-theme="picante"] footer {
@@ -420,8 +439,14 @@ footer {
 /* === ANIMACIONES === */
 /* ======================= */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ======================= */
@@ -441,7 +466,7 @@ footer {
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
@@ -473,37 +498,31 @@ footer {
   }
 }
 
-/* ==== INICIO DE LA CORRECCIÓN DE LA TABLA (FINAL) ==== */
 /* ================================================= */
-/* Forzar color de texto en tablas para modo picante */
+/* === CORRECCIÓN DE LA TABLA === */
+/* ================================================= */
 [data-bs-theme="picante"] .table {
-  /* Usamos !important para asegurarnos de que sobreescriba a Bootstrap */
   color: var(--color-texto-principal) !important;
-  border-color: var(--color-borde) !important; /* También forzamos el borde */
+  border-color: var(--color-borde) !important;
 }
 
-/* Forzar color de texto en los encabezados (th) */
 [data-bs-theme="picante"] .table th {
   color: var(--color-texto-principal) !important;
 }
 
-/* Forzar color de texto en las celdas de datos (td) */
 [data-bs-theme="picante"] .table td {
-  color: var(--color-texto-principal) !important; /* <--- ESTA ES LA LÍNEA CLAVE */
+  color: var(--color-texto-principal) !important;
 }
 
-/* Forzar color de texto en el hover */
 [data-bs-theme="picante"] .table-hover > tbody > tr:hover > * {
   color: var(--color-texto-principal) !important;
-  background-color: rgba(255, 255, 255, 0.075) !important; /* Forzamos el fondo del hover también */
+  background-color: rgba(255, 255, 255, 0.075) !important;
 }
-/* ==== FIN DE LA CORRECCIÓN DE LA TABLA ==== */
 
 
 /* =================================== */
 /* === SUB-NAVEGACIÓN PÁGINA === */
 /* =================================== */
-/* La barra de navegación ya está alineada a la izquierda */
 .nav-tabs {
   border-bottom: 1px solid var(--bs-border-color);
 }
@@ -543,37 +562,31 @@ footer {
 
 /* Modo Oscuro (Picante) - Forzamos los colores */
 [data-bs-theme="picante"] .nav-tabs .nav-link {
-   color: var(--color-texto-secundario) !important;
-   border-color: transparent !important;
+  color: var(--color-texto-secundario) !important;
+  border-color: transparent !important;
 }
 [data-bs-theme="picante"] .nav-tabs .nav-link:hover,
 [data-bs-theme="picante"] .nav-tabs .nav-link:focus {
-   color: var(--color-primario) !important;
-   border-color: transparent !important;
+  color: var(--color-primario) !important;
+  border-color: transparent !important;
 }
 
-/* ================================== */
-/* === INICIO DE LA CORRECCIÓN === */
-/* ================================== */
 [data-bs-theme="picante"] .nav-tabs .nav-link.active {
-   color: var(--color-texto-principal) !important;
-   background-color: transparent !important;
-   border-bottom-color: var(--color-primario) !important;
+  color: var(--color-texto-principal) !important;
+  background-color: transparent !important;
+  border-bottom-color: var(--color-primario) !important;
 }
-/* ================================ */
-/* === FIN DE LA CORRECCIÓN === */
-/* ================================ */
 
 
 /* ============================ */
 /* === SECCIÓN RECOMPENSAS === */
 /* ============================ */
 .card.shadow-sm {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
 }
 
 [data-bs-theme="picante"] .card.shadow-sm {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Clases de color para los iconos */
@@ -586,7 +599,7 @@ footer {
 }
 
 [data-bs-theme="picante"] .text-success {
-    color: #4CAF50 !important;
+  color: #4CAF50 !important;
 }
 
 /* === Tarjeta de Sellos (Stamp Card) === */
@@ -621,29 +634,26 @@ footer {
 
 /* Cuando el sello esté "lleno" (activo) */
 .stamp-item.filled {
-    border-style: solid;
-    border-color: var(--color-primario);
-    background-color: var(--color-primario);
-    color: var(--bs-card-bg);
-    transform: scale(1.05);
-    box-shadow: 0 0 10px var(--color-primario);
+  border-style: solid;
+  border-color: var(--color-primario);
+  background-color: var(--color-primario);
+  color: var(--bs-card-bg);
+  transform: scale(1.05);
+  box-shadow: 0 0 10px var(--color-primario);
 }
 
 /* =============================================================== */
-/* === INICIO: NUEVOS ESTILOS "AÚN NO TIENES RECOMPENSAS" (CAJA) === */
+/* === ESTILOS "AÚN NO TIENES RECOMPENSAS" (CAJA) === */
 /* =============================================================== */
 
-/* Contenedor para alinear la caja a la izquierda */
 .recompensas-container {
   display: flex;
-  justify-content: flex-start; /* <-- ESTE ES EL CAMBIO */
+  justify-content: flex-start;
   align-items: center;
-  padding: 3rem 0; /* Espacio arriba y abajo */
+  padding: 3rem 0;
 }
 
-/* La caja que contiene el mensaje de estado vacío */
 .recompensas-caja-vacia {
-  /* Usamos las variables del tema para el fondo y borde */
   background-color: var(--color-fondo-tarjeta);
   border: 1px solid var(--color-borde);
   border-radius: 12px;
@@ -651,51 +661,40 @@ footer {
   text-align: center;
   max-width: 550px;
   width: 90%;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
 
-/* Modo Oscuro (Picante) */
 [data-bs-theme="picante"] .recompensas-caja-vacia {
-  /* Las variables --color-fondo-tarjeta y --color-borde se actualizan solas.
-     Solo añadimos la sombra roja característica que te gustó */
   box-shadow: 0 6px 15px rgba(255, 82, 82, 0.25);
 }
 
-/* Icono de la donita dentro de la caja */
 .recompensas-icono {
   width: 80px;
   height: 80px;
   margin-bottom: 1.5rem;
   opacity: 0.4;
-  filter: grayscale(90%); /* Efecto "inactivo", funciona en ambos temas */
+  filter: grayscale(90%);
 }
 
-/* Título: "Aún no tienes recompensas" */
 .recompensas-caja-vacia h3 {
-  font-family: 'Playfair Display', serif; /* Usamos la fuente del tema */
+  font-family: 'Playfair Display', serif;
   font-size: 1.75rem;
   font-weight: 600;
-  color: var(--color-texto-principal); /* Usa el color de texto del tema */
+  color: var(--color-texto-principal);
   margin-bottom: 0.5rem;
 }
 
-/* Párrafo: "¡Sigue comprando..." */
 .recompensas-caja-vacia p {
   font-size: 1rem;
-  color: var(--color-texto-secundario); /* Usa el color de texto secundario del tema */
+  color: var(--color-texto-secundario);
   line-height: 1.5;
 }
-
-/* =========================================================== */
-/* === FIN: NUEVOS ESTILOS "AÚN NO TIENES RECOMPENSAS" (CAJA) === */
-/* =========================================================== */
-
 
 /* === RESPONSIVO (para Recompensas) === */
 @media (max-width: 767.98px) {
   .stamp-grid {
-      gap: 0.5rem;
+    gap: 0.5rem;
   }
   .stamp-item {
     font-size: 1.8rem;
@@ -709,79 +708,28 @@ footer {
 /* ======================= */
 /* === FOOTER (Créditos) === */
 /* ======================= */
-/* Esto asegura que el enlace de tu correo en el footer
-    use el color de texto secundario de CADA tema */
 footer .text-body-secondary,
 footer .text-body-secondary a {
   color: var(--color-texto-secundario) !important;
-  text-decoration: none; /* Quitamos el subrayado por defecto */
+  text-decoration: none;
 }
 
-/* Opcional: un sutil subrayado al pasar el mouse */
 footer .text-body-secondary a:hover {
   text-decoration: underline;
 }
 
 /* ===================================== */
-/* === ESTILOS Y ARREGLO LOGIN MÓVIL === */
-/* ===================================== */
-
-/* Esta es la clase que se usa en LoginPage.jsx */
-.login-box {
-  /* ESTILOS PARA PC (Como tu foto) */
-  max-width: 480px; 
-  margin: 4rem auto; /* Centra la caja */
-  
-  /* Usamos tus variables de tema */
-  padding: 2.5rem;
-  background-color: var(--color-fondo-tarjeta);
-  border: 1px solid var(--color-borde);
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  
-  /* Hacemos que el color de fondo y borde se anime 
-     con el cambio de tema */
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-/* Modo Oscuro (Picante) para el Login Box */
-[data-bs-theme="picante"] .login-box {
-  box-shadow: 0 6px 15px rgba(255, 82, 82, 0.25);
-}
-
-
-/* Arreglo para pantallas de 576px o menos (celulares) */
-@media (max-width: 576px) {
-  
-  .login-box {
-    /* Ocupa el 95% de la pantalla, no un ancho fijo */
-    width: 95%; 
-    
-    /* Menos espacio interno en celular */
-    padding: 1.5rem; 
-    
-    /* Menos margen arriba/abajo en celular */
-    margin: 2rem auto; 
-  }
-
-  /* Opcional: Centrar el título en móvil si se viera mal */
-  .login-box h2 {
-    font-size: 1.8rem; /* Un poco más pequeño en cel */
-  }
-}
-
-/* ===================================== */
-/* === ESTILOS Y ARREGLO LOGIN MÓVIL === */
+/* === ESTILOS LOGIN === */
 /* ===================================== */
 
 .login-box {
-  max-width: 480px; 
+  max-width: 480px;
   margin: 4rem auto;
   padding: 2.5rem;
   background-color: var(--color-fondo-tarjeta);
   border: 1px solid var(--color-borde);
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
@@ -797,6 +745,9 @@ footer .text-body-secondary a:hover {
   text-align: center;
 }
 
+/* ===================================== */
+/* === ARREGLO LOGIN MÓVIL === */
+/* ===================================== */
 @media (max-width: 576px) {
   .login-box {
     width: 95%;

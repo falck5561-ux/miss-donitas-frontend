@@ -84,15 +84,29 @@ const UserControls = ({ isMobile = false, onControlClick }) => {
         <ThemeToggleButton />
       </span>
       
+      {/* =============================================================== */}
+      {/* === INICIO DE LA MODIFICACIÓN: BOTÓN LOGOUT USA EL TEMA === */}
+      {/* =============================================================== */}
       {user ? (
-        <button onClick={handleLogoutClick} className={`btn btn-outline-danger btn-sm ${buttonClass}`}>
-          Cerrar Sesión
-        </button>
+        isMobile ? (
+          // En móvil, usamos la clase que ya está en App.css
+          <button onClick={handleLogoutClick} className={`offcanvas-logout-btn ${buttonClass}`}>
+            Cerrar Sesión
+          </button>
+        ) : (
+          // En escritorio, usamos 'btn-primary' que SÍ usa el tema (fondo sólido)
+          <button onClick={handleLogoutClick} className={`btn btn-primary btn-sm ${buttonClass}`}>
+            Cerrar Sesión
+          </button>
+        )
       ) : (
         <a href="/login" onClick={handleLoginClick} className={`btn btn-primary btn-sm ${buttonClass}`}>
           Login
         </a>
       )}
+      {/* =============================================================== */}
+      {/* === FIN DE LA MODIFICACIÓN === */}
+      {/* =============================================================== */}
     </>
   );
 };
@@ -112,9 +126,9 @@ function Navbar() {
     <nav className="navbar fixed-top navbar-light-theme">
       <div className="container">
 
-        {/* --- CAMBIO AQUÍ: Volvemos al texto "Miss Donitas" --- */}
+        {/* --- Logo de Texto (como lo tenías) --- */}
         <Link className="navbar-brand" to="/">
-          <span className="navbar-brand-text">Miss Donitas</span> {/* Usamos una clase para estilo si es necesario */}
+          <span className="navbar-brand-text">Miss Donitas</span>
         </Link>
 
         {/* --- MENÚ DE ESCRITORIO --- */}
@@ -167,6 +181,7 @@ function Navbar() {
             </ul>
 
             <div className="offcanvas-footer mt-auto">
+              {/* Aquí se pasan los props 'isMobile' y 'onControlClick' */}
               <UserControls isMobile={true} onControlClick={handleCloseOffcanvas} />
             </div>
           </div>

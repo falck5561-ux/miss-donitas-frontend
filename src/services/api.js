@@ -1,4 +1,4 @@
-// Archivo: src/services/api.js (Versión Corregida Definitiva)
+// Archivo: src/services/api.js (Versión FINAL con 'x-auth-token')
 
 import axios from 'axios';
 
@@ -41,7 +41,7 @@ apiClient.interceptors.request.use(
 );
 
 // =======================================================
-// ▼▼▼ ¡AÑADIMOS DE VUELTA LA FUNCIÓN QUE FALTABA! ▼▼▼
+// ▼▼▼ ¡LA FUNCIÓN QUE ARREGLÓ EL ERROR DE PÁGINA BLANCA! ▼▼▼
 // =======================================================
 export const crearPedidoAPI = async (datosPedido) => {
   const { data } = await apiClient.post('/pedidos', datosPedido);

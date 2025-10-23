@@ -1,4 +1,4 @@
-// Archivo: src/services/api.js (Versión FINAL con 'crearPedidoAPI')
+// Archivo: src/services/api.js (Versión Corregida Definitiva)
 
 import axios from 'axios';
 
@@ -26,10 +26,11 @@ apiClient.interceptors.request.use(
     // --- AÑADIMOS EL ID DE LA TIENDA ---
     config.headers['x-tienda-id'] = TIENDA_ID;
 
-    // --- AÑADIMOS EL TOKEN ('Authorization') ---
+    // --- AÑADIMOS EL TOKEN (Regresamos a 'x-auth-token') ---
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`; 
+      // Usamos 'x-auth-token' que es lo que tu authMiddleware espera
+      config.headers['x-auth-token'] = token; 
     }
     
     return config; 
@@ -40,7 +41,7 @@ apiClient.interceptors.request.use(
 );
 
 // =======================================================
-// ▼▼▼ ¡ESTA ES LA FUNCIÓN QUE HABÍAS BORRADO! ▼▼▼
+// ▼▼▼ ¡AÑADIMOS DE VUELTA LA FUNCIÓN QUE FALTABA! ▼▼▼
 // =======================================================
 export const crearPedidoAPI = async (datosPedido) => {
   const { data } = await apiClient.post('/pedidos', datosPedido);

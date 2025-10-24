@@ -150,9 +150,15 @@ function Navbar() {
           aria-controls="offcanvasNavbar"
           aria-label="Toggle navigation"
         >
-          <span style={{ fontSize: '1.8rem' }}>
+          {/* ====================================================== */}
+          {/* === INICIO DE LA CORRECCIÓN: Estilos para el emoji === */}
+          {/* ====================================================== */}
+          <span style={{ fontSize: '1.8rem', lineHeight: '1', display: 'inline-block' }}>
             {theme === 'dona' ? '🍩' : '🌶️'}
           </span>
+          {/* ====================================================== */}
+          {/* === FIN DE LA CORRECCIÓN === */}
+          {/* ====================================================== */}
         </button>
 
         {/* --- CONTENIDO DEL MENÚ MÓVIL (OFFCANVAS) --- */}
@@ -177,16 +183,10 @@ function Navbar() {
 
           <div className="offcanvas-body d-flex flex-column">
             
-            {/* ====================================================== */}
-            {/* === INICIO DE LA CORRECCIÓN: Se quitó flex-grow-1 === */}
-            {/* ====================================================== */}
+            {/* Corrección anterior para el footer del offcanvas */}
             <ul className="navbar-nav"> 
               <MenuLinks onLinkClick={handleCloseOffcanvas} />
             </ul>
-            {/* ====================================================== */}
-            {/* === FIN DE LA CORRECCIÓN === */}
-            {/* ====================================================== */}
-
 
             <div className="offcanvas-footer mt-auto">
               {/* Aquí se pasan los props 'isMobile' y 'onControlClick' */}

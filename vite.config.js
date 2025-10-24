@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// https://vite-pwa-org.netlify.app/guide/
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -9,26 +10,24 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        // --- CAMBIOS AQUÍ ---
-        name: 'Miss Donitas', // <-- Nombre
-        short_name: 'Donitas', // <-- Nombre corto
-        description: 'Donas frescas, postres deliciosos y más.', // <-- Descripción
-        theme_color: '#FF69B4', // <-- Color Rosa (o el que uses)
+        name: 'Miss Donitas',
+        short_name: 'Donitas',
+        description: 'Donas frescas, postres deliciosos y más.',
+        theme_color: '#FF69B4',
         icons: [
           {
-            src: 'dona-icon.png', // <-- Icono de dona (192x192 o similar)
-            sizes: '192x192',     // <-- Tamaño del icono
+            src: '/dona-icon.png', // Ruta corregida
+            sizes: '192x192',
             type: 'image/png',
-            purpose: 'any maskable' // <-- Añadido
+            purpose: 'any maskable'
           },
           {
-            src: 'miss-donitas-logo.png', // <-- Logo de Miss Donitas (512x512)
-            sizes: '512x512',           // <-- Tamaño del icono
+            src: '/miss-donitas-logo.png', // Ruta corregida
+            sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable' // <-- Añadido
+            purpose: 'any maskable'
           }
         ]
-        // --- FIN DE CAMBIOS ---
       }
     })
   ],

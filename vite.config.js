@@ -9,22 +9,26 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Tito Café',
-        short_name: 'TitoCafé',
-        description: 'La aplicación oficial de Tito Café.',
-        theme_color: '#ffffff', // Puedes cambiar este color
+        // --- CAMBIOS AQUÍ ---
+        name: 'Miss Donitas', // <-- Nombre
+        short_name: 'Donitas', // <-- Nombre corto
+        description: 'Donas frescas, postres deliciosos y más.', // <-- Descripción
+        theme_color: '#FF69B4', // <-- Color Rosa (o el que uses)
         icons: [
           {
-            src: 'tito-icon.png', // <-- Tu archivo de la carpeta public
-            sizes: '160x160',     // <-- Revisa que este sea el tamaño real
-            type: 'image/png'
+            src: 'dona-icon.png', // <-- Icono de dona (192x192 o similar)
+            sizes: '192x192',     // <-- Tamaño del icono
+            type: 'image/png',
+            purpose: 'any maskable' // <-- Añadido
           },
           {
-            src: 'logo-inicio.png', // <-- Tu otro archivo de la carpeta public
-            sizes: '512x512',       // <-- Revisa que este sea el tamaño real
-            type: 'image/png'
+            src: 'miss-donitas-logo.png', // <-- Logo de Miss Donitas (512x512)
+            sizes: '512x512',           // <-- Tamaño del icono
+            type: 'image/png',
+            purpose: 'any maskable' // <-- Añadido
           }
         ]
+        // --- FIN DE CAMBIOS ---
       }
     })
   ],

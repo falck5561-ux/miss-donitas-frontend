@@ -22,7 +22,7 @@ export default defineConfig({
             purpose: 'any maskable'
           },
           {
-            src: '/miss-donitas-logo.png', // Ruta corregida
+            src: '/dona-icon.png', // Ruta corregida
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'

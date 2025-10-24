@@ -56,7 +56,7 @@ const notify = (type, message) => {
 
 
 // ===================================================================
-// ===               INICIO DE LA CORRECCIÓN CLAVE                 ===
+// ===         COMPONENTE CarritoContent (EXTRAÍDO)                ===
 // ===================================================================
 //
 // `CarritoContent` se movió FUERA de `ClientePage` y ahora recibe
@@ -128,9 +128,6 @@ const CarritoContent = ({
 
           <div className="mt-3">
             <label htmlFor="referenciaDesktop" className="form-label">Referencia:</label>
-            {/* Este input ahora funciona porque su componente padre (`CarritoContent`)
-              ya no se destruye en cada render.
-            */}
             <input type="text" id="referenciaDesktop" className="form-control" value={referencia} onChange={(e) => setReferencia(e.target.value)} />
           </div>
 
@@ -170,7 +167,7 @@ const CarritoContent = ({
   </>
 );
 // ===================================================================
-// ===                FIN DE LA CORRECCIÓN CLAVE                 ===
+// ===                     FIN DE CarritoContent                   ===
 // ===================================================================
 
 
@@ -414,7 +411,7 @@ function ClientePage() {
           <div className="col-md-4 d-none d-md-block">
             <div className="card shadow-sm position-sticky" style={{ top: '20px' }}>
               {/* Ahora llamamos a CarritoContent como un componente 
-                independiente y le pasamos todas las props.
+                  independiente y le pasamos todas las props.
               */}
               <CarritoContent
                 isModal={false}
@@ -495,10 +492,6 @@ function ClientePage() {
                     <MapSelector onLocationSelect={handleLocationSelect} initialAddress={direccion} />
                     <div className="mt-3">
                       <label htmlFor="referenciaModal" className="form-label">Referencia:</label>
-                      {/* Este input también está corregido porque su 
-                        componente padre (`modalView === 'address'`) 
-                        no se redefine.
-                      */}
                       <input type="text" id="referenciaModal" className="form-control" value={referencia} onChange={(e) => setReferencia(e.target.value)} />
                     </div>
                     <div className="form-check mt-3">
@@ -545,27 +538,62 @@ function ClientePage() {
                         <td><span className={`badge ${getStatusBadge(p.estado)}`}>{p.estado}</span></td>
                         <td className="text-end">${Number(p.total).toFixed(2)}</td>
                       </tr>
+
+                      {/* ======================================================
+                      === INICIO DE LA CORRECCIÓN: Mejorar vista detalle ===
+                      ======================================================
+                      */}
                       {ordenExpandida === p.id && (
                         <tr>
+                          {/* Usamos un <td> con colSpan para que ocupe toda la fila */}
                           <td colSpan="5">
-                            <motion.div className="detalle-pedido-productos" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.3 }}>
-                              <h5 className="mb-3">Detalle del Pedido #{p.id}</h5>
-                              {p.productos?.map(producto => (
-                                <div key={`${p.id}-${producto.nombre}`} className="detalle-pedido-item">
-                                  <span>{producto.cantidad}x {producto.nombre}</span>
-                                  <span>${(producto.cantidad * Number(producto.precio)).toFixed(2)}</span>
-                                </div>
-                              ))}
-                              {p.costo_envio > 0 && (
-                                <div className="detalle-pedido-item mt-2 pt-2 border-top">
-                                  <span className="fw-bold">Costo de Envío</span>
-                                  <span className="fw-bold">${Number(p.costo_envio).toFixed(2)}</span>
-                                </div>
-                              )}
+                            <motion.div 
+                              className="detalle-pedido-container p-3 rounded" 
+                              style={{ 
+                                backgroundColor: 'var(--bs-tertiary-bg)', 
+                                border: '1px solid var(--bs-border-color)' 
+                              }}
+                              initial={{ opacity: 0, height: 0 }} 
+                              animate={{ opacity: 1, height: 'auto' }} 
+                              transition={{ duration: 0.3 }}
+                            >
+                              <h6 className="mb-3 fw-bold" style={{ color: 'var(--color-primario)' }}>
+                                Detalle del Pedido #{p.id}
+                              </h6>
+                              
+                              <ul className="list-unstyled mb-0">
+                                {p.productos?.map(producto => (
+                                  <li 
+                                    key={`${p.id}-${producto.nombre}`} 
+                                    className="d-flex justify-content-between align-items-center mb-2"
+                                  >
+                                    <div>
+                                      <span className="fw-bold" style={{ color: 'var(--color-primario)' }}>
+                                        {producto.cantidad}x
+                                      </span> {producto.nombre}
+                                    </div>
+                                    <span className="fw-bold" style={{ color: 'var(--color-texto-principal)' }}>
+                                      ${(producto.cantidad * Number(producto.precio)).toFixed(2)}
+                                    </span>
+                                  </li>
+                                ))}
+                                
+                                {p.costo_envio > 0 && (
+                                  <li className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                    <span className="fw-bold">Costo de Envío</span>
+                                    <span className="fw-bold">${Number(p.costo_envio).toFixed(2)}</span>
+                                  </li>
+                                )}
+                              </ul>
+                              
                             </motion.div>
                           </td>
                         </tr>
                       )}
+                      {/* ======================================================
+                      === FIN DE LA CORRECCIÓN: Mejorar vista detalle    ===
+                      ======================================================
+                      */}
                     </React.Fragment>
                   ))}
                 </tbody>
@@ -637,3 +665,4 @@ function ClientePage() {
 }
 
 export default ClientePage;
+

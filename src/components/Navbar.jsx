@@ -127,9 +127,14 @@ function Navbar() {
       <div className="container">
 
         {/* --- Logo de Texto (como lo tenías) --- */}
-        <Link className="navbar-brand" to="/">
-          <span className="navbar-brand-text">Miss Donitas</span>
-        </Link>
+        {/* --- Logo con Imagen --- */}
+<Link className="navbar-brand" to="/">
+  <img 
+    src="/miss-donitas-logo.png" // <-- ¡Asegúrate que el nombre del archivo sea correcto!
+    alt="Miss Donitas Logo" 
+    height="40" // <-- Ajusta la altura como necesites
+  />
+</Link>
 
         {/* --- MENÚ DE ESCRITORIO --- */}
         <div className="d-none d-lg-flex align-items-center">

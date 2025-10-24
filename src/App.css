@@ -765,3 +765,16 @@ footer .text-body-secondary a:hover {
     margin: 1rem auto 0 auto;
   }
 }
+
+/* ================================================= */
+/* === CORRECCIÓN BOTÓN 'X' (btn-close) MODO OSCURO === */
+/* ================================================= */
+/* Esto le dice a Bootstrap que use el filtro
+  para invertir el color del botón 'X'
+  (que por defecto es negro) a blanco
+  cuando el tema 'picante' (oscuro) esté activo.
+*/
+[data-bs-theme="picante"] .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+

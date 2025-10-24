@@ -6,6 +6,7 @@ import { useInstallPWA } from '../context/InstallPwaContext';
 import { useTheme } from '../context/ThemeContext';
 
 // --- COMPONENTE DE ENLACES DEL MENÚ ---
+// (No cambia)
 const MenuLinks = ({ onLinkClick }) => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ const MenuLinks = ({ onLinkClick }) => {
           </NavLink>
         </li>
       )}
-      {user?.rol === 'Jefe' && ( // Asegúrate que el rol 'Jefe' sea correcto
+      {user?.rol === 'Jefe' && (
         <li className="nav-item">
           <NavLink className="nav-link" to="/admin" onClick={(e) => handleClick(e, "/admin")}>
             Admin
@@ -55,7 +56,6 @@ const MenuLinks = ({ onLinkClick }) => {
           </a>
         </li>
       )}
-      {/* Puedes añadir más enlaces aquí si es necesario */}
     </>
   );
 };
@@ -65,9 +65,7 @@ const MenuLinks = ({ onLinkClick }) => {
 const UserControls = ({ isMobile = false, onControlClick }) => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  // Añadimos clases de flexbox para alinear los botones en el footer
-  const containerClass = isMobile ? "d-flex justify-content-between align-items-center w-100" : "";
-  const buttonClass = isMobile ? "ms-2" : "ms-3"; // Ajustamos margen para móvil
+  const buttonClass = isMobile ? "" : "ms-3";
 
   const handleLoginClick = (e) => {
     e.preventDefault();
@@ -81,23 +79,35 @@ const UserControls = ({ isMobile = false, onControlClick }) => {
   };
 
   return (
-    // Envolvemos en un div para aplicar flexbox en móvil
-    <div className={containerClass}>
+    <>
       <span onClick={onControlClick}>
         <ThemeToggleButton />
       </span>
 
+      {/* =============================================================== */}
+      {/* === INICIO DE LA MODIFICACIÓN: BOTÓN LOGOUT USA EL TEMA === */}
+      {/* =============================================================== */}
       {user ? (
-        // Quitamos la lógica ternaria isMobile, ya que el botón de logout ahora es consistente
-         <button onClick={handleLogoutClick} className={`btn btn-danger btn-sm ${buttonClass}`}> {/* Usamos btn-danger para logout */}
-           Cerrar Sesión
-         </button>
+        isMobile ? (
+          // En móvil, usamos la clase que ya está en App.css
+          <button onClick={handleLogoutClick} className={`offcanvas-logout-btn ${buttonClass}`}>
+            Cerrar Sesión
+          </button>
+        ) : (
+          // En escritorio, usamos 'btn-primary' que SÍ usa el tema (fondo sólido)
+          <button onClick={handleLogoutClick} className={`btn btn-primary btn-sm ${buttonClass}`}>
+            Cerrar Sesión
+          </button>
+        )
       ) : (
         <a href="/login" onClick={handleLoginClick} className={`btn btn-primary btn-sm ${buttonClass}`}>
           Login
         </a>
       )}
-    </div>
+      {/* =============================================================== */}
+      {/* === FIN DE LA MODIFICACIÓN === */}
+      {/* =============================================================== */}
+    </>
   );
 };
 
@@ -116,26 +126,22 @@ function Navbar() {
     <nav className="navbar fixed-top navbar-light-theme">
       <div className="container">
 
-        {/* --- Logo con Imagen --- */}
+        {/* --- Logo de Texto (como lo tenías) --- */}
         <Link className="navbar-brand" to="/">
-          <img
-            src="/miss-donitas-logo.png" // <-- Verifica este nombre en 'public'
-            alt="Miss Donitas Logo"
-            height="40" // <-- Ajusta la altura si es necesario
-          />
+          <span className="navbar-brand-text">Miss Donitas</span>
         </Link>
 
-        {/* --- MENÚ DE ESCRITORIO --- */}
+        {/* --- MENÚ DE ESCRITORIOS --- */}
         <div className="d-none d-lg-flex align-items-center">
           <ul className="navbar-nav flex-row">
             <MenuLinks />
           </ul>
           <div className="ms-lg-3">
-             <UserControls isMobile={false} /> {/* Le decimos que NO es móvil */}
+            <UserControls />
           </div>
         </div>
 
-        {/* --- BOTÓN DEL MENÚ MÓVIL --- */}
+        {/* --- BOTÓN DEL MENÚ MÓVIL (Mantenemos el icono temático) --- */}
         <button
           className="navbar-toggler d-lg-none border-0 btn-dona-toggler"
           type="button"
@@ -169,17 +175,22 @@ function Navbar() {
             ></button>
           </div>
 
-          {/* --- Cuerpo del Offcanvas --- */}
           <div className="offcanvas-body d-flex flex-column">
-
-            {/* --- Lista de Enlaces (AHORA CON SCROLL) --- */}
-            <ul className="navbar-nav flex-grow-1 overflow-auto"> {/* <--- ¡AÑADIDO overflow-auto! */}
+            
+            {/* ====================================================== */}
+            {/* === INICIO DE LA CORRECCIÓN: Se quitó flex-grow-1 === */}
+            {/* ====================================================== */}
+            <ul className="navbar-nav"> 
               <MenuLinks onLinkClick={handleCloseOffcanvas} />
             </ul>
+            {/* ====================================================== */}
+            {/* === FIN DE LA CORRECCIÓN === */}
+            {/* ====================================================== */}
 
-            {/* --- Footer del Offcanvas (se pega abajo) --- */}
-            <div className="offcanvas-footer mt-auto py-3 border-top"> {/* Añadimos padding y borde */}
-               <UserControls isMobile={true} onControlClick={handleCloseOffcanvas} /> {/* Le decimos que SÍ es móvil */}
+
+            <div className="offcanvas-footer mt-auto">
+              {/* Aquí se pasan los props 'isMobile' y 'onControlClick' */}
+              <UserControls isMobile={true} onControlClick={handleCloseOffcanvas} />
             </div>
           </div>
         </div>

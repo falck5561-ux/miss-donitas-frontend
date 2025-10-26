@@ -83,7 +83,13 @@ function AdminPage() {
         const res = await apiClient.get('/pedidos');
         setPedidos(res.data);
       } else if (activeTab === 'combos') {
-        const res = await apiClient.get('/combos');
+        
+        // ================== CAMBIO AQUÍ (1 de 3) ==================
+        // Ahora usamos la nueva ruta del backend para traer
+        // TODOS los combos (activos e inactivos) a este panel.
+        const res = await apiClient.get('/combos/admin/todos');
+        // ==========================================================
+
         setCombos(res.data);
       }
     } catch (err) {
@@ -162,20 +168,33 @@ function AdminPage() {
     } catch (err) { toast.error(`No se pudo guardar el combo.`); }
   };
 
-  // ✅ MEJORA: La función de eliminar combo también es específica
+  // ================== CAMBIO AQUÍ (2 de 3) ==================
+  // Esta es la función que se llama al pulsar "Eliminar" en un combo.
   const handleDeleteCombo = (combo) => {
-    setConfirmTitle('Eliminar Combo');
-    setConfirmMessage(`¿Estás seguro de que quieres eliminar el combo "${combo.titulo}"? Esta acción es permanente.`);
+    
+    // 1. Cambiamos el Título y Mensaje para que digan "Desactivar"
+    setConfirmTitle('Desactivar Combo');
+    // Usamos 'nombre' (de la DB) en lugar de 'titulo' (del mapeo frontend)
+    setConfirmMessage(`¿Seguro que quieres desactivar "${combo.nombre}"? Ya no será visible para los clientes.`);
+    
     setConfirmAction(() => async () => {
       try {
-        await apiClient.delete(`/combos/${combo.id}`);
-        toast.success('Combo eliminado.');
-        fetchData();
-      } catch (err) { toast.error('No se pudo eliminar el combo.'); }
+        
+        // 2. Cambiamos el método de 'delete' a 'patch'
+        // 3. Cambiamos la URL a la nueva ruta '/desactivar'
+        await apiClient.patch(`/combos/${combo.id}/desactivar`);
+        
+        toast.success('Combo desactivado con éxito.');
+        fetchData(); // Recarga la lista
+      } catch (err) { 
+        // Mostramos el error del backend si existe
+        toast.error(err.response?.data?.msg || 'No se pudo desactivar el combo.'); 
+      }
       setShowConfirmModal(false);
     });
     setShowConfirmModal(true);
   };
+  // ==========================================================
   
   const handleUpdateStatus = async (pedidoId, nuevoEstado) => {
     try {
@@ -281,6 +300,8 @@ function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* ================== CAMBIO AQUÍ (3 de 3) ================== */}
       {!loading && !error && activeTab === 'combos' && (
         <div>
           <div className="d-flex justify-content-between align-items-center mb-4">
@@ -290,17 +311,29 @@ function AdminPage() {
           <div className="table-responsive">
             <table className="table table-hover align-middle">
               <thead className="table-dark">
-                <tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Acciones</th></tr>
+                {/* Añadimos la columna "Visible" */}
+                <tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Visible</th><th>Acciones</th></tr>
               </thead>
               <tbody>
                 {combos.map((combo) => (
-                  <tr key={combo.id}>
+                  // Si el combo está inactivo, le ponemos una clase para atenuarlo
+                  <tr key={combo.id} className={!combo.esta_activo ? 'text-muted opacity-50' : ''}>
                     <td>{combo.id}</td>
-                    <td>{combo.titulo}</td>
+                    {/* Usamos 'nombre' que viene de la DB (la nueva ruta ya no manda 'titulo') */}
+                    <td>{combo.nombre}</td>
                     <td>${Number(combo.precio).toFixed(2)}</td>
+                    {/* Mostramos el estado de visibilidad */}
+                    <td>
+                      <span className={`badge ${combo.esta_activo ? 'bg-success' : 'bg-danger'}`}>
+                        {combo.esta_activo ? 'Sí' : 'No'}
+                      </span>
+                    </td>
                     <td>
                       <button className="btn btn-sm btn-outline-warning me-2" onClick={() => handleOpenComboModal(combo)}>Editar</button>
-                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteCombo(combo)}>Eliminar</button>
+                      {/* Solo mostramos "Eliminar" si el combo está activo */}
+                      {combo.esta_activo && (
+                        <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteCombo(combo)}>Eliminar</button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -309,6 +342,8 @@ function AdminPage() {
           </div>
         </div>
       )}
+      {/* ========================================================== */}
+      
       {!loading && !error && activeTab === 'reporteGeneral' && (
         <div>
           {reportData.length > 0 ? <SalesReportChart reportData={reportData} /> : <p className="text-center">No hay datos de ventas para mostrar.</p>}

@@ -1,7 +1,8 @@
-// Archivo: src/components/ProductSalesReport.jsx (Versión Final)
+// Archivo: src/components/ProductSalesReport.jsx (CORREGIDO)
 
 import React, { useState } from 'react';
-import axios from 'axios';
+// --- 1. CAMBIA ESTA LÍNEA ---
+import apiClient from '../services/api'; // Importa tu cliente configurado
 import toast from 'react-hot-toast';
 
 function ProductSalesReport() {
@@ -26,17 +27,19 @@ function ProductSalesReport() {
     }
     setLoading(true);
     try {
-      // --- ¡URL CORREGIDA! ---
-      // Ahora usamos la URL relativa gracias a la configuración global de axios.
-      const res = await axios.get(`/api/ventas/reporte-productos`, {
-        params: fechas, // axios convertirá esto a ?inicio=FECHA&fin=FECHA
+      // --- 2. Y CAMBIA ESTA LÍNEA ---
+      // Ahora usamos apiClient, que SÍ tiene los interceptores
+      const res = await apiClient.get(`/ventas/reporte-productos`, {
+        params: fechas, 
       });
       setReporte(res.data);
       if (res.data.length === 0) {
         toast.success('No se encontraron ventas en el periodo seleccionado.');
       }
     } catch (err) {
-      toast.error('No se pudo generar el reporte.');
+      // Manejo de error mejorado
+      const errorMsg = err.response?.data?.msg || 'No se pudo generar el reporte.';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -46,6 +49,7 @@ function ProductSalesReport() {
     <div>
       <h1 className="mb-4">Reporte de Ventas por Producto</h1>
       <div className="card shadow-sm mb-4">
+        {/* ... (el resto de tu JSX es idéntico y está perfecto) ... */}
         <div className="card-body">
           <div className="row g-3 align-items-end">
             <div className="col-md-4">

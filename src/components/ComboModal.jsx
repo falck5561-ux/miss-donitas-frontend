@@ -18,16 +18,17 @@ function ComboModal({ show, handleClose, handleSave, comboActual }) {
         // Si estamos editando, llenamos el formulario con los datos existentes
         setFormData({
           id: comboActual.id,
-          titulo: comboActual.titulo || '',
+
+          // --- ¡CORRECCIÓN #1: LEER 'nombre'! ---
+          // Leemos 'nombre' del combo, pero lo guardamos en el estado 'titulo'
+          // para que el input 'name="titulo"' funcione.
+          titulo: comboActual.nombre || '', 
+          
           descripcion: comboActual.descripcion || '',
           precio: comboActual.precio || '',
           imagenes: (comboActual.imagenes && comboActual.imagenes.length > 0) ? comboActual.imagenes : [''],
           descuento_porcentaje: comboActual.descuento_porcentaje || 0,
-          // --- ¡CORRECCIÓN APLICADA AQUÍ! ---
-          // Hacemos el componente más robusto.
-          // Lee 'oferta_activa', pero si no existe, usa 'en_oferta' como respaldo.
           oferta_activa: comboActual.oferta_activa !== undefined ? comboActual.oferta_activa : (comboActual.en_oferta || false),
-          // Hacemos lo mismo para la visibilidad del combo.
           activa: comboActual.activa !== undefined ? comboActual.activa : (comboActual.esta_activo !== undefined ? comboActual.esta_activo : true),
         });
       } else {
@@ -43,7 +44,7 @@ function ComboModal({ show, handleClose, handleSave, comboActual }) {
         });
       }
     }
-  }, [comboActual, show]);
+  }, [comboActual, show]); // Se ejecuta cuando el modal se muestra o el combo cambia
 
   if (!show) return null;
 
@@ -73,10 +74,17 @@ function ComboModal({ show, handleClose, handleSave, comboActual }) {
 
   const onSave = (e) => {
     e.preventDefault();
+    
+    // --- ¡CORRECCIÓN #2: ENVIAR 'nombre'! ---
     const cleanedData = {
       ...formData,
+      // Renombramos 'titulo' (del estado) a 'nombre' (para el backend)
+      nombre: formData.titulo, 
       imagenes: formData.imagenes.filter(url => url && url.trim() !== ''),
     };
+    // Eliminamos la propiedad 'titulo' que ya no necesitamos
+    delete cleanedData.titulo; 
+    
     handleSave(cleanedData);
   };
 
@@ -93,6 +101,7 @@ function ComboModal({ show, handleClose, handleSave, comboActual }) {
               {/* Campos de Título, Descripción, Precio e Imágenes */}
               <div className="mb-3">
                 <label htmlFor="titulo" className="form-label">Título del Combo</label>
+                {/* Este input sigue usando 'name="titulo"' y 'value={formData.titulo}', lo cual está perfecto */}
                 <input type="text" className="form-control" id="titulo" name="titulo" value={formData.titulo} onChange={handleChange} required />
               </div>
               <div className="mb-3">
@@ -114,7 +123,7 @@ function ComboModal({ show, handleClose, handleSave, comboActual }) {
                 <button type="button" className="btn btn-outline-primary btn-sm mt-2" onClick={handleAddImageField}>Añadir URL de Imagen</button>
               </div>
 
-              {/* --- SECCIÓN CORREGIDA CON DOS INTERRUPTORES --- */}
+              {/* --- SECCIÓN DE INTERRUPTORES (Esta ya estaba bien) --- */}
               <div className="p-3 border rounded">
                   <h6 className="mb-3">Configuración de Oferta y Visibilidad</h6>
                   <div className="mb-3">
@@ -148,4 +157,3 @@ function ComboModal({ show, handleClose, handleSave, comboActual }) {
 }
 
 export default ComboModal;
-

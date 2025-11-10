@@ -9,7 +9,7 @@ function ComboModal({ show, handleClose, handleSave, comboActual }) {
     imagenes: [''],
     descuento_porcentaje: 0,
     oferta_activa: false,  // Para activar/desactivar el descuento
-    activa: true,          // Para la visibilidad del combo
+    activa: true,         // Para la visibilidad del combo
   });
 
   useEffect(() => {
@@ -26,7 +26,7 @@ function ComboModal({ show, handleClose, handleSave, comboActual }) {
           
           descripcion: comboActual.descripcion || '',
           precio: comboActual.precio || '',
-          imagenes: (comboActual.imagenes && comboActual.imagenes.length > 0) ? comboActual.imagenes : [''],
+          imagenes: (comboActual.imagenes && comboActual.imagenes.length > 0) ? comboActual.imagenes : (comboActual.imagen_url ? [comboActual.imagen_url] : ['']),
           descuento_porcentaje: comboActual.descuento_porcentaje || 0,
           oferta_activa: comboActual.oferta_activa !== undefined ? comboActual.oferta_activa : (comboActual.en_oferta || false),
           activa: comboActual.activa !== undefined ? comboActual.activa : (comboActual.esta_activo !== undefined ? comboActual.esta_activo : true),
@@ -72,21 +72,27 @@ function ComboModal({ show, handleClose, handleSave, comboActual }) {
     setFormData({ ...formData, imagenes: newImages });
   };
 
+  // ==========================================
+  // ¡AQUÍ ESTÁ LA CORRECCIÓN DEL ERROR 400!
+  // ==========================================
   const onSave = (e) => {
     e.preventDefault();
     
-    // --- ¡CORRECCIÓN #2: ENVIAR 'nombre'! ---
+    // Limpiamos las URLs de imagen vacías
     const cleanedData = {
       ...formData,
-      // Renombramos 'titulo' (del estado) a 'nombre' (para el backend)
-      nombre: formData.titulo, 
       imagenes: formData.imagenes.filter(url => url && url.trim() !== ''),
     };
-    // Eliminamos la propiedad 'titulo' que ya no necesitamos
-    delete cleanedData.titulo; 
+
+    // NO borramos 'titulo'. El backend (combosController) 
+    // lo espera en req.body.titulo para la validación.
+    // delete cleanedData.titulo;  <-- ESTA LÍNEA SE ELIMINÓ
     
+    // Enviamos 'cleanedData' que ahora SÍ contiene 'titulo' y 'precio'
     handleSave(cleanedData);
   };
+  // ==========================================
+
 
   return (
     <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -117,37 +123,37 @@ function ComboModal({ show, handleClose, handleSave, comboActual }) {
                 {formData.imagenes.map((url, index) => (
                   <div key={index} className="d-flex align-items-center mb-2">
                     <input type="text" className="form-control me-2" placeholder="https://ejemplo.com/imagen.jpg" value={url} onChange={(e) => handleImageChange(index, e.target.value)} />
-                    <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => handleRemoveImageField(index)} disabled={formData.imagenes.length <= 1}>&times;</button>
+                    <button type="button" className="btn-outline-danger btn-sm" onClick={() => handleRemoveImageField(index)} disabled={formData.imagenes.length <= 1}>&times;</button>
                   </div>
                 ))}
-                <button type="button" className="btn btn-outline-primary btn-sm mt-2" onClick={handleAddImageField}>Añadir URL de Imagen</button>
+                <button type="button" className="btn-outline-primary btn-sm mt-2" onClick={handleAddImageField}>Añadir URL de Imagen</button>
               </div>
 
               {/* --- SECCIÓN DE INTERRUPTORES (Esta ya estaba bien) --- */}
               <div className="p-3 border rounded">
-                  <h6 className="mb-3">Configuración de Oferta y Visibilidad</h6>
-                  <div className="mb-3">
-                    <label htmlFor="descuento_porcentaje" className="form-label">Porcentaje de Descuento (%)</label>
-                    <input type="number" className="form-control" id="descuento_porcentaje" name="descuento_porcentaje" value={formData.descuento_porcentaje} onChange={handleChange} />
-                  </div>
-                  
-                  {/* Interruptor para el DESCUENTO */}
-                  <div className="form-check form-switch mb-2">
-                    <input className="form-check-input" type="checkbox" role="switch" id="oferta_activa" name="oferta_activa" checked={formData.oferta_activa} onChange={handleChange} />
-                    <label className="form-check-label" htmlFor="oferta_activa">Activar Descuento</label>
-                  </div>
+                <h6 className="mb-3">Configuración de Oferta y Visibilidad</h6>
+                <div className="mb-3">
+                  <label htmlFor="descuento_porcentaje" className="form-label">Porcentaje de Descuento (%)</label>
+                  <input type="number" className="form-control" id="descuento_porcentaje" name="descuento_porcentaje" value={formData.descuento_porcentaje} onChange={handleChange} />
+                </div>
+                
+                {/* Interruptor para el DESCUENTO */}
+                <div className="form-check form-switch mb-2">
+                  <input className="form-check-input" type="checkbox" role="switch" id="oferta_activa" name="oferta_activa" checked={formData.oferta_activa} onChange={handleChange} />
+                  <label className="form-check-label" htmlFor="oferta_activa">Activar Descuento</label>
+                </div>
 
-                  {/* Interruptor para la VISIBILIDAD */}
-                  <div className="form-check form-switch">
-                    <input className="form-check-input" type="checkbox" role="switch" id="activa" name="activa" checked={formData.activa} onChange={handleChange} />
-                    <label className="form-check-label" htmlFor="activa">Combo Visible para Clientes</label>
-                  </div>
+                {/* Interruptor para la VISIBILIDAD */}
+                <div className="form-check form-switch">
+                  <input className="form-check-input" type="checkbox" role="switch" id="activa" name="activa" checked={formData.activa} onChange={handleChange} />
+                  <label className="form-check-label" htmlFor="activa">Combo Visible para Clientes</label>
+                </div>
               </div>
 
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={handleClose}>Cancelar</button>
-              <button type="submit" className="btn btn-primary">Guardar Cambios</button>
+              <button type="button" className="btn-secondary" onClick={handleClose}>Cancelar</button>
+              <button type="submit" className="btn-primary">Guardar Cambios</button>
             </div>
           </form>
         </div>

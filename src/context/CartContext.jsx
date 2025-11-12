@@ -11,65 +11,87 @@ export const CartProvider = ({ children }) => {
 
   // Calcula el subtotal cada vez que el carrito cambia.
   useEffect(() => {
+    // 🚨 CAMBIO: Esta función ahora funcionará correctamente porque
+    // nos aseguraremos de que 'item.precio' tenga el precio final.
     const nuevoSubtotal = pedidoActual.reduce((sum, item) => sum + (item.cantidad * Number(item.precio)), 0);
     setSubtotal(nuevoSubtotal);
   }, [pedidoActual]);
 
   const agregarProductoAPedido = (producto) => {
-    // 1. VALIDACIÓN: Nos aseguramos de que el producto sea válido.
-    if (!producto || typeof producto.id === 'undefined' || typeof producto.precio === 'undefined') {
+    // 1. VALIDACIÓN: (Sin cambios)
+    if (!producto || typeof producto.id === 'undefined' || (typeof producto.precio === 'undefined' && typeof producto.precioFinal === 'undefined') ) {
       console.error("Intento de agregar un producto inválido al carrito:", producto);
       toast.error("Este producto no se puede agregar.");
-      return; // Detenemos la función si el producto no es válido.
+      return;
     }
 
+    // 🚨 CAMBIO: Usamos 'cartItemId' (que envía el modal) como ID único.
+    // Si no existe (es un producto simple), usamos el 'id' normal.
+    const idUnico = producto.cartItemId || producto.id;
+
     setPedidoActual(prevPedido => {
-      const productoExistente = prevPedido.find(item => item.id === producto.id);
+      // 🚨 CAMBIO: Buscamos el producto por su ID único.
+      const productoExistente = prevPedido.find(item => (item.cartItemId || item.id) === idUnico);
 
       if (productoExistente) {
-        // Si el producto ya existe, solo incrementamos su cantidad.
+        // Si el producto ya existe (mismo producto, mismos toppings), incrementamos cantidad.
         return prevPedido.map(item =>
-          item.id === producto.id
+          (item.cartItemId || item.id) === idUnico
             ? { ...item, cantidad: item.cantidad + 1 }
             : item
         );
       } else {
-        // Si es un producto nuevo, lo añadimos al carrito con cantidad 1.
-        // El precio ya viene calculado desde la página de productos.
-        return [...prevPedido, { ...producto, cantidad: 1 }];
+        // Si es un producto nuevo...
+        
+        // 🚨 CAMBIO: Creamos el objeto para guardar.
+        // Forzamos que 'precio' sea el 'precioFinal' que envió el modal.
+        // Así, el resto de la app (como el useEffect) sigue funcionando.
+        const itemParaGuardar = {
+          ...producto,
+          precio: producto.precioFinal || producto.precio, // Usa precioFinal SI EXISTE
+          cantidad: 1
+        };
+
+        // (Opcional) Limpiamos la propiedad duplicada para evitar confusión
+        delete itemParaGuardar.precioFinal; 
+
+        return [...prevPedido, itemParaGuardar];
       }
     });
 
-    // 2. NOTIFICACIÓN: Informamos al usuario que el producto se agregó con éxito.
+    // 2. NOTIFICACIÓN: (Sin cambios)
     toast.success(`${producto.nombre} agregado al carrito`);
   };
 
-  const incrementarCantidad = (productoId) => {
+  // 🚨 CAMBIO: Estas funciones ahora deben usar el 'idUnico'
+  // (que puede ser 'cartItemId' o 'id')
+  
+  const incrementarCantidad = (idUnico) => {
     setPedidoActual(prev => 
       prev.map(item => 
-        item.id === productoId ? { ...item, cantidad: item.cantidad + 1 } : item
+        (item.cartItemId || item.id) === idUnico ? { ...item, cantidad: item.cantidad + 1 } : item
       )
     );
   };
 
-  const decrementarCantidad = (productoId) => {
+  const decrementarCantidad = (idUnico) => {
     setPedidoActual(prev => {
-      const productoEncontrado = prev.find(item => item.id === productoId);
+      const productoEncontrado = prev.find(item => (item.cartItemId || item.id) === idUnico);
 
-      // Si la cantidad es 1, al decrementar se elimina del carrito.
+      // Si la cantidad es 1, se elimina 
       if (productoEncontrado?.cantidad === 1) {
-        return prev.filter(item => item.id !== productoId);
+        return prev.filter(item => (item.cartItemId || item.id) !== idUnico);
       }
       
-      // Si la cantidad es mayor a 1, solo se resta.
+      // Si es mayor, se resta
       return prev.map(item => 
-        item.id === productoId ? { ...item, cantidad: item.cantidad - 1 } : item
+        (item.cartItemId || item.id) === idUnico ? { ...item, cantidad: item.cantidad - 1 } : item
       );
     });
   };
 
-  const eliminarProducto = (productoId) => {
-    setPedidoActual(prev => prev.filter(item => item.id !== productoId));
+  const eliminarProducto = (idUnico) => {
+    setPedidoActual(prev => prev.filter(item => (item.cartItemId || item.id) !== idUnico));
     toast.error("Producto eliminado del carrito.");
   };
 
@@ -77,7 +99,6 @@ export const CartProvider = ({ children }) => {
     setPedidoActual([]);
   };
 
-  // Valores que se expondrán a los componentes que usen este contexto.
   const value = {
     pedidoActual,
     subtotal,

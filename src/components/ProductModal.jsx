@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../services/api';
 import toast from 'react-hot-toast';
 
-// --- Componente Interno para la Tarjeta de Grupo de Opciones (CORREGIDO) ---
+// --- Componente Interno para la Tarjeta de Grupo de Opciones ---
 function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDeleted, theme }) {
   const [nombreOpcion, setNombreOpcion] = useState('');
   const [precioOpcion, setPrecioOpcion] = useState(0);
@@ -11,9 +11,7 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
   const inputClass = theme === 'dark' ? 'form-control form-control-dark bg-dark text-white' : 'form-control';
   const listGroupClass = theme === 'dark' ? 'list-group-item bg-dark text-white border-secondary' : 'list-group-item';
 
-  // 🚨 CAMBIO: Eliminamos el parámetro 'e' (evento) y el 'e.preventDefault()'
   const handleAddOption = async () => {
-    // e.preventDefault(); // <-- 🚨 CAMBIO: Ya no es necesario
     if (!nombreOpcion.trim()) return toast.error('El nombre de la opción no puede estar vacío.');
     try {
       const optionData = { nombre: nombreOpcion, precio_adicional: parseFloat(precioOpcion) || 0 };
@@ -29,7 +27,6 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
   };
 
   const handleDeleteOption = async (opcionId) => {
-    // ... (sin cambios)
     if (!window.confirm('¿Seguro que quieres eliminar esta opción?')) return;
     try {
       await apiClient.delete(`/productos/opciones/${opcionId}`);
@@ -42,7 +39,6 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
   };
 
   const handleDeleteGroup = async () => {
-    // ... (sin cambios)
     if (!window.confirm(`¿Seguro que quieres eliminar el grupo "${grupo.nombre}" y todas sus opciones?`)) return;
     try {
       await apiClient.delete(`/productos/grupos/${grupo.id}`);
@@ -57,7 +53,6 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
   return (
     <div className={`${cardClass} mb-4`}>
       <div className="card-header d-flex justify-content-between align-items-center">
-        {/* ... (sin cambios) */}
         <span>Grupo: <strong>{grupo.nombre}</strong> (Selección: {grupo.tipo_seleccion})</span>
         <button type="button" className="btn btn-sm btn-outline-danger" onClick={handleDeleteGroup}>
           Eliminar Grupo
@@ -65,7 +60,6 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
       </div>
       <div className="card-body">
         <h6 className="card-title">Opciones existentes:</h6>
-        {/* ... (sin cambios en la lista) */}
         {grupo.opciones && grupo.opciones.length > 0 ? (
           <ul className="list-group list-group-flush mb-3">
             {grupo.opciones.map(op => (
@@ -83,7 +77,6 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
         <hr />
         <h6 className="card-title">Añadir nueva opción:</h6>
         
-        {/* 🚨 CAMBIO: Cambiamos <form> por <div> */}
         <div className="row g-2">
           <div className="col-md-6">
             <input
@@ -105,10 +98,9 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
             />
           </div>
           <div className="col-md-2 d-flex align-items-end">
-            {/* 🚨 CAMBIO: Cambiamos type="submit" por type="button" y añadimos onClick */}
             <button type="button" onClick={handleAddOption} className="btn btn-primary btn-sm w-100">Añadir</button>
           </div>
-        </div> {/* 🚨 CAMBIO: Cierre del <div> */}
+        </div>
       </div>
     </div>
   );
@@ -136,20 +128,37 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
   const [nombreGrupo, setNombreGrupo] = useState('');
   const [tipoSeleccion, setTipoSeleccion] = useState('unico');
 
-  // ... (useEffect y otros manejadores sin cambios) ...
+  // 🚨 AQUÍ ESTÁ LA CORRECCIÓN PRINCIPAL 🚨
   useEffect(() => {
     if (show) {
       if (productoActual) {
-        setFormData(productoActual); 
+        // 1. Cargamos la data básica inmediata para que el usuario vea algo
+        setFormData(productoActual);
         
-        if (productoActual.grupos_opciones && productoActual.grupos_opciones.length > 0) {
-          setGrupos(productoActual.grupos_opciones);
-          setGestionarOpciones(true); 
-        } else {
-          setGrupos([]);
-          setGestionarOpciones(false);
-        }
+        // 2. Solicitamos al Backend los detalles COMPLETOS (Grupos y Opciones)
+        setLoadingGrupos(true);
+        apiClient.get(`/productos/${productoActual.id}`)
+          .then(res => {
+            const productoCompleto = res.data;
+            if (productoCompleto.grupos_opciones && productoCompleto.grupos_opciones.length > 0) {
+              setGrupos(productoCompleto.grupos_opciones);
+              setGestionarOpciones(true); // Activamos el switch si hay grupos
+            } else {
+              setGrupos([]);
+              setGestionarOpciones(false);
+            }
+          })
+          .catch(err => {
+            console.error("Error cargando detalles del producto:", err);
+            toast.error("No se pudieron cargar las opciones del producto");
+            setGrupos([]);
+          })
+          .finally(() => {
+            setLoadingGrupos(false);
+          });
+
       } else {
+        // Modo Crear Nuevo
         setFormData({
           nombre: '',
           descripcion: '',
@@ -162,6 +171,7 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
         });
         setGrupos([]);
         setGestionarOpciones(false);
+        setLoadingGrupos(false);
       }
     }
   }, [productoActual, show]);
@@ -214,9 +224,7 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
 
   // --- Manejadores para Grupos y Opciones ---
 
-  // 🚨 CAMBIO: Eliminamos el parámetro 'e' (evento) y el 'e.preventDefault()'
   const handleAddGroup = async () => {
-    // e.preventDefault(); // <-- 🚨 CAMBIO: Ya no es necesario
     if (!productoActual?.id) {
       return toast.error('Guarda el producto antes de añadir grupos.');
     }
@@ -237,21 +245,18 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
   };
 
   const handleOptionAdded = (grupoId, nuevaOpcion) => {
-    // ... (sin cambios)
     setGrupos(gruposActuales => gruposActuales.map(g =>
       g.id === grupoId ? { ...g, opciones: [...g.opciones, nuevaOpcion] } : g
     ));
   };
 
   const handleOptionDeleted = (grupoId, opcionId) => {
-    // ... (sin cambios)
     setGrupos(gruposActuales => gruposActuales.map(g =>
       g.id === grupoId ? { ...g, opciones: g.opciones.filter(o => o.id !== opcionId) } : g
     ));
   };
 
   const handleGroupDeleted = (grupoId) => {
-    // ... (sin cambios)
     setGrupos(gruposActuales => gruposActuales.filter(g => g.id !== grupoId));
   };
   // --- Fin Manejadores Grupos y Opciones ---
@@ -264,21 +269,16 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
       <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div className={modalContentClass}> 
           
-          {/* Header del Modal (fuera del form) */}
           <div className="modal-header border-secondary">
             <h5 className="modal-title">{formData.id ? 'Editar Producto' : 'Añadir Nuevo Producto'}</h5>
             <button type="button" className="btn-close btn-close-white" onClick={handleClose}></button>
           </div>
           
-          {/* * Este es el <form> PRINCIPAL. Solo debe haber UNO.
-            * Envuelve el body y el footer.
-            */}
           <form onSubmit={onSave} className="d-flex flex-column flex-grow-1" style={{ minHeight: "0" }}>
             
             <div className="modal-body">
               
               {/* --- CAMPOS BÁSICOS DEL PRODUCTO --- */}
-              {/* ... (sin cambios aquí) ... */}
               <div className="mb-3">
                 <label className="form-label">Nombre del Producto</label>
                 <input type="text" className="form-control" name="nombre" value={formData.nombre || ''} onChange={handleChange} required />
@@ -334,7 +334,6 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
               <div className="card text-bg-dark border-secondary">
                 <div className="card-body">
                   <div className="form-check form-switch fs-5">
-                    {/* ... (switch sin cambios) ... */}
                     <input 
                       className="form-check-input" 
                       type="checkbox" 
@@ -357,7 +356,6 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
                       <div className="p-3 mb-4 border rounded text-bg-dark border-secondary"> 
                         <h5 className="mb-3">Crear Nuevo Grupo</h5>
                         
-                        {/* 🚨 CAMBIO: Cambiamos <form> por <div> */}
                         <div className="row g-3">
                           <div className="col-md-5">
                             <label className="form-label">Nombre del Grupo</label>
@@ -371,17 +369,16 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
                             </select>
                           </div>
                           <div className="col-md-3 d-flex align-items-end">
-                            {/* 🚨 CAMBIO: Cambiamos type="submit" por type="button" y añadimos onClick */}
                             <button type="button" onClick={handleAddGroup} className="btn btn-success w-100">Crear Grupo</button>
                           </div>
-                        </div> {/* 🚨 CAMBIO: Cierre del <div> */}
+                        </div>
                       </div>
 
                       <hr className="border-secondary" />
 
                       {/* Lista de Grupos Existentes */}
                       {loadingGrupos ? (
-                        <div className="text-center"><div className="spinner-border" role="status"></div></div>
+                        <div className="text-center my-3"><div className="spinner-border text-light" role="status"></div><p className="mt-2">Cargando opciones...</p></div>
                       ) : (
                         grupos.length > 0 ? (
                           grupos.map(grupo => (
@@ -407,11 +404,10 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
             
             <div className="modal-footer border-secondary">
               <button type="button" className="btn btn-secondary" onClick={handleClose}>Cancelar</button>
-              {/* Este botón SÍ debe ser type="submit" porque es del <form> principal */}
               <button type="submit" className="btn btn-primary">Guardar Cambios</button>
             </div>
 
-          </form> {/* Fin <form> principal */}
+          </form>
 
         </div>
       </div>

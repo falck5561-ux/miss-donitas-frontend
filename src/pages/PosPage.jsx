@@ -1,16 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-// --- Usando rutas relativas estándar ---
 import apiClient from '../services/api';
 import DetallesPedidoModal from '../components/DetallesPedidoModal';
-
-// --- NUEVO ---
-// 1. Importamos el modal de detalles del producto
 import ProductDetailModal from '../components/ProductDetailModal';
-// --- CAMBIO 1: Importa el nuevo modal ---
 import PaymentMethodModal from '../components/PaymentMethodModal';
-
 
 function PosPage() {
   const [activeTab, setActiveTab] = useState('pos');
@@ -27,11 +21,9 @@ function PosPage() {
   const [clienteEncontrado, setClienteEncontrado] = useState(null);
   const [recompensaAplicadaId, setRecompensaAplicadaId] = useState(null);
 
-  // --- NUEVO ---
-  // 2. Añadimos el estado para controlar el modal de productos
+  // Estado para controlar el modal de productos
   const [productoSeleccionadoParaModal, setProductoSeleccionadoParaModal] = useState(null);
-
-  // --- CAMBIO 2: Añadir estado para el modal de pago ---
+  // Estado para el modal de pago
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const fetchData = async () => {
@@ -47,7 +39,6 @@ function PosPage() {
         const estandarizarItem = (item) => {
           const precioFinal = Number(item.precio);
           let precioOriginal = precioFinal;
-          // Asigna categoría, asegurando que sea string
           const categoria = item.categoria?.nombre || item.categoria || 'General';
 
           if (item.en_oferta && item.descuento_porcentaje > 0) {
@@ -56,7 +47,7 @@ function PosPage() {
 
           return {
             ...item,
-            categoria: String(categoria), // Forzar a string por si acaso
+            categoria: String(categoria),
             precio: precioFinal,
             precio_original: precioOriginal,
             nombre: item.nombre || item.titulo,
@@ -65,7 +56,6 @@ function PosPage() {
 
         const productosEstandarizados = productosRes.data.map(estandarizarItem);
         const combosEstandarizados = combosRes.data.map(estandarizarItem);
-
         setMenuItems([...productosEstandarizados, ...combosEstandarizados]);
 
       } else if (activeTab === 'pedidos') {
@@ -89,98 +79,97 @@ function PosPage() {
     setTotalVenta(nuevoTotal);
   }, [ventaActual]);
 
+  // 🚨 CORRECCIÓN PRINCIPAL: Lógica de Agregado Inteligente
   const agregarProductoAVenta = (item) => {
-    // --- LÓGICA DEL MODAL ---
-    // El 'item' que viene del modal de detalles (cuando tiene opciones)
-    // puede traer 'opcionesSeleccionadas' y un 'precio' (total) actualizado.
+    // 1. Determinar el ID ÚNICO del ticket (idUnicoTicket)
+    // Intentamos usar el que viene del modal (cartItemId)
+    let idUnicoTicket = item.cartItemId;
+
+    if (!idUnicoTicket) {
+      // Si no trae ID (agregado directo desde la tarjeta), lo calculamos:
+      const tieneOpciones = item.opcionesSeleccionadas && item.opcionesSeleccionadas.length > 0;
+      
+      if (tieneOpciones) {
+        // Si tiene toppings, FORZAMOS una línea nueva usando un timestamp
+        idUnicoTicket = `${item.id}-POS-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      } else {
+        // Si NO tiene opciones (producto simple), usamos su ID original para que SÍ se agrupen
+        idUnicoTicket = String(item.id);
+      }
+    }
     
-    // Si el 'item' viene del modal SIN OPCIONES,
-    // 'item.opcionesSeleccionadas' será undefined.
-    // Si el 'item' viene del modal CON OPCIONES,
-    // 'item.opcionesSeleccionadas' será un array.
-    
-    const tieneOpciones = item.opcionesSeleccionadas && item.opcionesSeleccionadas.length > 0;
-    
-    // El precioFinal es el 'precio' que viene del modal (que ya es el total)
-    // o el precio base del item.
+    // Aseguramos que sea string para comparar fácil
+    idUnicoTicket = String(idUnicoTicket);
     const precioFinal = Number(item.precio); 
 
     setVentaActual(prevVenta => {
-      
-      // ID Único para el ticket
-      // Si tiene opciones, creamos un ID único para que no se agrupe
-      // Si NO tiene opciones, usamos el ID normal para que SÍ se agrupe
-      const idUnicoTicket = tieneOpciones ? `${item.id}-${Date.now()}` : item.id;
-      const esRecompensa = false; // Asumimos que nunca es recompensa al agregar
+      // 2. Buscamos si YA existe este ID ÚNICO en el ticket actual
+      // IMPORTANTE: La comparación es ESTRICTA por idUnicoTicket.
+      // Ya NO comparamos por p.id para evitar que un producto simple se fusione con uno complejo.
+      const indiceExistente = prevVenta.findIndex(p => String(p.idUnicoTicket) === idUnicoTicket && !p.esRecompensa);
 
-      const productoExistente = prevVenta.find(p => 
-        (p.idUnicoTicket === idUnicoTicket || (!tieneOpciones && p.id === item.id)) && 
-        !p.esRecompensa
-      );
-
-      if (productoExistente) {
-        // Si existe y no tiene opciones, agrupamos
-        return prevVenta.map(p =>
-          (p.idUnicoTicket === idUnicoTicket || (!tieneOpciones && p.id === item.id)) && !p.esRecompensa 
-            ? { ...p, cantidad: p.cantidad + 1 } 
-            : p
-        );
+      if (indiceExistente >= 0) {
+        // YA EXISTE -> Solo sumamos 1 a la cantidad
+        const nuevaVenta = [...prevVenta];
+        nuevaVenta[indiceExistente] = {
+          ...nuevaVenta[indiceExistente],
+          cantidad: nuevaVenta[indiceExistente].cantidad + 1
+        };
+        return nuevaVenta;
+      } else {
+        // NO EXISTE -> Agregamos una línea nueva
+        return [...prevVenta, {
+          ...item,
+          idUnicoTicket: idUnicoTicket, // Guardamos el ID que calculamos
+          cantidad: 1,
+          precioFinal: parseFloat(precioFinal).toFixed(2),
+          esRecompensa: false,
+          opcionesSeleccionadas: item.opcionesSeleccionadas || [] 
+        }];
       }
-      
-      // Si es nuevo o tiene opciones, lo añadimos como línea nueva
-      return [...prevVenta, {
-        ...item,
-        idUnicoTicket: idUnicoTicket, // Guardamos el ID único
-        cantidad: 1,
-        precioFinal: parseFloat(precioFinal).toFixed(2),
-        esRecompensa: esRecompensa,
-        // Guardamos las opciones para mostrarlas en el ticket (si las hay)
-        opcionesSeleccionadas: item.opcionesSeleccionadas || [] 
-      }];
     });
     
-    // Mostramos toast solo si el modal no lo hizo (agregado manual)
-    if (!item.opcionesSeleccionadas) {
-         toast.success(`${item.nombre} agregado al ticket`);
+    // Mostrar toast solo si no vino del modal (para no spamear)
+    if (!item.cartItemId) {
+       toast.success(`${item.nombre} agregado`);
     }
   };
 
-
-  const incrementarCantidad = (idUnicoTicket, id, esRecompensa) => {
+  // 🚨 CORRECCIÓN: Usar idUnicoTicket estrictamente en todas las acciones
+  const incrementarCantidad = (idUnicoTicket, esRecompensa) => {
     if (esRecompensa) return;
     setVentaActual(prev => prev.map(item =>
-      (item.idUnicoTicket === idUnicoTicket || item.id === id) && !item.esRecompensa 
+      (String(item.idUnicoTicket) === String(idUnicoTicket)) && !item.esRecompensa 
         ? { ...item, cantidad: item.cantidad + 1 } 
         : item
     ));
   };
 
-  const decrementarCantidad = (idUnicoTicket, id, esRecompensa) => {
+  const decrementarCantidad = (idUnicoTicket, esRecompensa) => {
     if (esRecompensa) return;
     setVentaActual(prev => {
-      const p = prev.find(item => (item.idUnicoTicket === idUnicoTicket || item.id === id) && !item.esRecompensa);
+      const p = prev.find(item => String(item.idUnicoTicket) === String(idUnicoTicket) && !item.esRecompensa);
       
       if (p && p.cantidad === 1) {
-        return prev.filter(item => !( (item.idUnicoTicket === idUnicoTicket || item.id === id) && !item.esRecompensa ));
+        return prev.filter(item => !(String(item.idUnicoTicket) === String(idUnicoTicket) && !item.esRecompensa));
       }
       
       return prev.map(item =>
-        (item.idUnicoTicket === idUnicoTicket || item.id === id) && !item.esRecompensa 
+        (String(item.idUnicoTicket) === String(idUnicoTicket)) && !item.esRecompensa 
           ? { ...item, cantidad: item.cantidad - 1 } 
           : item
       );
     });
   };
 
-  const eliminarProducto = (idUnicoTicket, id, esRecompensa) => {
+  const eliminarProducto = (idUnicoTicket, esRecompensa) => {
      setVentaActual(prev => prev.filter(item => 
-        !((item.idUnicoTicket === idUnicoTicket || item.id === id) && item.esRecompensa === esRecompensa)
+       !(String(item.idUnicoTicket) === String(idUnicoTicket) && item.esRecompensa === esRecompensa)
      ));
      if (esRecompensa) {
        setRecompensaAplicadaId(null);
      }
   };
-
 
   const limpiarVenta = () => {
     setVentaActual([]);
@@ -189,14 +178,11 @@ function PosPage() {
     setRecompensaAplicadaId(null);
   };
 
-  // --- CAMBIO 3: 'handleCobrar' ahora solo abre el modal ---
   const handleCobrar = () => {
     if (ventaActual.length === 0) return toast.error('El ticket está vacío.');
-    // Si el ticket no está vacío, abre el modal de pago
     setIsPaymentModalOpen(true);
   };
 
-  // --- CAMBIO 4: Creamos 'handleFinalizarVenta' ---
   const handleFinalizarVenta = async (metodoDePago) => {
     if (ventaActual.length === 0) return toast.error('El ticket está vacío.');
 
@@ -212,7 +198,6 @@ function PosPage() {
 
     const ventaData = {
       total: totalVenta,
-      // --- Usamos el método de pago que viene del modal ---
       metodo_pago: metodoDePago,
       items: itemsParaEnviar,
       clienteId: clienteEncontrado ? clienteEncontrado.cliente.id : null,
@@ -223,7 +208,7 @@ function PosPage() {
       await apiClient.post('/ventas', ventaData);
       toast.success('¡Venta registrada con éxito!');
       limpiarVenta();
-      setIsPaymentModalOpen(false); // Cerramos el modal de pago
+      setIsPaymentModalOpen(false);
       if (activeTab === 'historial') {
         fetchData();
       }
@@ -252,7 +237,6 @@ function PosPage() {
     }
   };
 
-  // --- FUNCIÓN 'handleAplicarRecompensa' (Lógica Final) ---
   const handleAplicarRecompensa = (recompensa) => {
     if (recompensaAplicadaId) {
       return toast.error('Ya se aplicó una recompensa en este ticket.');
@@ -262,45 +246,33 @@ function PosPage() {
     let precioMaximo = -1;
     const nombreRecompensaLower = recompensa.nombre ? recompensa.nombre.toLowerCase() : '';
 
-    // Buscar "pikulito" o "mojadito"
     if (nombreRecompensaLower.includes('pikulito') || nombreRecompensaLower.includes('mojadito')) {
-      const productosElegibles = ['Tito Pikulito', 'Tito Mojadito']; // Buscar por nombre exacto
-
+      const productosElegibles = ['Tito Pikulito', 'Tito Mojadito']; 
       ventaActual.forEach(item => {
         if (productosElegibles.includes(item.nombre) && !item.esRecompensa && Number(item.precioFinal) > precioMaximo) {
           precioMaximo = Number(item.precioFinal);
           itemParaDescontar = item;
         }
       });
-
-      if (!itemParaDescontar) {
-        return toast.error('Añade un Tito Pikulito o Tito Mojadito al ticket para aplicar la recompensa.');
-      }
+      if (!itemParaDescontar) return toast.error('Añade un Tito Pikulito o Tito Mojadito al ticket para aplicar la recompensa.');
 
     } else if (nombreRecompensaLower.includes('café') || nombreRecompensaLower.includes('frappe')) {
-      // Lógica vieja para café/frappe
       const productosElegibles = ['Café Americano', 'Frappe Coffee'];
-
       ventaActual.forEach(item => {
         if (productosElegibles.includes(item.nombre) && !item.esRecompensa && Number(item.precioFinal) > precioMaximo) {
           precioMaximo = Number(item.precioFinal);
           itemParaDescontar = item;
         }
       });
-
-      if (!itemParaDescontar) {
-        return toast.error('Añade un Café o Frappe al ticket para aplicar la recompensa.');
-      }
+      if (!itemParaDescontar) return toast.error('Añade un Café o Frappe al ticket para aplicar la recompensa.');
     } else {
-      console.warn("Recompensa no reconocida:", recompensa.nombre);
       return toast.error('No se reconoce el tipo de recompensa.');
     }
 
-    // Aplicar descuento
     setVentaActual(prevVenta => {
       let itemModificado = false;
       return prevVenta.map(item => {
-        if (!itemModificado && (item.idUnicoTicket === itemParaDescontar.idUnicoTicket || item.id === itemParaDescontar.id) && !item.esRecompensa) {
+        if (!itemModificado && String(item.idUnicoTicket) === String(itemParaDescontar.idUnicoTicket) && !item.esRecompensa) {
           itemModificado = true;
           return {
             ...item,
@@ -317,8 +289,7 @@ function PosPage() {
     toast.success('¡Recompensa aplicada!');
   };
 
-  // --- NUEVO ---
-  // 3. Handlers para el modal de producto
+  // Handlers para el modal de producto
   const handleProductClick = (item) => {
     setProductoSeleccionadoParaModal(item);
   };
@@ -340,7 +311,7 @@ function PosPage() {
           {pedidos.length === 0 ? <p>No hay pedidos pendientes.</p> : (
             <div className="table-responsive">
               <table className="table table-hover align-middle">
-                <thead><tr><th>ID</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <thead className="table-light"><tr><th>ID</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr></thead>
                 <tbody>
                   {pedidos.map((pedido) => (
                     <tr key={pedido.id}>
@@ -374,8 +345,6 @@ function PosPage() {
             <div className="row g-3">
               {menuItems.map(item => (
                 <div key={item.id} className="col-md-4 col-lg-3">
-                  {/* --- CAMBIO --- */}
-                  {/* 4. El onClick ahora llama a handleProductClick */}
                   <motion.div whileHover={{ scale: 1.05 }} className={`card h-100 text-center ${item.en_oferta ? 'border-danger' : ''}`} onClick={() => handleProductClick(item)} style={{ cursor: 'pointer', position: 'relative' }}>
                     {item.en_oferta && (<span className="badge bg-danger" style={{ position: 'absolute', top: '10px', right: '10px' }}>-{Number(item.descuento_porcentaje || 0).toFixed(0)}%</span>)}
                     <div className="card-body d-flex flex-column justify-content-center pt-4">
@@ -435,11 +404,10 @@ function PosPage() {
                       
                       <div className="me-auto" style={{ paddingRight: '10px' }}>
                         <span className={`me-auto ${item.esRecompensa ? 'text-success fw-bold' : ''}`}>{item.nombre}</span>
-                        {/* --- NUEVO: Mostrar opciones en el ticket --- */}
                         {item.opcionesSeleccionadas && item.opcionesSeleccionadas.length > 0 && (
                           <ul className="list-unstyled small text-muted mb-0" style={{ marginTop: '-3px' }}>
-                            {item.opcionesSeleccionadas.map(opcion => (
-                              <li key={opcion.id}>+ {opcion.nombre}</li>
+                            {item.opcionesSeleccionadas.map((opcion, idx) => (
+                              <li key={idx}>+ {opcion.nombre}</li>
                             ))}
                           </ul>
                         )}
@@ -459,7 +427,6 @@ function PosPage() {
                 {/* Total y Botones */}
                 <h4>Total: ${totalVenta.toFixed(2)}</h4>
                 <div className="d-grid gap-2 mt-3">
-                  {/* --- CAMBIO 5: Confirmado, onClick llama a handleCobrar --- */}
                   <button className="btn btn-success" onClick={handleCobrar} disabled={ventaActual.length === 0}>Cobrar</button>
                   <button className="btn btn-danger" onClick={limpiarVenta}>Cancelar Venta</button>
                 </div>
@@ -510,8 +477,7 @@ function PosPage() {
       {/* Modal para Detalles del Pedido */}
       {showDetailsModal && (<DetallesPedidoModal pedido={selectedOrderDetails} onClose={handleCloseDetailsModal} />)}
 
-      {/* --- NUEVO --- */}
-      {/* 5. Renderizamos el modal de producto aquí */}
+      {/* --- Renderizamos el modal de producto aquí --- */}
       {productoSeleccionadoParaModal && (
         <ProductDetailModal
           product={productoSeleccionadoParaModal}
@@ -520,7 +486,7 @@ function PosPage() {
         />
       )}
 
-      {/* --- CAMBIO 6: Renderizar el nuevo modal de pago --- */}
+      {/* --- Renderizar el nuevo modal de pago --- */}
       {isPaymentModalOpen && (
         <PaymentMethodModal
           total={totalVenta}

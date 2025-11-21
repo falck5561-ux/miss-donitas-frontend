@@ -1,9 +1,11 @@
-import React, { useContext, useState, useEffect, useCallback } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import AuthContext from '../context/AuthContext';
 import { getProductById } from '../services/productService'; 
 
-// (Los estilos no cambian)
+// Detectar si es móvil para ajustar estilos (simple check)
+const isMobile = window.innerWidth <= 768;
+
 const modalStyles = {
   backdrop: {
     position: 'fixed',
@@ -18,7 +20,7 @@ const modalStyles = {
     zIndex: 1050,
   },
   content: {
-    width: '90%',
+    width: isMobile ? '95%' : '90%', // En móvil usa casi todo el ancho
     maxWidth: '500px',
     background: 'var(--bs-card-bg)',
     borderRadius: '15px',
@@ -27,18 +29,20 @@ const modalStyles = {
     flexDirection: 'column',
     color: 'var(--bs-body-color)',
     boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+    margin: isMobile ? '10px' : '0', // Margen seguro en móviles
   },
   header: {
     position: 'relative',
     width: '100%',
-    height: '250px',
+    height: isMobile ? '180px' : '250px', // Imagen un poco más chica en móvil
+    flexShrink: 0,
   },
   body: {
-    padding: '1.5rem 2rem 2rem 2rem',
+    padding: '1.5rem',
     overflowY: 'auto',
   },
   footer: {
-    padding: '1.5rem 2rem',
+    padding: '1rem 1.5rem',
     borderTop: '1px solid var(--bs-border-color)',
     backgroundColor: 'var(--bs-tertiary-bg)',
     borderBottomLeftRadius: '15px',
@@ -74,25 +78,28 @@ const modalStyles = {
   productTitle: {
     fontFamily: "'Playfair Display', serif",
     marginBottom: '0.5rem',
+    fontSize: isMobile ? '1.5rem' : '2rem', // Título más chico en móvil
   },
   productDescription: {
-    margin: '1rem 0',
-    fontSize: '1rem',
-    lineHeight: '1.6',
+    margin: '0.5rem 0 1rem 0',
+    fontSize: '0.95rem',
+    lineHeight: '1.5',
+    color: 'var(--bs-secondary-color)',
   },
   optionsContainer: {
-    marginTop: '1.5rem',
+    marginTop: '1rem',
   },
   optionGroup: {
-    marginBottom: '1.5rem',
-    padding: '1rem',
+    marginBottom: '1rem',
+    padding: '0.75rem',
     border: '1px solid var(--bs-border-color)',
     borderRadius: '8px',
+    backgroundColor: 'var(--bs-body-bg)',
   },
   optionGroupTitle: {
     fontWeight: 'bold',
-    marginBottom: '0.75rem',
-    fontSize: '1.1rem',
+    marginBottom: '0.5rem',
+    fontSize: '1rem',
     color: 'var(--bs-heading-color)',
   },
 };
@@ -132,7 +139,7 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
   }, [product, onAddToCart, onClose]);
 
   
-  // --- 2. EFECTO PARA CALCULAR EL PRECIO TOTAL (Corregido) ---
+  // --- 2. EFECTO PARA CALCULAR EL PRECIO TOTAL ---
   useEffect(() => {
     if (!fullProduct) return;
 
@@ -156,7 +163,7 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
 
   }, [fullProduct, selectedOptions]);
 
-  // --- 3. MANEJADORES DE SELECCIÓN (Sin cambios) ---
+  // --- 3. MANEJADORES DE SELECCIÓN ---
   const handleRadioChange = (grupo, opcion) => {
     setSelectedOptions(prev => ({
       ...prev,
@@ -181,7 +188,7 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
     });
   };
 
-  // --- 4. MANEJADOR PARA AÑADIR AL CARRITO (Corregido) ---
+  // --- 4. MANEJADOR PARA AÑADIR AL CARRITO ---
   const handleAddToCart = () => {
     const opcionesParaCarrito = [];
     fullProduct.grupos_opciones?.forEach(grupo => {
@@ -200,6 +207,7 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
       ...fullProduct,
       precio: totalPrice, 
       opcionesSeleccionadas: opcionesParaCarrito,
+      // ID ÚNICO: Combinamos ID producto + Timestamp para evitar que se mezclen
       cartItemId: tieneOpciones ? `${fullProduct.id}-${Date.now()}` : null 
     };
 
@@ -218,15 +226,11 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
   const placeholderImage = `https://placehold.co/500x250/333333/CCCCCC?text=${encodeURIComponent(fullProduct.nombre)}`;
 
   
-  // 🚨 SOLUCIÓN BUG 2 (Estético):
-  // Si está cargando, no retornamos NADA.
-  // Esto evita el "flash" del spinner en los productos sin opciones.
-  // El modal solo se renderizará cuando SÍ tenga opciones y esté listo.
+  // Si está cargando, no retornamos NADA (evita el flash)
   if (loadingToppings) {
     return null;
   }
   
-  // Si no está cargando (y tiene opciones), muestra el modal:
   return (
     <motion.div
       style={modalStyles.backdrop}
@@ -327,13 +331,8 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
               )}
             </div>
 
-            {/*
-              * ✅ SOLUCIÓN BUG 1: 
-              * Se elimina la condición {(!user || user.rol === 'Cliente') && ...}
-              * para que el botón aparezca siempre.
-            */}
             <button className="btn btn-primary" onClick={handleAddToCart}>
-              {'Hacer Pedido'}
+              Agregar al Pedido
             </button>
             
           </div>

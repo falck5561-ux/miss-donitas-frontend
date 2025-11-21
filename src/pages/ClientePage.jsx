@@ -465,7 +465,7 @@ function ClientePage() {
                             <span className="card-text fw-bold fs-5 text-success">${Number(item.precio).toFixed(2)}</span>
                           </div>
                         ) : (
-                          <p className="card-text fw-bold fs-5 text-dark">${Number(item.precio).toFixed(2)}</p>
+                          <p className="card-text fw-bold fs-5">${Number(item.precio).toFixed(2)}</p>
                         )}
                       </div>
                     </div>
@@ -477,7 +477,7 @@ function ClientePage() {
 
           {/* SIDEBAR CARRITO (Desktop) */}
           <div className="col-md-4 d-none d-md-block">
-            <div className="card shadow-sm position-sticky border-0" style={{ top: '20px', backgroundColor: '#f8f9fa' }}>
+            <div className="card shadow-sm position-sticky border-0" style={{ top: '20px' }}>
               <CarritoContent
                 isModal={false}
                 pedidoActual={pedidoActual}

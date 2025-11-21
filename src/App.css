@@ -778,3 +778,38 @@ footer .text-body-secondary a:hover {
   filter: invert(1) grayscale(100%) brightness(200%);
 }
 
+/* =============================================== */
+/* === PARCHES PARA BOOTSTRAP EN MODO PICANTE === */
+/* =============================================== */
+
+[data-bs-theme="picante"] .text-dark,
+[data-bs-theme="picante"] .text-muted,
+[data-bs-theme="picante"] .form-check-label {
+  color: var(--color-texto-principal) !important;
+}
+
+/* Inputs (Cajas de texto) en modo oscuro */
+[data-bs-theme="picante"] .form-control,
+[data-bs-theme="picante"] .form-select {
+  background-color: #2b2b2b;
+  border-color: #444;
+  color: #fff;
+}
+
+[data-bs-theme="picante"] .form-control:focus {
+  background-color: #333;
+  color: #fff;
+  border-color: var(--color-primario);
+}
+
+/* Botones outline (para que se vean los - y + del carrito) */
+[data-bs-theme="picante"] .btn-outline-secondary {
+  color: #e0e0e0;
+  border-color: #666;
+}
+
+[data-bs-theme="picante"] .list-group-item {
+  background-color: transparent; /* Para que tome el color de la tarjeta */
+  color: var(--color-texto-principal);
+  border-color: var(--color-borde);
+}

@@ -79,37 +79,40 @@ function PosPage() {
     setTotalVenta(nuevoTotal);
   }, [ventaActual]);
 
-  // 🚨 CORRECCIÓN PRINCIPAL: Lógica de Agregado Inteligente
+  // 🚨 CORRECCIÓN DE AGRUPAMIENTO (STACKING) PARA EL POS 🚨
   const agregarProductoAVenta = (item) => {
-    // 1. Determinar el ID ÚNICO del ticket (idUnicoTicket)
-    // Intentamos usar el que viene del modal (cartItemId)
-    let idUnicoTicket = item.cartItemId;
+    let idUnicoTicket;
+    
+    // Detectamos si viene con opciones (del Modal)
+    // Nota: En PosPage, solemos usar 'opcionesSeleccionadas'
+    const opciones = item.opcionesSeleccionadas || [];
 
-    if (!idUnicoTicket) {
-      // Si no trae ID (agregado directo desde la tarjeta), lo calculamos:
-      const tieneOpciones = item.opcionesSeleccionadas && item.opcionesSeleccionadas.length > 0;
+    if (opciones.length > 0) {
+      // SI TIENE TOPPINGS:
+      // Creamos una firma única ordenando los IDs de los toppings.
+      // Así "Chocolate + Vainilla" genera el mismo ID que "Vainilla + Chocolate".
+      const firmaToppings = opciones
+        .map(op => op.id)
+        .sort((a, b) => a - b) // Ordenar para consistencia (1, 5, 9)
+        .join('-');
       
-      if (tieneOpciones) {
-        // Si tiene toppings, FORZAMOS una línea nueva usando un timestamp
-        idUnicoTicket = `${item.id}-POS-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      } else {
-        // Si NO tiene opciones (producto simple), usamos su ID original para que SÍ se agrupen
-        idUnicoTicket = String(item.id);
-      }
+      // El ID único será: "ID_PROD-OPC-ID_TOPPING1-ID_TOPPING2..."
+      idUnicoTicket = `${item.id}-OPC-${firmaToppings}`;
+    } else {
+      // SI ES SIMPLE (Sin toppings):
+      // Usamos solo el ID del producto. Así todos los "Café Solos" se agrupan.
+      idUnicoTicket = String(item.id);
     }
     
-    // Aseguramos que sea string para comparar fácil
-    idUnicoTicket = String(idUnicoTicket);
     const precioFinal = Number(item.precio); 
 
     setVentaActual(prevVenta => {
-      // 2. Buscamos si YA existe este ID ÚNICO en el ticket actual
-      // IMPORTANTE: La comparación es ESTRICTA por idUnicoTicket.
-      // Ya NO comparamos por p.id para evitar que un producto simple se fusione con uno complejo.
-      const indiceExistente = prevVenta.findIndex(p => String(p.idUnicoTicket) === idUnicoTicket && !p.esRecompensa);
+      // Buscamos si ya existe un producto con esta MISMA huella digital
+      // IMPORTANTE: Usamos 'idUnicoTicket' que acabamos de generar
+      const indiceExistente = prevVenta.findIndex(p => p.idUnicoTicket === idUnicoTicket && !p.esRecompensa);
 
       if (indiceExistente >= 0) {
-        // YA EXISTE -> Solo sumamos 1 a la cantidad
+        // ¡YA EXISTE! -> Es idéntico, así que solo sumamos 1 a la cantidad.
         const nuevaVenta = [...prevVenta];
         nuevaVenta[indiceExistente] = {
           ...nuevaVenta[indiceExistente],
@@ -117,20 +120,21 @@ function PosPage() {
         };
         return nuevaVenta;
       } else {
-        // NO EXISTE -> Agregamos una línea nueva
+        // NO EXISTE (Es nuevo o tiene toppings diferentes) -> Creamos nueva fila.
         return [...prevVenta, {
           ...item,
-          idUnicoTicket: idUnicoTicket, // Guardamos el ID que calculamos
+          idUnicoTicket: idUnicoTicket, // Guardamos nuestra huella como el ID del ticket
           cantidad: 1,
           precioFinal: parseFloat(precioFinal).toFixed(2),
           esRecompensa: false,
-          opcionesSeleccionadas: item.opcionesSeleccionadas || [] 
+          opcionesSeleccionadas: opciones // Aseguramos que se guarden las opciones
         }];
       }
     });
     
-    // Mostrar toast solo si no vino del modal (para no spamear)
-    if (!item.cartItemId) {
+    // Mostrar toast solo si es agregado manual (no desde modal, aunque en POS casi todo es manual o modal)
+    // Para evitar doble toast si el modal ya lo mostró, podriamos quitarlo, pero mejor dejarlo para feedback visual
+    if (!item.cartItemId) { 
        toast.success(`${item.nombre} agregado`);
     }
   };

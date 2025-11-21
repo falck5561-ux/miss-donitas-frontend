@@ -43,7 +43,6 @@ function DetallesPedidoModal({ pedido, onClose }) {
             </div>
             <div className="d-flex justify-content-between mb-3">
               <span className={mutedTextColor}>Estado:</span>
-              {/* Badge de estado simple */}
               <span className="badge bg-warning text-dark">{pedido.estado}</span>
             </div>
             
@@ -53,18 +52,18 @@ function DetallesPedidoModal({ pedido, onClose }) {
             <h6 className="mb-3">Productos:</h6>
             <ul className="list-group list-group-flush">
               {productos.map((prod, index) => {
-                // Lógica segura para obtener la imagen (string o array)
+                // Lógica segura para obtener la imagen
                 const imagenSrc = Array.isArray(prod.imagenes) && prod.imagenes.length > 0 
                   ? prod.imagenes[0] 
                   : (typeof prod.imagen === 'string' ? prod.imagen : null);
 
-                // Detectar opciones/toppings (puede venir como 'opciones' o 'selectedOptions')
+                // Detectar opciones/toppings
                 const opcionesList = prod.opciones || prod.selectedOptions || [];
 
                 return (
                   <li key={index} className={`list-group-item d-flex align-items-start p-2 ${theme === 'dark' ? 'bg-dark text-white border-secondary' : ''}`}>
                     
-                    {/* 1. IMAGEN DEL PRODUCTO */}
+                    {/* FOTO */}
                     <div className="me-3" style={{ width: '60px', height: '60px', flexShrink: 0 }}>
                       {imagenSrc ? (
                         <img 
@@ -80,14 +79,14 @@ function DetallesPedidoModal({ pedido, onClose }) {
                       )}
                     </div>
 
-                    {/* 2. DETALLES (Nombre + Toppings) */}
+                    {/* DETALLES */}
                     <div className="flex-grow-1">
                       <div className="d-flex justify-content-between fw-bold">
                         <span>{prod.cantidad}x {prod.nombre}</span>
                         <span>${(Number(prod.precio) * prod.cantidad).toFixed(2)}</span>
                       </div>
                       
-                      {/* Renderizado de Toppings */}
+                      {/* LISTA DE INGREDIENTES */}
                       {opcionesList.length > 0 && (
                         <div className={`small ${mutedTextColor} mt-1`}>
                           {opcionesList.map((op, i) => (
@@ -112,11 +111,6 @@ function DetallesPedidoModal({ pedido, onClose }) {
                 <div className={`p-2 rounded border ${borderClass}`}>
                   <p className="mb-1 small"><strong>Dir:</strong> {pedido.direccion_entrega}</p>
                   {pedido.referencia && <p className="mb-1 small text-muted">Ref: {pedido.referencia}</p>}
-                  {googleMapsUrl && (
-                    <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-primary btn-sm w-100 mt-1">
-                      <i className="bi bi-geo-alt-fill"></i> Ver Mapa
-                    </a>
-                  )}
                 </div>
               </>
             )}

@@ -7,11 +7,12 @@ import CheckoutForm from '../components/CheckoutForm';
 import MapSelector from '../components/MapSelector';
 import apiClient from '../services/api';
 import { useCart } from '../context/CartContext';
+import ProductDetailModal from '../components/ProductDetailModal';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-// (styles y notify se quedan igual...)
+// --- ESTILOS ---
 const styles = {
   recompensasContainer: { padding: '1rem 0' },
   cupon: {
@@ -42,27 +43,14 @@ const styles = {
 
 const notify = (type, message) => {
   switch (type) {
-    case 'success':
-      toast.success(message);
-      break;
-    case 'error':
-      toast.error(message);
-      break;
-    default:
-      toast(message);
-      break;
+    case 'success': toast.success(message); break;
+    case 'error': toast.error(message); break;
+    default: toast(message); break;
   }
 };
 
-
 // ===================================================================
-// ===         COMPONENTE CarritoContent (EXTRAÍDO)                ===
-// ===================================================================
-//
-// `CarritoContent` se movió FUERA de `ClientePage` y ahora recibe
-// todo lo que necesita como props. Esto evita que se vuelva a 
-// crear en cada render y soluciona el problema del "focus" del input.
-//
+// ===        COMPONENTE CarritoContent (INTACTO)                  ===
 // ===================================================================
 const CarritoContent = ({
   isModal,
@@ -99,16 +87,29 @@ const CarritoContent = ({
       )}
       <ul className="list-group list-group-flush">
         {pedidoActual.length === 0 && <li className="list-group-item text-center text-muted">Tu carrito está vacío</li>}
+        
         {pedidoActual.map((item) => (
-          <li key={item.id} className="list-group-item d-flex align-items-center justify-content-between p-1">
-            <span className="me-auto">{item.nombre}</span>
-            <div className="d-flex align-items-center">
-              <button className="btn btn-outline-secondary btn-sm" onClick={() => decrementarCantidad(item.id)}>-</button>
-              <span className="mx-2">{item.cantidad}</span>
-              <button className="btn btn-outline-secondary btn-sm" onClick={() => incrementarCantidad(item.id)}>+</button>
+          <li key={item.cartItemId || item.id} className="list-group-item d-flex align-items-center justify-content-between p-1">
+            
+            <div className="me-auto" style={{ paddingRight: '10px' }}> 
+              <span className="fw-bold">{item.nombre}</span>
+              {/* Mostrar Toppings si existen */}
+              {item.opcionesSeleccionadas && item.opcionesSeleccionadas.length > 0 && (
+                <ul className="list-unstyled small text-muted mb-0" style={{ marginTop: '-2px', fontSize: '0.85em' }}>
+                  {item.opcionesSeleccionadas.map((opcion, idx) => (
+                    <li key={idx}>+ {opcion.nombre}</li>
+                  ))}
+                </ul>
+              )}
             </div>
-            <span className="mx-3" style={{ minWidth: '60px', textAlign: 'right' }}>${(item.cantidad * Number(item.precio)).toFixed(2)}</span>
-            <button className="btn btn-outline-danger btn-sm" onClick={() => eliminarProducto(item.id)}>&times;</button>
+
+            <div className="d-flex align-items-center">
+              <button className="btn btn-outline-secondary btn-sm py-0 px-2" onClick={() => decrementarCantidad(item.cartItemId || item.id)}>-</button>
+              <span className="mx-2">{item.cantidad}</span>
+              <button className="btn btn-outline-secondary btn-sm py-0 px-2" onClick={() => incrementarCantidad(item.cartItemId || item.id)}>+</button>
+            </div>
+            <span className="mx-2 fw-bold text-end" style={{ minWidth: '60px' }}>${(item.cantidad * Number(item.precio)).toFixed(2)}</span>
+            <button className="btn btn-outline-danger btn-sm py-0 px-2" onClick={() => eliminarProducto(item.cartItemId || item.id)}>&times;</button>
           </li>
         ))}
       </ul>
@@ -166,11 +167,11 @@ const CarritoContent = ({
     </div>
   </>
 );
-// ===================================================================
-// ===                     FIN DE CarritoContent                   ===
-// ===================================================================
 
 
+// ===================================================================
+// ===             COMPONENTE PRINCIPAL ClientePage                ===
+// ===================================================================
 function ClientePage() {
   const {
     pedidoActual,
@@ -184,7 +185,11 @@ function ClientePage() {
 
   const [activeTab, setActiveTab] = useState('crear');
   const [ordenExpandida, setOrdenExpandida] = useState(null);
+  
+  // Datos del menú y Filtros
   const [menuItems, setMenuItems] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('Todos'); // <--- NUEVO: Estado para categoría seleccionada
+
   const [tipoOrden, setTipoOrden] = useState('llevar');
   const [direccion, setDireccion] = useState(null);
   const [costoEnvio, setCostoEnvio] = useState(0);
@@ -202,9 +207,13 @@ function ClientePage() {
   const [referencia, setReferencia] = useState('');
   const [showCartModal, setShowCartModal] = useState(false);
   const [modalView, setModalView] = useState('cart');
+  
+  // Modal de Producto
+  const [productoSeleccionadoParaModal, setProductoSeleccionadoParaModal] = useState(null);
 
   const totalFinal = subtotal + costoEnvio;
 
+  // --- Carga de Datos Iniciales ---
   useEffect(() => {
     const fetchInitialData = async () => {
       if (activeTab !== 'crear') return;
@@ -216,6 +225,7 @@ function ClientePage() {
           apiClient.get('/combos'),
           apiClient.get('/usuarios/mi-direccion')
         ]);
+        
         const estandarizarItem = (item) => {
           const precioFinal = Number(item.precio);
           let precioOriginal = precioFinal;
@@ -223,15 +233,19 @@ function ClientePage() {
             precioOriginal = precioFinal / (1 - item.descuento_porcentaje / 100);
           }
           return {
-            ...item,
+            ...item, 
             precio: precioFinal,
             precio_original: precioOriginal,
             nombre: item.nombre || item.titulo,
+            // Asegurar que siempre tenga una categoría
+            categoria: item.categoria || (item.titulo ? 'Combos' : 'General') 
           };
         };
         const productosEstandarizados = productosRes.data.map(estandarizarItem);
         const combosEstandarizados = combosRes.data.map(estandarizarItem);
+        
         setMenuItems([...productosEstandarizados, ...combosEstandarizados]);
+        
         if (direccionRes.data) {
           setDireccionGuardada(direccionRes.data);
         }
@@ -245,6 +259,15 @@ function ClientePage() {
     fetchInitialData();
   }, [activeTab]);
 
+  // --- Lógica de Filtrado por Categoría (NUEVO) ---
+  const categories = ['Todos', ...new Set(menuItems.map(item => item.categoria))];
+  
+  const filteredItems = selectedCategory === 'Todos' 
+    ? menuItems 
+    : menuItems.filter(item => item.categoria === selectedCategory);
+
+
+  // --- Carga de Mis Pedidos / Recompensas ---
   useEffect(() => {
     const fetchTabData = async () => {
       if (activeTab === 'crear') return;
@@ -284,6 +307,7 @@ function ClientePage() {
     setShowCartModal(false);
   };
 
+  // ... Funciones de Pago y Mapa (sin cambios) ...
   const handleLocationSelect = async (location) => {
     setDireccion(location);
     setCalculandoEnvio(true);
@@ -316,7 +340,17 @@ function ClientePage() {
     if (calculandoEnvio) { return notify('error', 'Espera a que termine el cálculo del envío.'); }
     setPaymentLoading(true);
     try {
-      const productosParaEnviar = pedidoActual.map(({ id, cantidad, precio, nombre }) => ({ id, cantidad, precio: Number(precio), nombre }));
+      const productosParaEnviar = pedidoActual.map(item => ({ 
+        id: item.id, 
+        cantidad: item.cantidad, 
+        precio: Number(item.precio), 
+        nombre: item.nombre,
+        // Enviar los toppings como string para guardarlos fácil en el historial
+        opciones: item.opcionesSeleccionadas 
+          ? item.opcionesSeleccionadas.map(op => op.nombre).join(', ') 
+          : null
+      }));
+
       const pedidoData = {
         total: totalFinal,
         productos: productosParaEnviar,
@@ -327,6 +361,7 @@ function ClientePage() {
         longitude: tipoOrden === 'domicilio' ? direccion?.lng : null,
         referencia: tipoOrden === 'domicilio' ? referencia : null
       };
+      
       setDatosParaCheckout(pedidoData);
       const res = await apiClient.post('/payments/create-payment-intent', { amount: totalFinal });
       setShowCartModal(false);
@@ -366,53 +401,83 @@ function ClientePage() {
     setActiveTab('ver');
   };
 
+  // --- ABRIR MODAL AL CLIC ---
+  const handleProductClick = (item) => {
+    setProductoSeleccionadoParaModal(item);
+  };
+
   const getStatusBadge = (estado) => { switch (estado) { case 'Pendiente': return 'bg-warning text-dark'; case 'En Preparacion': return 'bg-info text-dark'; case 'Listo para Recoger': return 'bg-success text-white'; case 'Completado': return 'bg-secondary text-white'; case 'En Camino': return 'bg-primary text-white'; default: return 'bg-light text-dark'; } };
   const handleToggleDetalle = (pedidoId) => { setOrdenExpandida(ordenExpandida === pedidoId ? null : pedidoId); };
   const totalItemsEnCarrito = pedidoActual.reduce((sum, item) => sum + item.cantidad, 0);
 
-  // --- El componente CarritoContent FUE MOVIDO AFUERA ---
+  const pageStyle = {
+    pointerEvents: (productoSeleccionadoParaModal || showPaymentModal || showCartModal) ? 'none' : 'auto'
+  };
 
   return (
-    <div>
+    <div style={pageStyle}> 
+      {/* --- TABS PRINCIPALES --- */}
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item"><button className={`nav-link ${activeTab === 'crear' ? 'active' : ''}`} onClick={() => setActiveTab('crear')}>Hacer un Pedido</button></li>
         <li className="nav-item"><button className={`nav-link ${activeTab === 'ver' ? 'active' : ''}`} onClick={() => setActiveTab('ver')}>Mis Pedidos</button></li>
         <li className="nav-item"><button className={`nav-link ${activeTab === 'recompensas' ? 'active' : ''}`} onClick={() => setActiveTab('recompensas')}>Mis Recompensas</button></li>
       </ul>
 
-      {loading && <div className="text-center"><div className="spinner-border" role="status"></div></div>}
+      {loading && <div className="text-center py-5"><div className="spinner-border text-primary" role="status"></div></div>}
       {error && <div className="alert alert-danger">{error}</div>}
 
+      {/* --- PESTAÑA: HACER PEDIDO --- */}
       {!loading && activeTab === 'crear' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="row">
           <div className="col-md-8">
             <h2>Elige tus Productos</h2>
-            <div className="row g-3">
-              {menuItems?.map(item => (
-                <div key={item.id} className="col-6 col-md-4 col-lg-3">
-                  <div className="card h-100 text-center shadow-sm" onClick={() => agregarProductoAPedido(item)} style={{ cursor: 'pointer' }}>
-                    <div className="card-body d-flex flex-column justify-content-center pt-4">
-                      <h5 className="card-title">{item.nombre}</h5>
-                      {item.en_oferta ? (
-                        <div>
-                          <span className="text-muted text-decoration-line-through me-2">${Number(item.precio_original).toFixed(2)}</span>
-                          <span className="card-text fw-bold fs-5 text-success">${Number(item.precio).toFixed(2)}</span>
-                        </div>
-                      ) : (
-                        <p className="card-text fw-bold fs-5">${Number(item.precio).toFixed(2)}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
+
+            {/* === BARRA DE CATEGORÍAS (NUEVO) === */}
+            <div className="d-flex overflow-auto mb-3 pb-2 align-items-center" style={{ whiteSpace: 'nowrap', gap: '10px', scrollbarWidth: 'none' }}>
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  className={`btn rounded-pill px-3 ${selectedCategory === cat ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  onClick={() => setSelectedCategory(cat)}
+                >
+                  {cat}
+                </button>
               ))}
             </div>
+
+            {/* GRID DE PRODUCTOS (Filtrados) */}
+            {filteredItems.length === 0 ? (
+               <p className="text-muted text-center mt-4">No hay productos en esta categoría.</p>
+            ) : (
+              <div className="row g-3">
+                {filteredItems.map(item => (
+                  <div key={item.id} className="col-6 col-md-4 col-lg-3">
+                    <div 
+                      className="card h-100 text-center shadow-sm border-0 hover-effect" 
+                      onClick={() => handleProductClick(item)} 
+                      style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
+                    >
+                      <div className="card-body d-flex flex-column justify-content-center pt-4">
+                        <h5 className="card-title">{item.nombre}</h5>
+                        {item.en_oferta ? (
+                          <div>
+                            <span className="text-muted text-decoration-line-through me-2 small">${Number(item.precio_original).toFixed(2)}</span>
+                            <span className="card-text fw-bold fs-5 text-success">${Number(item.precio).toFixed(2)}</span>
+                          </div>
+                        ) : (
+                          <p className="card-text fw-bold fs-5 text-dark">${Number(item.precio).toFixed(2)}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
+          {/* SIDEBAR CARRITO (Desktop) */}
           <div className="col-md-4 d-none d-md-block">
-            <div className="card shadow-sm position-sticky" style={{ top: '20px' }}>
-              {/* Ahora llamamos a CarritoContent como un componente 
-                  independiente y le pasamos todas las props.
-              */}
+            <div className="card shadow-sm position-sticky border-0" style={{ top: '20px', backgroundColor: '#f8f9fa' }}>
               <CarritoContent
                 isModal={false}
                 pedidoActual={pedidoActual}
@@ -443,22 +508,122 @@ function ClientePage() {
         </motion.div>
       )}
 
+      {/* --- PESTAÑA: MIS PEDIDOS (INTACTO) --- */}
+      {!loading && activeTab === 'ver' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <h2>Mis Pedidos</h2>
+          {(!Array.isArray(misPedidos) || misPedidos.length === 0) ? (
+            <p className="text-center text-muted mt-4">No has realizado ningún pedido aún.</p>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-hover align-middle">
+                <thead className="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th className="text-end">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {misPedidos?.map(p => (
+                    <React.Fragment key={p.id}>
+                      <tr style={{ cursor: 'pointer' }} onClick={() => handleToggleDetalle(p.id)}>
+                        <td className="fw-bold">#{p.id}</td>
+                        <td>{new Date(p.fecha).toLocaleString('es-MX')}</td>
+                        <td>{p.tipo_orden}</td>
+                        <td><span className={`badge ${getStatusBadge(p.estado)}`}>{p.estado}</span></td>
+                        <td className="text-end fw-bold">${Number(p.total).toFixed(2)}</td>
+                      </tr>
+                      {ordenExpandida === p.id && (
+                        <tr className="bg-light">
+                          <td colSpan="5">
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="p-3">
+                              <h6 className="fw-bold mb-3">Detalle del Pedido</h6>
+                              <ul className="list-group">
+                                {p.productos?.map(producto => (
+                                  <li key={`${p.id}-${producto.nombre}`} className="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 ps-0">
+                                    <div>
+                                      <span className="fw-bold">{producto.cantidad}x</span> {producto.nombre}
+                                      {producto.opciones && <small className="text-muted d-block fst-italic ms-3">Extra: {producto.opciones}</small>}
+                                    </div>
+                                    <span>${(producto.cantidad * Number(producto.precio)).toFixed(2)}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                              {p.costo_envio > 0 && (
+                                <div className="d-flex justify-content-between mt-2 pt-2 border-top">
+                                  <span>Costo de Envío</span>
+                                  <span>${Number(p.costo_envio).toFixed(2)}</span>
+                                </div>
+                              )}
+                            </motion.div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* --- PESTAÑA: MIS RECOMPENSAS (INTACTO) --- */}
+      {!loading && activeTab === 'recompensas' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <h2>Mis Recompensas</h2>
+          {misRecompensas?.length === 0 ? (
+            <div className="text-center py-5">
+              <div className="mb-3" style={{ fontSize: '4rem' }}>🍩</div>
+              <h3>Aún no tienes recompensas</h3>
+              <p className="text-muted">¡Sigue comprando para ganar premios!</p>
+            </div>
+          ) : (
+            <div className="row g-4">
+              {misRecompensas?.map(recompensa => (
+                <div key={recompensa.id} className="col-md-6">
+                  <div style={styles.cupon}>
+                    <div style={styles.cuponIcon}>🎁</div>
+                    <div style={styles.cuponBody}>
+                      <h4 style={styles.cuponTitle}>{recompensa.nombre}</h4>
+                      <p style={styles.cuponDescription}>{recompensa.descripcion}</p>
+                    </div>
+                    <div style={styles.cuponCantidad}>x{recompensa.cantidad}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* --- BOTÓN FLOTANTE CARRITO (Móvil) --- */}
       {activeTab === 'crear' && pedidoActual.length > 0 && (
-        <button className="boton-carrito-flotante d-md-none" onClick={() => setShowCartModal(true)}>
+        <button 
+          className="boton-carrito-flotante d-md-none" 
+          onClick={() => setShowCartModal(true)}
+          style={{ pointerEvents: 'auto' }}
+        >
           🛒 <span className="badge-carrito">{totalItemsEnCarrito}</span>
         </button>
       )}
 
+      {/* --- MODAL CARRITO (Móvil) --- */}
       {showCartModal && (
-        <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="modal-dialog modal-dialog-scrollable">
+        <div 
+          className="modal show" 
+          style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto', zIndex: 1060 }}
+        >
+          <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
             <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">{modalView === 'cart' ? 'Mi Pedido' : 'Dirección de Entrega'}</h5>
+              <div className="modal-header border-0">
+                <h5 className="modal-title fw-bold">{modalView === 'cart' ? 'Tu Canasta' : 'Dirección'}</h5>
                 <button type="button" className="btn-close" onClick={() => { setShowCartModal(false); setModalView('cart'); }}></button>
               </div>
               {modalView === 'cart' ? (
-                // Aquí también le pasamos todas las props
                 <CarritoContent
                   isModal={true}
                   pedidoActual={pedidoActual}
@@ -488,20 +653,20 @@ function ClientePage() {
                 <>
                   <div className="modal-body">
                     {direccionGuardada && (<button className="btn btn-outline-info w-100 mb-3" onClick={usarDireccionGuardada}>Usar mi dirección guardada</button>)}
-                    <label className="form-label">Busca tu dirección:</label>
+                    <label className="form-label">Ubicación:</label>
                     <MapSelector onLocationSelect={handleLocationSelect} initialAddress={direccion} />
                     <div className="mt-3">
-                      <label htmlFor="referenciaModal" className="form-label">Referencia:</label>
-                      <input type="text" id="referenciaModal" className="form-control" value={referencia} onChange={(e) => setReferencia(e.target.value)} />
+                      <label className="form-label">Referencia:</label>
+                      <input type="text" className="form-control" value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="Casa azul, portón negro..." />
                     </div>
                     <div className="form-check mt-3">
                       <input className="form-check-input" type="checkbox" id="guardarDireccionModal" checked={guardarDireccion} onChange={(e) => setGuardarDireccion(e.target.checked)} />
-                      <label className="form-check-label" htmlFor="guardarDireccionModal">Guardar dirección</label>
+                      <label className="form-check-label" htmlFor="guardarDireccionModal">Guardar para futuros pedidos</label>
                     </div>
                   </div>
-                  <div className="modal-footer d-flex justify-content-between">
+                  <div className="modal-footer border-0 d-flex justify-content-between">
                     <button className="btn btn-secondary" onClick={() => setModalView('cart')}>Volver</button>
-                    <button className="btn btn-primary" onClick={handleProcederAlPago} disabled={!direccion || paymentLoading || calculandoEnvio}>{paymentLoading ? 'Iniciando...' : 'Confirmar y Pagar'}</button>
+                    <button className="btn btn-primary" onClick={handleProcederAlPago} disabled={!direccion || paymentLoading || calculandoEnvio}>{paymentLoading ? 'Procesando...' : 'Pagar Ahora'}</button>
                   </div>
                 </>
               )}
@@ -510,141 +675,27 @@ function ClientePage() {
         </div>
       )}
 
-      {/* ... (El resto del código para 'ver' y 'recompensas' sigue igual) ... */}
-      {!loading && activeTab === 'ver' && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <h2>Mis Pedidos</h2>
-          {(!Array.isArray(misPedidos) || misPedidos.length === 0) ? (
-            <p className="text-center">No has realizado ningún pedido.</p>
-          ) : (
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Fecha</th>
-                    <th>Tipo</th>
-                    <th>Estado</th>
-                    <th className="text-end">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {misPedidos?.map(p => (
-                    <React.Fragment key={p.id}>
-                      <tr style={{ cursor: 'pointer' }} onClick={() => handleToggleDetalle(p.id)}>
-                        <td>#{p.id}</td>
-                        <td>{new Date(p.fecha).toLocaleString('es-MX')}</td>
-                        <td>{p.tipo_orden}</td>
-                        <td><span className={`badge ${getStatusBadge(p.estado)}`}>{p.estado}</span></td>
-                        <td className="text-end">${Number(p.total).toFixed(2)}</td>
-                      </tr>
-
-                      {/* ======================================================
-                      === INICIO DE LA CORRECCIÓN: Mejorar vista detalle ===
-                      ======================================================
-                      */}
-                      {ordenExpandida === p.id && (
-                        <tr>
-                          {/* Usamos un <td> con colSpan para que ocupe toda la fila */}
-                          <td colSpan="5">
-                            <motion.div 
-                              className="detalle-pedido-container p-3 rounded" 
-                              style={{ 
-                                backgroundColor: 'var(--bs-tertiary-bg)', 
-                                border: '1px solid var(--bs-border-color)' 
-                              }}
-                              initial={{ opacity: 0, height: 0 }} 
-                              animate={{ opacity: 1, height: 'auto' }} 
-                              transition={{ duration: 0.3 }}
-                            >
-                              <h6 className="mb-3 fw-bold" style={{ color: 'var(--color-primario)' }}>
-                                Detalle del Pedido #{p.id}
-                              </h6>
-                              
-                              <ul className="list-unstyled mb-0">
-                                {p.productos?.map(producto => (
-                                  <li 
-                                    key={`${p.id}-${producto.nombre}`} 
-                                    className="d-flex justify-content-between align-items-center mb-2"
-                                  >
-                                    <div>
-                                      <span className="fw-bold" style={{ color: 'var(--color-primario)' }}>
-                                        {producto.cantidad}x
-                                      </span> {producto.nombre}
-                                    </div>
-                                    <span className="fw-bold" style={{ color: 'var(--color-texto-principal)' }}>
-                                      ${(producto.cantidad * Number(producto.precio)).toFixed(2)}
-                                    </span>
-                                  </li>
-                                ))}
-                                
-                                {p.costo_envio > 0 && (
-                                  <li className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                                    <span className="fw-bold">Costo de Envío</span>
-                                    <span className="fw-bold">${Number(p.costo_envio).toFixed(2)}</span>
-                                  </li>
-                                )}
-                              </ul>
-                              
-                            </motion.div>
-                          </td>
-                        </tr>
-                      )}
-                      {/* ======================================================
-                      === FIN DE LA CORRECCIÓN: Mejorar vista detalle    ===
-                      ======================================================
-                      */}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </motion.div>
+      {/* --- MODAL DE DETALLE DE PRODUCTO (Opciones/Toppings) --- */}
+      {productoSeleccionadoParaModal && (
+        <div style={{ pointerEvents: 'auto' }}>
+          <ProductDetailModal
+            product={productoSeleccionadoParaModal}
+            onClose={() => setProductoSeleccionadoParaModal(null)}
+            onAddToCart={agregarProductoAPedido}
+          />
+        </div>
       )}
 
-      {!loading && activeTab === 'recompensas' && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <h2>Mis Recompensas</h2>
-          {misRecompensas?.length === 0 ? (
-            <div className="recompensas-container">
-              <div className="recompensas-caja-vacia">
-                <img
-                  src="/dona-icon.png"
-                  alt="Icono de Donita"
-                  className="recompensas-icono"
-                />
-                <h3>Aún no tienes recompensas</h3>
-                <p>¡Sigue comprando para ganar bebidas gratis y más sorpresas!</p>
-              </div>
-            </div>
-          ) : (
-            <div className="row g-4">
-              {misRecompensas?.map(recompensa => (
-                <div key={recompensa.id} className="col-12">
-                  <div style={styles.cupon}>
-                    <div style={styles.cuponIcon}>🎁</div>
-                    <div style={styles.cuponBody}>
-                      <h4 style={styles.cuponTitle}>{recompensa.nombre}</h4>
-                      <p style={styles.cuponDescription}>{recompensa.descripcion}</p>
-                    </div>
-                    <div style={styles.cuponCantidad}>
-                      Tienes {recompensa.cantidad}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </motion.div>
-      )}
-
+      {/* --- MODAL DE PAGO STRIPE --- */}
       {showPaymentModal && clientSecret && (
-        <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="modal-dialog">
+        <div 
+          className="modal show" 
+          style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto', zIndex: 1070 }}
+        >
+          <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Finalizar Compra</h5>
+              <div className="modal-header border-0">
+                <h5 className="modal-title fw-bold">Pago Seguro</h5>
                 <button type="button" className="btn-close" onClick={() => setShowPaymentModal(false)}></button>
               </div>
               <div className="modal-body">
@@ -660,9 +711,9 @@ function ClientePage() {
           </motion.div>
         </div>
       )}
-    </div>
+      
+    </div> 
   );
 }
 
 export default ClientePage;
-

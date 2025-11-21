@@ -35,7 +35,7 @@
   --color-secundario: #FF7043;
   --color-fondo: #121212;
   --color-fondo-tarjeta: #1E1E1E;
-  --color-borde: #333333;
+  --color-borde: #FF5252;
   --color-texto-principal: #FAFAFA;
   --color-texto-secundario: #CCCCCC;
 
@@ -812,4 +812,8 @@ footer .text-body-secondary a:hover {
   background-color: transparent; /* Para que tome el color de la tarjeta */
   color: var(--color-texto-principal);
   border-color: var(--color-borde);
+}
+
+[data-bs-theme="picante"] .card {
+  border-color: var(--color-borde) !important;
 }

@@ -10,7 +10,10 @@
   --color-secundario: #FFC0CB;
   --color-fondo: #FFF8E1;
   --color-fondo-tarjeta: #FFF0F5;
-  --color-borde: #F8BBD0;
+  
+  /* 🟢 CAMBIO: Rosa más oscuro para que se vea el borde en fondo claro */
+  --color-borde: #F48FB1; 
+  
   --color-texto-principal: #5D4037;
   --color-texto-secundario: #8D6E63;
 
@@ -35,7 +38,10 @@
   --color-secundario: #FF7043;
   --color-fondo: #121212;
   --color-fondo-tarjeta: #1E1E1E;
-  --color-borde: #FF5252;
+  
+  /* 🟢 CAMBIO: Gris medio para que resalte sobre el negro */
+  --color-borde: #666666; 
+  
   --color-texto-principal: #FAFAFA;
   --color-texto-secundario: #CCCCCC;
 
@@ -315,15 +321,9 @@ h5,
 }
 
 @keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }
 
 .btn-primary {
@@ -350,7 +350,8 @@ h5,
 /* ======================= */
 .card {
   background-color: var(--bs-card-bg);
-  border: 1px solid var(--bs-border-color);
+  /* 🟢 CAMBIO: Borde de 2px para mejor visibilidad */
+  border: 2px solid var(--color-borde); 
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -378,18 +379,18 @@ h5,
   position: absolute;
   top: 10px;
   right: 10px;
-  background-color: var(--color-primario); /* ¡Usa el color de tu marca! */
-  color: #fff; /* Texto blanco sobre el color de marca */
-  width: 55px; /* Ancho fijo para el círculo */
-  height: 55px; /* Alto fijo para el círculo */
-  border-radius: 50%; /* ¡La magia del círculo! */
+  background-color: var(--color-primario); 
+  color: #fff; 
+  width: 55px; 
+  height: 55px; 
+  border-radius: 50%; 
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85em; /* Ajustamos la fuente al círculo */
+  font-size: 0.85em; 
   font-weight: 700;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Sombra sutil */
-  z-index: 2; /* Nos aseguramos que esté visible */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); 
+  z-index: 2; 
 }
 /* ============================================================= */
 /* === FIN: MODIFICACIÓN CREATIVA DE ETIQUETA DE DESCUENTO === */
@@ -439,14 +440,8 @@ footer {
 /* === ANIMACIONES === */
 /* ======================= */
 @keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ======================= */
@@ -769,11 +764,6 @@ footer .text-body-secondary a:hover {
 /* ================================================= */
 /* === CORRECCIÓN BOTÓN 'X' (btn-close) MODO OSCURO === */
 /* ================================================= */
-/* Esto le dice a Bootstrap que use el filtro
-  para invertir el color del botón 'X'
-  (que por defecto es negro) a blanco
-  cuando el tema 'picante' (oscuro) esté activo.
-*/
 [data-bs-theme="picante"] .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
 }
@@ -814,6 +804,7 @@ footer .text-body-secondary a:hover {
   border-color: var(--color-borde);
 }
 
+/* 🟢 CAMBIO: Forzar el color del borde en las tarjetas en modo oscuro */
 [data-bs-theme="picante"] .card {
   border-color: var(--color-borde) !important;
 }

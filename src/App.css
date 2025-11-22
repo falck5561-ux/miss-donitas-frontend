@@ -1,21 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Lato:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Lato:wght@400;700;900&display=swap');
 
-/* =================================== */
-/* === PALETA DE COLORES Y TEMAS === */
-/* =================================== */
+/* ============================================== */
+/* === 1. CONFIGURACIÓN DE VARIABLES Y TEMAS === */
+/* ============================================== */
 :root {
+  /* --- VARIABLES DE DISEÑO (NUEVAS) --- */
+  --transicion: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --radio-borde: 16px;
+  --sombra-suave: 0 10px 30px -10px rgba(83, 48, 55, 0.15);
+  --sombra-hover: 0 20px 40px -10px rgba(83, 48, 55, 0.25);
+
   /* --- TEMA DONA (MODO CLARO) --- */
-  --color-primario: #FF80AB;
-  --color-primario-hover: #F06292;
-  --color-secundario: #FFC0CB;
-  --color-fondo: #FFF8E1;
-  --color-fondo-tarjeta: #FFF0F5;
+  --color-primario: #FF4081;      /* Rosa más moderno y vibrante */
+  --color-primario-hover: #D81B60;
+  --color-secundario: #FF80AB;
   
-  /* Borde Rosa FUERTE para modo claro */
-  --color-borde: #EC407A; 
+  --color-fondo: #FFF9F5;         /* Crema muy suave */
+  --color-fondo-tarjeta: #FFFFFF; /* Blanco puro */
   
-  --color-texto-principal: #5D4037;
-  --color-texto-secundario: #8D6E63;
+  /* 🟢 BORDE: Rosa fuerte para que se note */
+  --color-borde: #EC407A;         
+  
+  --color-texto-principal: #4A2C2A;
+  --color-texto-secundario: #6D4C41;
 
   --cafe-dark: var(--color-primario-hover);
   --cafe-medium: var(--color-primario);
@@ -24,6 +31,7 @@
   --texto-principal: var(--color-texto-principal);
   --texto-secundario: var(--color-texto-secundario);
 
+  /* Mapeo a Bootstrap */
   --bs-body-bg: var(--color-fondo);
   --bs-body-color: var(--color-texto-principal);
   --bs-border-color: var(--color-borde);
@@ -33,17 +41,18 @@
 
 /* --- TEMA PICANTE (MODO OSCURO) --- */
 [data-bs-theme="picante"] {
-  --color-primario: #FF5252;
-  --color-primario-hover: #E53935;
-  --color-secundario: #FF7043;
-  --color-fondo: #121212;
-  --color-fondo-tarjeta: #1E1E1E;
+  --color-primario: #FF5252;      /* Rojo Neón */
+  --color-primario-hover: #FF1744;
+  --color-secundario: #FF8A80;
   
-  /* Borde Gris CLARO para modo oscuro */
-  --color-borde: #AAAAAA; 
+  --color-fondo: #121212;         /* Negro profundo */
+  --color-fondo-tarjeta: #1E1E1E; /* Gris elegante */
   
-  --color-texto-principal: #FAFAFA;
-  --color-texto-secundario: #CCCCCC;
+  /* 🟢 BORDE: Gris claro casi blanco para contraste en negro */
+  --color-borde: #AAAAAA;         
+  
+  --color-texto-principal: #FFFFFF;
+  --color-texto-secundario: #E0E0E0;
 
   --cafe-dark: var(--color-primario-hover);
   --cafe-medium: var(--color-primario);
@@ -52,14 +61,17 @@
   --texto-principal: var(--color-texto-principal);
   --texto-secundario: var(--color-texto-secundario);
 
+  /* Mapeo a Bootstrap */
   --bs-body-bg: var(--color-fondo);
   --bs-body-color: var(--color-texto-principal);
   --bs-border-color: var(--color-borde);
   --bs-card-bg: var(--color-fondo-tarjeta);
   --bs-tertiary-bg: #1E1E1E;
 
-  /* Arregla .text-muted */
-  --bs-secondary-color: var(--color-texto-secundario);
+  --bs-secondary-color: #BBBBBB;
+  
+  --sombra-suave: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  --sombra-hover: 0 20px 40px -10px rgba(255, 82, 82, 0.15);
 }
 
 /* ============================ */
@@ -69,13 +81,19 @@ body {
   font-family: 'Lato', sans-serif;
   background-color: var(--bs-body-bg);
   color: var(--bs-body-color);
-  transition: background-color 0.3s ease, color 0.3s ease;
-  padding-top: 70px;
+  transition: var(--transicion);
+  padding-top: 80px; /* Ajustado para el navbar */
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
   font-family: 'Playfair Display', serif;
-  letter-spacing: 0.5px;
+  letter-spacing: -0.5px;
+}
+
+h2 {
+  font-weight: 900;
+  margin-bottom: 1.5rem;
 }
 
 .section-padding {
@@ -88,35 +106,41 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
 }
 
 /* =============================== */
-/* === NAVBAR ELEGANTE === */
+/* === NAVBAR ELEGANTE (MEJORADO) === */
 /* =============================== */
 .navbar.navbar-light-theme {
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--bs-border-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(15px); /* Efecto vidrio */
+  -webkit-backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
   transition: all 0.3s ease;
-  padding: 0.5rem 1rem;
+  padding: 0.8rem 1rem;
 }
 
 [data-bs-theme="picante"] .navbar.navbar-light-theme {
-  background-color: rgba(25, 25, 25, 0.95);
-  border-bottom-color: var(--bs-border-color);
+  background-color: rgba(18, 18, 18, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .navbar-brand-text {
   font-weight: 800;
-  font-size: 1.6rem;
-  color: var(--color-primario);
-  letter-spacing: 0.5px;
+  font-size: 1.8rem;
+  background: linear-gradient(45deg, var(--color-primario), var(--color-secundario));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 .navbar.navbar-light-theme .nav-link {
   color: var(--color-texto-secundario) !important;
-  font-weight: 500;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.9rem;
   margin: 0 0.6rem;
   position: relative;
   transition: all 0.3s ease;
+  letter-spacing: 1px;
 }
 
 [data-bs-theme="picante"] .navbar.navbar-light-theme .nav-link {
@@ -182,7 +206,7 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
 .offcanvas-header {
   border-bottom: 1px solid var(--bs-border-color);
   padding: 1.5rem;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
 .offcanvas-title {
@@ -217,23 +241,22 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
 .offcanvas-body .nav-link:hover,
 .offcanvas-body .nav-link.active {
   color: var(--color-primario) !important;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(var(--color-primario), 0.05);
   transform: scale(1.05);
 }
 
-/* Footer del menú */
 .offcanvas-footer {
   border-top: 1px solid var(--bs-border-color);
   padding: 1rem 1.5rem;
   font-size: 1rem;
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(0, 0, 0, 0.02);
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 1.5rem;
 }
 
-/* --- BOTÓN CERRAR SESIÓN --- */
+/* Botón cerrar sesión Offcanvas */
 .offcanvas-body .logout-container {
   margin-top: auto;
   padding: 1.5rem;
@@ -250,22 +273,21 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
   color: var(--color-primario);
   background-color: transparent;
   border: 2px solid var(--color-primario);
-  border-radius: 8px;
+  border-radius: 12px;
   text-align: center;
   text-decoration: none;
   transition: all 0.3s ease;
 }
 
 .offcanvas-logout-btn:hover {
-  background-color: var(--color-primario-hover);
-  border-color: var(--color-primario-hover);
-  color: var(--bs-tertiary-bg);
+  background-color: var(--color-primario);
+  color: #FFF;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
 
 /* ============================ */
-/* === HERO SECTION === */
+/* === HERO SECTION (INTACTO) === */
 /* ============================ */
 .hero-classic-section.hero-full-width {
   position: relative;
@@ -278,7 +300,7 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
   background-position: center;
   color: white;
   overflow: hidden;
-  margin-top: -70px;
+  margin-top: -80px; /* Ajustado por el navbar */
   margin-bottom: 3rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 }
@@ -287,7 +309,7 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.15));
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2));
   z-index: 0;
 }
 
@@ -310,71 +332,70 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
   100% { transform: translateY(0px); }
 }
 
+/* ======================= */
+/* === BOTONES MODERNOS === */
+/* ======================= */
 .btn-primary {
-  background-color: var(--cafe-medium);
-  border-color: var(--cafe-medium);
-  border-width: 2px;
-  font-weight: 700;
+  background-color: var(--color-primario);
+  border: none;
+  border-radius: 50px; /* Pill shape */
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 0.6rem 1.2rem;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 4px 15px rgba(255, 128, 171, 0.4);
+  padding: 0.8rem 2rem;
+  transition: var(--transicion);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   color: #fff;
 }
 
 .btn-primary:hover {
-  background-color: var(--cafe-dark);
-  border-color: var(--cafe-dark);
+  background-color: var(--color-primario-hover) !important;
   transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* ======================= */
-/* === TARJETAS (CARDS) === */
+/* === TARJETAS (MEJORADAS) === */
 /* ======================= */
 .card {
   background-color: var(--bs-card-bg);
-  border: 2px solid var(--color-borde) !important; 
-  border-radius: 12px;
+  /* 🟢 IMPORTANTE: Borde de 2px sólido para visibilidad */
+  border: 2px solid var(--color-borde) !important;
+  border-radius: var(--radio-borde);
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: var(--transicion);
+  box-shadow: var(--sombra-suave);
 }
 
-/* Aseguramos que el borde se respete en modo Picante */
+/* Asegurar visibilidad en modo oscuro */
 [data-bs-theme="picante"] .card {
-  box-shadow: 0 4px 15px rgba(255, 82, 82, 0.1);
+  box-shadow: var(--sombra-suave);
   color: var(--color-texto-principal);
   border-color: var(--color-borde) !important;
 }
 
 .card:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+  transform: translateY(-8px);
+  box-shadow: var(--sombra-hover);
+  border-color: var(--color-primario) !important;
 }
 
 .card.en-oferta {
   border-color: var(--color-primario) !important;
 }
 
-/* =============================================================== */
-/* === ETIQUETA DE DESCUENTO === */
-/* =============================================================== */
+/* Badge descuento */
 .discount-badge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: var(--color-primario); 
-  color: #fff; 
-  width: 55px; 
-  height: 55px; 
-  border-radius: 50%; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85em; 
-  font-weight: 700;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); 
-  z-index: 2; 
+  top: 10px; right: 10px;
+  background-color: var(--color-primario);
+  color: #fff;
+  width: 55px; height: 55px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85em; font-weight: 700;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  z-index: 2;
 }
 
 /* ======================= */
@@ -400,17 +421,17 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
 /* === FOOTER === */
 /* ======================= */
 footer {
-  background: var(--color-secundario);
+  background: var(--color-fondo-tarjeta); /* Coherencia con el tema */
   color: var(--color-texto-principal);
   text-align: center;
-  padding: 2rem 1rem;
+  padding: 3rem 1rem;
   font-weight: 500;
   border-top: 2px solid var(--color-borde);
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 4rem;
 }
 
 [data-bs-theme="picante"] footer {
-  background: #1A1A1A;
+  background: #1E1E1E;
   color: #E0E0E0;
   border-top-color: #333;
 }
@@ -432,17 +453,15 @@ footer {
   right: 20px;
   background-color: var(--cafe-medium);
   color: white;
-  width: 60px;
-  height: 60px;
+  width: 60px; height: 60px;
   border-radius: 50%;
   border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   font-size: 1.5rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  transition: var(--transicion);
+  z-index: 1000;
 }
 
 .boton-carrito-flotante:hover {
@@ -460,33 +479,75 @@ footer {
     padding: 3rem 1.5rem;
     min-height: 40vh;
   }
-  .hero-content-left {
-    text-align: center;
-  }
-  .hero-logo-main {
-    margin: 0 auto 1rem auto;
-    max-width: 180px;
-  }
-  .btn-primary {
-    width: 80%;
-  }
+  .hero-content-left { text-align: center; }
+  .hero-logo-main { margin: 0 auto 1rem auto; max-width: 180px; }
+  .btn-primary { width: 80%; }
+}
+
+/* ================================================= */
+/* === CORRECCIÓN DE TABLAS (FIX DEFINITIVO) === */
+/* ================================================= */
+
+/* Estilos generales de tabla */
+.table-responsive {
+  border-radius: var(--radio-borde);
+  box-shadow: var(--sombra-suave);
+  background-color: var(--bs-card-bg);
+  padding: 1rem;
+  border: 2px solid var(--color-borde);
+}
+
+.table {
+  color: var(--color-texto-principal);
+  margin-bottom: 0;
+  vertical-align: middle;
+}
+
+.table th {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 🔴 ESTO ARREGLA LA BARRA BLANCA EN MODO OSCURO 🔴 */
+
+/* Neutralizamos la clase .table-light cuando estamos en picante */
+[data-bs-theme="picante"] .table-light,
+[data-bs-theme="picante"] .table-light th,
+[data-bs-theme="picante"] .table-light td,
+[data-bs-theme="picante"] .table thead th {
+  background-color: #2D2D2D !important; /* Gris oscuro */
+  color: #FFFFFF !important;             /* Letra blanca */
+  border-color: #555 !important;
+}
+
+[data-bs-theme="picante"] .table tbody td {
+  background-color: transparent !important;
+  color: #E0E0E0 !important;
+  border-color: #444 !important;
+}
+
+[data-bs-theme="picante"] .table-hover tbody tr:hover td {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: #FFF !important;
 }
 
 /* =================================== */
-/* === SUB-NAVEGACIÓN PÁGINA === */
+/* === SUB-NAVEGACIÓN (TABS) === */
 /* =================================== */
 .nav-tabs {
-  border-bottom: 1px solid var(--bs-border-color);
+  border-bottom: 2px solid var(--color-borde);
+  margin-bottom: 2rem;
 }
 
 .nav-tabs .nav-item {
-  margin-bottom: -1px;
+  margin-bottom: -2px;
 }
 
 .nav-tabs .nav-link {
   font-family: 'Lato', sans-serif;
   font-weight: 700;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   color: var(--color-texto-secundario);
   text-decoration: none;
   margin: 0 1rem;
@@ -496,62 +557,37 @@ footer {
   transition: all 0.3s ease;
 }
 
-/* Modo Claro */
-.nav-tabs .nav-link:hover,
-.nav-tabs .nav-link:focus {
+.nav-tabs .nav-link:hover {
   color: var(--color-primario);
-  border-color: transparent;
-  isolation: isolate;
 }
 
 .nav-tabs .nav-link.active {
-  color: var(--color-texto-principal);
-  border-bottom-color: var(--color-primario);
-  background-color: transparent;
-  border-color: transparent;
-  border-bottom: 3px solid var(--color-primario);
-}
-
-/* Modo Oscuro */
-[data-bs-theme="picante"] .nav-tabs .nav-link {
-  color: var(--color-texto-secundario) !important;
-  border-color: transparent !important;
-}
-[data-bs-theme="picante"] .nav-tabs .nav-link:hover,
-[data-bs-theme="picante"] .nav-tabs .nav-link:focus {
-  color: var(--color-primario) !important;
-  border-color: transparent !important;
-}
-[data-bs-theme="picante"] .nav-tabs .nav-link.active {
   color: var(--color-texto-principal) !important;
   background-color: transparent !important;
-  border-bottom-color: var(--color-primario) !important;
+  border-bottom: 3px solid var(--color-primario) !important;
+}
+
+/* Fix para modo oscuro en tabs */
+[data-bs-theme="picante"] .nav-tabs .nav-link {
+  color: var(--color-texto-secundario);
+}
+[data-bs-theme="picante"] .nav-tabs .nav-link.active {
+  color: #FFF !important;
 }
 
 /* ============================ */
 /* === SECCIÓN RECOMPENSAS === */
 /* ============================ */
 .card.shadow-sm {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: var(--sombra-suave) !important;
 }
 
-[data-bs-theme="picante"] .card.shadow-sm {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-}
+/* Iconos */
+.text-primary { color: var(--color-primario) !important; }
+.text-success { color: #28a745 !important; }
+[data-bs-theme="picante"] .text-success { color: #4CAF50 !important; }
 
-.text-primary {
-  color: var(--color-primario) !important;
-}
-
-.text-success {
-  color: #28a745 !important;
-}
-
-[data-bs-theme="picante"] .text-success {
-  color: #4CAF50 !important;
-}
-
-/* === Stamp Card === */
+/* === Tarjeta de Sellos === */
 .stamp-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -564,9 +600,7 @@ footer {
   aspect-ratio: 1 / 1;
   border: 3px dashed var(--color-borde);
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   font-size: 2.5rem;
   color: var(--color-borde);
   transition: all 0.3s ease;
@@ -589,52 +623,39 @@ footer {
   box-shadow: 0 0 10px var(--color-primario);
 }
 
-/* ==================================== */
-/* === ESTILOS "NO TIENES RECOMPENSAS" === */
-/* ==================================== */
+/* === Estilo "Aún no tienes recompensas" === */
 .recompensas-container {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
+  display: flex; justify-content: flex-start; align-items: center;
   padding: 3rem 0;
 }
 
 .recompensas-caja-vacia {
   background-color: var(--color-fondo-tarjeta);
-  border: 1px solid var(--color-borde);
-  border-radius: 12px;
-  padding: 2.5rem 2rem;
+  border: 2px dashed var(--color-borde);
+  border-radius: 20px;
+  padding: 3rem;
   text-align: center;
   max-width: 550px;
   width: 90%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-}
-
-[data-bs-theme="picante"] .recompensas-caja-vacia {
-  box-shadow: 0 6px 15px rgba(255, 82, 82, 0.25);
+  box-shadow: var(--sombra-suave);
+  transition: var(--transicion);
 }
 
 .recompensas-icono {
-  width: 80px;
-  height: 80px;
+  width: 80px; height: 80px;
   margin-bottom: 1.5rem;
-  opacity: 0.4;
-  filter: grayscale(90%);
+  opacity: 0.4; filter: grayscale(90%);
 }
 
 .recompensas-caja-vacia h3 {
   font-family: 'Playfair Display', serif;
-  font-size: 1.75rem;
-  font-weight: 600;
+  font-size: 1.75rem; font-weight: 600;
   color: var(--color-texto-principal);
   margin-bottom: 0.5rem;
 }
 
 .recompensas-caja-vacia p {
-  font-size: 1rem;
-  color: var(--color-texto-secundario);
-  line-height: 1.5;
+  font-size: 1rem; color: var(--color-texto-secundario);
 }
 
 @media (max-width: 767.98px) {
@@ -642,42 +663,29 @@ footer {
   .stamp-item { font-size: 1.8rem; border-width: 2px; }
 }
 
-/* ======================= */
-/* === FOOTER CREDITS === */
-/* ======================= */
-footer .text-body-secondary,
-footer .text-body-secondary a {
-  color: var(--color-texto-secundario) !important;
-  text-decoration: none;
+/* Footer Créditos */
+footer .text-body-secondary, footer .text-body-secondary a {
+  color: var(--color-texto-secundario) !important; text-decoration: none;
 }
-footer .text-body-secondary a:hover {
-  text-decoration: underline;
-}
+footer .text-body-secondary a:hover { text-decoration: underline; }
 
 /* ===================================== */
-/* === ESTILOS LOGIN === */
+/* === LOGIN Y FORMS MEJORADOS === */
 /* ===================================== */
 .login-box {
   max-width: 480px;
   margin: 4rem auto;
   padding: 2.5rem;
   background-color: var(--color-fondo-tarjeta);
-  border: 1px solid var(--color-borde);
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-[data-bs-theme="picante"] .login-box {
-  box-shadow: 0 6px 15px rgba(255, 82, 82, 0.25);
+  border: 2px solid var(--color-borde); /* Borde más visible */
+  border-radius: 20px;
+  box-shadow: var(--sombra-suave);
+  transition: var(--transicion);
 }
 
 .login-box button {
-  display: block;
-  width: 100%;
-  max-width: 300px;
-  margin: 1.5rem auto 0 auto;
-  text-align: center;
+  display: block; width: 100%; max-width: 300px;
+  margin: 1.5rem auto 0 auto; text-align: center;
 }
 
 @media (max-width: 576px) {
@@ -686,56 +694,71 @@ footer .text-body-secondary a:hover {
   .login-box button { width: 90%; margin: 1rem auto 0 auto; }
 }
 
+/* Inputs Bonitos */
+.form-control, .form-select {
+  background-color: #FFF; /* Fondo blanco en modo claro */
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  color: var(--color-texto-principal);
+  transition: var(--transicion);
+  background-color: rgba(0,0,0,0.03); /* Ligero gris */
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: #FFF;
+  border-color: var(--color-primario);
+  box-shadow: 0 0 0 4px rgba(var(--color-primario), 0.15);
+}
+
 /* ================================================= */
-/* === UTILIDADES MODO OSCURO (FIXES) === */
+/* === PARCHES FINALES PARA MODO OSCURO (FIXES) === */
 /* ================================================= */
 
+/* Botón cerrar modal (X) */
 [data-bs-theme="picante"] .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
 }
 
+/* Textos que Bootstrap pone negros por defecto */
 [data-bs-theme="picante"] .text-dark,
 [data-bs-theme="picante"] .text-muted,
 [data-bs-theme="picante"] .form-check-label {
   color: var(--color-texto-principal) !important;
 }
 
+/* Inputs en modo oscuro */
 [data-bs-theme="picante"] .form-control,
 [data-bs-theme="picante"] .form-select {
-  background-color: #2b2b2b;
+  background-color: #2D2D2D;
   border-color: #444;
-  color: #fff;
+  color: #FFF;
 }
 
 [data-bs-theme="picante"] .form-control:focus {
   background-color: #333;
-  color: #fff;
   border-color: var(--color-primario);
 }
 
+/* Botones outline (para el carrito) */
 [data-bs-theme="picante"] .btn-outline-secondary {
-  color: #e0e0e0;
+  color: #E0E0E0;
   border-color: #666;
 }
+[data-bs-theme="picante"] .btn-outline-secondary:hover {
+  background-color: #444;
+  color: #FFF;
+}
 
+/* List groups transparentes */
 [data-bs-theme="picante"] .list-group-item {
   background-color: transparent;
   color: var(--color-texto-principal);
   border-color: var(--color-borde);
 }
 
-/* 🔴 FIX CRÍTICO: REPARAR TABLAS EN MODO OSCURO */
-/* Esto neutraliza la clase 'table-light' de Bootstrap cuando está en tema oscuro */
-[data-bs-theme="picante"] .table-light,
-[data-bs-theme="picante"] .table-light th,
-[data-bs-theme="picante"] .table-light td {
-  background-color: #333333 !important; /* Gris oscuro para encabezado */
-  color: #ffffff !important;             /* Texto blanco */
-  border-color: var(--color-borde) !important;
-}
-
-/* Filas al pasar el mouse en modo oscuro */
-[data-bs-theme="picante"] .table-hover tbody tr:hover {
-  color: #ffffff !important;
-  background-color: rgba(255, 255, 255, 0.1) !important;
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--bs-body-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-borde); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-primario); }

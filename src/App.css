@@ -639,99 +639,132 @@ footer .text-body-secondary a:hover {
   text-decoration: underline;
 }
 
-/* ====================================================== */
-/* === ESTILOS DE MODAL Y FIXES BASICOS === */
-/* ====================================================== */
 
-/* Fix tablas en modo oscuro */
+/* ################################################################ */
+/* ### ZONA DE CORRECCIONES MAESTRAS: TABLAS Y FORMULARIOS (MODALES) ### */
+/* ################################################################ */
+
+/* 1. FIX DEFINITIVO PARA TABLAS EN MODO OSCURO */
 [data-bs-theme="picante"] .table {
   color: var(--color-texto-principal) !important;
   border-color: var(--color-borde) !important;
   --bs-table-bg: transparent;
   --bs-table-color: var(--color-texto-principal);
 }
+
+/* Header de Tabla Oscuro (Sin barra blanca) */
 [data-bs-theme="picante"] .table thead,
-[data-bs-theme="picante"] .table thead th {
+[data-bs-theme="picante"] .table thead th,
+[data-bs-theme="picante"] .table-light {
   background-color: var(--color-fondo-tarjeta) !important; 
   color: var(--color-primario) !important; 
   border-color: var(--color-borde) !important;
 }
+
 [data-bs-theme="picante"] .table td {
   background-color: transparent !important;
   color: var(--color-texto-principal) !important;
   border-bottom: 1px solid var(--color-borde);
 }
 
-/* Estilos específicos para el contenedor del Modal */
+[data-bs-theme="picante"] .table-hover tbody tr:hover td,
+[data-bs-theme="picante"] .table-hover tbody tr:hover th {
+  color: var(--color-texto-principal) !important;
+  background-color: rgba(255, 255, 255, 0.075) !important;
+}
+
+/* 2. FIX DEFINITIVO PARA FORMULARIOS Y MODALES */
+/* ESTA ES LA SECCIÓN CORREGIDA QUE ARREGLA EL PROBLEMA DE LA IMAGEN */
+
+/* Inputs en modo oscuro: Fondo Gris Oscuro, Texto Blanco */
+[data-bs-theme="picante"] .form-control,
+[data-bs-theme="picante"] .form-select,
+[data-bs-theme="picante"] input:not([type="checkbox"]):not([type="radio"]), 
+[data-bs-theme="picante"] textarea,
+/* Añadimos selectores específicos para dentro de modales por si acaso */
+[data-bs-theme="picante"] .modal-content input,
+[data-bs-theme="picante"] .modal-content textarea,
+[data-bs-theme="picante"] .modal-content .form-control,
+[data-bs-theme="picante"] .modal-content .form-select {
+  background-color: #2b2b2b !important; /* Gris oscuro elegante, no amarillo */
+  border: 1px solid #444 !important;
+  color: #FFFFFF !important;
+}
+
+/* Cuando haces click en el input (Focus) */
+[data-bs-theme="picante"] .form-control:focus,
+[data-bs-theme="picante"] .form-select:focus,
+[data-bs-theme="picante"] input:not([type="checkbox"]):not([type="radio"]):focus,
+[data-bs-theme="picante"] textarea:focus {
+  background-color: #333333 !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-primario) !important;
+  box-shadow: 0 0 0 0.25rem rgba(255, 82, 82, 0.25) !important;
+}
+
+/* Texto de ayuda (Placeholder) */
+[data-bs-theme="picante"] .form-control::placeholder,
+[data-bs-theme="picante"] input::placeholder,
+[data-bs-theme="picante"] textarea::placeholder {
+  color: #999999 !important;
+  opacity: 1;
+}
+
+/* Estilos específicos para el Modal en modo oscuro */
 [data-bs-theme="picante"] .modal-content {
   background-color: var(--color-fondo-tarjeta);
   color: var(--color-texto-principal);
   border: 1px solid var(--color-borde);
 }
+
 [data-bs-theme="picante"] .modal-header,
 [data-bs-theme="picante"] .modal-footer {
   border-color: var(--color-borde);
 }
+
+/* Botón cerrar modal (X) invertido para que se vea en oscuro */
 [data-bs-theme="picante"] .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
 }
 
-/* Textos varios */
+/* 3. PARCHES GLOBALES PARA ELEMENTOS REBELDES */
+
+/* Forzar textos oscuros a blanco en modo picante */
 [data-bs-theme="picante"] .text-dark,
 [data-bs-theme="picante"] .text-muted,
 [data-bs-theme="picante"] .form-check-label,
-[data-bs-theme="picante"] h1, [data-bs-theme="picante"] h2, 
-[data-bs-theme="picante"] h3, [data-bs-theme="picante"] h4, 
-[data-bs-theme="picante"] h5, [data-bs-theme="picante"] label {
+[data-bs-theme="picante"] h1, 
+[data-bs-theme="picante"] h2, 
+[data-bs-theme="picante"] h3, 
+[data-bs-theme="picante"] h4, 
+[data-bs-theme="picante"] h5,
+[data-bs-theme="picante"] label {
   color: var(--color-texto-principal) !important;
 }
 
-
-/* ######################################################################### */
-/* ### FUERZA BRUTA PARA INPUTS (FIX FINAL) ### */
-/* ######################################################################### */
-/* Esta sección es nueva y usa selectores de máxima prioridad */
-
-/* 1. Reseteo General en modo oscuro para TODO input de texto */
-[data-bs-theme="picante"] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
-[data-bs-theme="picante"] textarea,
-[data-bs-theme="picante"] select,
-[data-bs-theme="picante"] .form-control,
-[data-bs-theme="picante"] .form-select {
-    background-color: #2b2b2b !important;
-    border-color: #555555 !important;
-    color: #ffffff !important;
+/* Forzar fondo oscuro en contenedores claros */
+[data-bs-theme="picante"] .bg-light,
+[data-bs-theme="picante"] .bg-white {
+  background-color: var(--color-fondo-tarjeta) !important;
+  color: var(--color-texto-principal) !important;
+  border: 1px solid var(--color-borde);
 }
 
-/* 2. Estado Focus (cuando haces clic) */
-[data-bs-theme="picante"] input:not([type="checkbox"]):not([type="radio"]):focus,
-[data-bs-theme="picante"] textarea:focus,
-[data-bs-theme="picante"] select:focus,
-[data-bs-theme="picante"] .form-control:focus {
-    background-color: #333333 !important;
-    border-color: var(--color-primario) !important;
-    color: #ffffff !important;
-    box-shadow: 0 0 0 0.25rem rgba(255, 82, 82, 0.25) !important;
+/* Estilos para Login Box */
+.login-box {
+  max-width: 480px;
+  margin: 4rem auto;
+  padding: 2.5rem;
+  background-color: var(--color-fondo-tarjeta);
+  border: 1px solid var(--color-borde);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* 3. EL ARREGLO DEL AUTOCOMPLETAR (Ese amarillo molesto) */
-/* Esto engaña al navegador poniendo una sombra interna sobre el color amarillo */
-[data-bs-theme="picante"] input:-webkit-autofill,
-[data-bs-theme="picante"] input:-webkit-autofill:hover, 
-[data-bs-theme="picante"] input:-webkit-autofill:focus, 
-[data-bs-theme="picante"] input:-webkit-autofill:active,
-[data-bs-theme="picante"] textarea:-webkit-autofill,
-[data-bs-theme="picante"] textarea:-webkit-autofill:hover,
-[data-bs-theme="picante"] textarea:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 30px #2b2b2b inset !important;
-    -webkit-text-fill-color: #ffffff !important;
-    caret-color: white !important;
-    transition: background-color 5000s ease-in-out 0s;
+[data-bs-theme="picante"] .login-box {
+  box-shadow: 0 6px 15px rgba(255, 82, 82, 0.25);
 }
 
-/* 4. Placeholder (texto de ayuda) */
-[data-bs-theme="picante"] input::placeholder,
-[data-bs-theme="picante"] textarea::placeholder {
-    color: #999999 !important;
-    opacity: 1;
+@media (max-width: 576px) {
+  .login-box { width: 95%; padding: 1.5rem; margin: 2rem auto; }
 }

@@ -11,7 +11,7 @@
   --color-fondo: #FFF8E1;
   --color-fondo-tarjeta: #FFF0F5;
   
-  /* 🟢 CAMBIO: Rosa FUERTE para que el borde se vea sí o sí en modo claro */
+  /* Borde Rosa FUERTE para modo claro */
   --color-borde: #EC407A; 
   
   --color-texto-principal: #5D4037;
@@ -39,7 +39,7 @@
   --color-fondo: #121212;
   --color-fondo-tarjeta: #1E1E1E;
   
-  /* 🟢 CAMBIO: Gris CLARO casi blanco para que resalte en el negro */
+  /* Borde Gris CLARO para modo oscuro */
   --color-borde: #AAAAAA; 
   
   --color-texto-principal: #FAFAFA;
@@ -60,15 +60,6 @@
 
   /* Arregla .text-muted */
   --bs-secondary-color: var(--color-texto-secundario);
-
-  /* Variables de Bootstrap para tablas */
-  --bs-table-color: var(--color-texto-principal);
-  --bs-table-bg: transparent;
-  --bs-table-border-color: var(--color-borde);
-  --bs-table-striped-color: var(--color-texto-principal);
-  --bs-table-striped-bg: rgba(255, 255, 255, 0.05);
-  --bs-table-hover-color: var(--color-texto-principal);
-  --bs-table-hover-bg: rgba(255, 255, 255, 0.075);
 }
 
 /* ============================ */
@@ -82,13 +73,7 @@ body {
   padding-top: 70px;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-.navbar-brand,
-.display-4 {
+h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
   font-family: 'Playfair Display', serif;
   letter-spacing: 0.5px;
 }
@@ -114,7 +99,6 @@ h5,
   padding: 0.5rem 1rem;
 }
 
-/* Navbar oscuro */
 [data-bs-theme="picante"] .navbar.navbar-light-theme {
   background-color: rgba(25, 25, 25, 0.95);
   border-bottom-color: var(--bs-border-color);
@@ -350,7 +334,6 @@ h5,
 /* ======================= */
 .card {
   background-color: var(--bs-card-bg);
-  /* 🟢 CAMBIO: Se fuerza el color del borde con !important y 2px de grosor */
   border: 2px solid var(--color-borde) !important; 
   border-radius: 12px;
   overflow: hidden;
@@ -487,27 +470,6 @@ footer {
   .btn-primary {
     width: 80%;
   }
-}
-
-/* ================================================= */
-/* === CORRECCIÓN DE LA TABLA === */
-/* ================================================= */
-[data-bs-theme="picante"] .table {
-  color: var(--color-texto-principal) !important;
-  border-color: var(--color-borde) !important;
-}
-
-[data-bs-theme="picante"] .table th {
-  color: var(--color-texto-principal) !important;
-}
-
-[data-bs-theme="picante"] .table td {
-  color: var(--color-texto-principal) !important;
-}
-
-[data-bs-theme="picante"] .table-hover > tbody > tr:hover > * {
-  color: var(--color-texto-principal) !important;
-  background-color: rgba(255, 255, 255, 0.075) !important;
 }
 
 /* =================================== */
@@ -725,8 +687,9 @@ footer .text-body-secondary a:hover {
 }
 
 /* ================================================= */
-/* === UTILIDADES MODO OSCURO === */
+/* === UTILIDADES MODO OSCURO (FIXES) === */
 /* ================================================= */
+
 [data-bs-theme="picante"] .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
 }
@@ -759,4 +722,20 @@ footer .text-body-secondary a:hover {
   background-color: transparent;
   color: var(--color-texto-principal);
   border-color: var(--color-borde);
+}
+
+/* 🔴 FIX CRÍTICO: REPARAR TABLAS EN MODO OSCURO */
+/* Esto neutraliza la clase 'table-light' de Bootstrap cuando está en tema oscuro */
+[data-bs-theme="picante"] .table-light,
+[data-bs-theme="picante"] .table-light th,
+[data-bs-theme="picante"] .table-light td {
+  background-color: #333333 !important; /* Gris oscuro para encabezado */
+  color: #ffffff !important;             /* Texto blanco */
+  border-color: var(--color-borde) !important;
+}
+
+/* Filas al pasar el mouse en modo oscuro */
+[data-bs-theme="picante"] .table-hover tbody tr:hover {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }

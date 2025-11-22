@@ -11,7 +11,7 @@
   --color-fondo: #FFF8E1;
   --color-fondo-tarjeta: #FFF0F5;
   
-  /* 🟢 CAMBIO: Color más fuerte para que el borde se note en claro */
+  /* Color más fuerte para que el borde se note en claro */
   --color-borde: #EC407A; 
   
   --color-texto-principal: #5D4037;
@@ -39,7 +39,7 @@
   --color-fondo: #121212;
   --color-fondo-tarjeta: #1E1E1E;
   
-  /* 🟢 CAMBIO: Gris claro (casi blanco) para que resalte en fondo negro */
+  /* Gris claro para que resalte en fondo negro */
   --color-borde: #AAAAAA;
   
   --color-texto-principal: #FAFAFA;
@@ -58,10 +58,10 @@
   --bs-card-bg: var(--color-fondo-tarjeta);
   --bs-tertiary-bg: #1E1E1E;
 
-  /* Arregla .text-muted (precio original y "carrito vacío") */
+  /* Arregla .text-muted */
   --bs-secondary-color: var(--color-texto-secundario);
 
-  /* Variables de Bootstrap para tablas */
+  /* Variables de Bootstrap para tablas (Reset inicial) */
   --bs-table-color: var(--color-texto-principal);
   --bs-table-bg: transparent;
   --bs-table-border-color: var(--color-borde);
@@ -344,18 +344,16 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
 /* ======================= */
 .card {
   background-color: var(--bs-card-bg);
-  /* 🟢 CAMBIO: Borde de 2px sólido para mejor visibilidad */
   border: 2px solid var(--color-borde) !important;
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
 }
 
-/* Esta regla pone el texto de la tarjeta en blanco */
+/* Tarjeta en modo oscuro */
 [data-bs-theme="picante"] .card {
   box-shadow: 0 4px 15px rgba(255, 82, 82, 0.25);
   color: var(--color-texto-principal);
-  /* Aseguramos que el borde se vea en modo oscuro */
   border-color: var(--color-borde) !important;
 }
 
@@ -369,7 +367,7 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
 }
 
 /* =============================================================== */
-/* === INICIO: MODIFICACIÓN CREATIVA DE ETIQUETA DE DESCUENTO === */
+/* === ETIQUETA DE DESCUENTO === */
 /* =============================================================== */
 .discount-badge {
   position: absolute;
@@ -388,10 +386,6 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); 
   z-index: 2; 
 }
-/* ============================================================= */
-/* === FIN: MODIFICACIÓN CREATIVA DE ETIQUETA DE DESCUENTO === */
-/* ============================================================= */
-
 
 /* ======================= */
 /* === PRECIOS === */
@@ -408,7 +402,6 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
   font-weight: 700;
 }
 
-/* Esta regla es para el precio verde en modo oscuro */
 [data-bs-theme="picante"] .precio-descuento {
   color: #81C784 !important;
 }
@@ -480,27 +473,6 @@ footer {
   .hero-content-left { text-align: center; }
   .hero-logo-main { margin: 0 auto 1rem auto; max-width: 180px; }
   .btn-primary { width: 80%; }
-}
-
-/* ================================================= */
-/* === CORRECCIÓN DE LA TABLA === */
-/* ================================================= */
-[data-bs-theme="picante"] .table {
-  color: var(--color-texto-principal) !important;
-  border-color: var(--color-borde) !important;
-}
-
-[data-bs-theme="picante"] .table th {
-  color: var(--color-texto-principal) !important;
-}
-
-[data-bs-theme="picante"] .table td {
-  color: var(--color-texto-principal) !important;
-}
-
-[data-bs-theme="picante"] .table-hover > tbody > tr:hover > * {
-  color: var(--color-texto-principal) !important;
-  background-color: rgba(255, 255, 255, 0.075) !important;
 }
 
 
@@ -621,7 +593,6 @@ footer {
 /* =============================================================== */
 /* === ESTILOS "AÚN NO TIENES RECOMPENSAS" (CAJA) === */
 /* =============================================================== */
-
 .recompensas-container {
   display: flex; justify-content: flex-start; align-items: center;
   padding: 3rem 0;
@@ -705,62 +676,101 @@ footer .text-body-secondary a:hover {
   margin: 1.5rem auto 0 auto; text-align: center;
 }
 
-/* ===================================== */
-/* === ARREGLO LOGIN MÓVIL === */
-/* ===================================== */
 @media (max-width: 576px) {
   .login-box { width: 95%; padding: 1.5rem; margin: 2rem auto; }
   .login-box h2 { font-size: 1.8rem; text-align: center; }
   .login-box button { width: 90%; margin: 1rem auto 0 auto; }
 }
 
-/* ================================================= */
-/* === CORRECCIÓN BOTÓN 'X' (btn-close) MODO OSCURO === */
-/* ================================================= */
-[data-bs-theme="picante"] .btn-close {
-  filter: invert(1) grayscale(100%) brightness(200%);
+
+/* ################################################################ */
+/* ### ZONA DE CORRECCIONES Y FIXES PARA MODO OSCURO (PICANTE) ### */
+/* ################################################################ */
+
+/* 1. REPARAR TABLAS (Para que NO salgan blancas en modo oscuro) */
+[data-bs-theme="picante"] .table {
+  color: var(--color-texto-principal) !important;
+  border-color: var(--color-borde) !important;
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--color-texto-principal);
 }
 
-/* =============================================== */
-/* === PARCHES PARA BOOTSTRAP EN MODO PICANTE === */
-/* =============================================== */
+/* ESTA ES LA MAGIA PARA QUITAR LA BARRA BLANCA DEL HEADER */
+[data-bs-theme="picante"] .table thead,
+[data-bs-theme="picante"] .table thead th,
+[data-bs-theme="picante"] .table-light {
+  background-color: var(--color-fondo-tarjeta) !important; /* Gris oscuro */
+  color: var(--color-primario) !important; /* Texto rosado/rojo */
+  border-color: var(--color-borde) !important;
+}
 
+/* Celdas normales */
+[data-bs-theme="picante"] .table td {
+  background-color: transparent !important;
+  color: var(--color-texto-principal) !important;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+/* Hover al pasar el mouse */
+[data-bs-theme="picante"] .table-hover tbody tr:hover td,
+[data-bs-theme="picante"] .table-hover tbody tr:hover th {
+  color: var(--color-texto-principal) !important;
+  background-color: rgba(255, 255, 255, 0.075) !important;
+}
+
+/* 2. PARCHES GLOBALES BOOTSTRAP (Textos y Fondos rebeldes) */
+
+/* Forzar textos a color claro */
 [data-bs-theme="picante"] .text-dark,
 [data-bs-theme="picante"] .text-muted,
-[data-bs-theme="picante"] .form-check-label {
+[data-bs-theme="picante"] .form-check-label,
+[data-bs-theme="picante"] h1, 
+[data-bs-theme="picante"] h2, 
+[data-bs-theme="picante"] h3, 
+[data-bs-theme="picante"] h4, 
+[data-bs-theme="picante"] h5 {
   color: var(--color-texto-principal) !important;
 }
 
-/* Inputs (Cajas de texto) en modo oscuro */
+/* Inputs (Cajas de texto) */
 [data-bs-theme="picante"] .form-control,
 [data-bs-theme="picante"] .form-select {
   background-color: #2b2b2b;
   border-color: #444;
   color: #fff;
 }
-
 [data-bs-theme="picante"] .form-control:focus {
   background-color: #333;
   color: #fff;
   border-color: var(--color-primario);
+  box-shadow: 0 0 0 0.25rem rgba(255, 82, 82, 0.25);
 }
 
-/* Botones outline (para que se vean los - y + del carrito) */
+/* Forzar fondo oscuro en elementos bg-light (causantes de barras blancas) */
+[data-bs-theme="picante"] .bg-light,
+[data-bs-theme="picante"] .bg-white {
+  background-color: var(--color-fondo-tarjeta) !important;
+  color: var(--color-texto-principal) !important;
+  border: 1px solid var(--color-borde);
+}
+
+/* Botones transparentes (Outline) */
 [data-bs-theme="picante"] .btn-outline-secondary {
   color: #e0e0e0;
   border-color: #666;
 }
+[data-bs-theme="picante"] .btn-outline-secondary:hover {
+  background-color: #666;
+  color: #fff;
+}
 
 [data-bs-theme="picante"] .list-group-item {
-  background-color: transparent; /* Para que tome el color de la tarjeta */
+  background-color: transparent;
   color: var(--color-texto-principal);
   border-color: var(--color-borde);
 }
 
-/* 🟢 FIX CRÍTICO: REPARAR LA BARRA BLANCA EN LA TABLA 🟢 */
-/* Esto anula la clase 'bg-light' de bootstrap cuando estamos en modo picante */
-[data-bs-theme="picante"] .bg-light {
-  background-color: var(--color-fondo-tarjeta) !important;
-  color: var(--color-texto-principal) !important;
-  border-top: 1px solid var(--color-borde);
+/* Corrección Botón Cerrar (X) */
+[data-bs-theme="picante"] .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
 }

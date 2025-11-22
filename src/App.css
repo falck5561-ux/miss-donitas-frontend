@@ -1,28 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Lato:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Lato:wght@400;700&display=swap');
 
-/* ============================================== */
-/* === 1. CONFIGURACIÓN DE VARIABLES Y TEMAS === */
-/* ============================================== */
+/* =================================== */
+/* === PALETA DE COLORES Y TEMAS === */
+/* =================================== */
 :root {
-  /* --- VARIABLES DE DISEÑO (NUEVAS) --- */
-  --transicion: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  --radio-borde: 16px;
-  --sombra-suave: 0 10px 30px -10px rgba(83, 48, 55, 0.15);
-  --sombra-hover: 0 20px 40px -10px rgba(83, 48, 55, 0.25);
-
   /* --- TEMA DONA (MODO CLARO) --- */
-  --color-primario: #FF4081;      /* Rosa más moderno y vibrante */
-  --color-primario-hover: #D81B60;
-  --color-secundario: #FF80AB;
+  --color-primario: #FF80AB;
+  --color-primario-hover: #F06292;
+  --color-secundario: #FFC0CB;
+  --color-fondo: #FFF8E1;
+  --color-fondo-tarjeta: #FFF0F5;
   
-  --color-fondo: #FFF9F5;         /* Crema muy suave */
-  --color-fondo-tarjeta: #FFFFFF; /* Blanco puro */
+  /* 🟢 CAMBIO: Color más fuerte para que el borde se note en claro */
+  --color-borde: #EC407A; 
   
-  /* 🟢 BORDE: Rosa fuerte para que se note */
-  --color-borde: #EC407A;         
-  
-  --color-texto-principal: #4A2C2A;
-  --color-texto-secundario: #6D4C41;
+  --color-texto-principal: #5D4037;
+  --color-texto-secundario: #8D6E63;
 
   --cafe-dark: var(--color-primario-hover);
   --cafe-medium: var(--color-primario);
@@ -31,7 +24,6 @@
   --texto-principal: var(--color-texto-principal);
   --texto-secundario: var(--color-texto-secundario);
 
-  /* Mapeo a Bootstrap */
   --bs-body-bg: var(--color-fondo);
   --bs-body-color: var(--color-texto-principal);
   --bs-border-color: var(--color-borde);
@@ -41,18 +33,17 @@
 
 /* --- TEMA PICANTE (MODO OSCURO) --- */
 [data-bs-theme="picante"] {
-  --color-primario: #FF5252;      /* Rojo Neón */
-  --color-primario-hover: #FF1744;
-  --color-secundario: #FF8A80;
+  --color-primario: #FF5252;
+  --color-primario-hover: #E53935;
+  --color-secundario: #FF7043;
+  --color-fondo: #121212;
+  --color-fondo-tarjeta: #1E1E1E;
   
-  --color-fondo: #121212;         /* Negro profundo */
-  --color-fondo-tarjeta: #1E1E1E; /* Gris elegante */
+  /* 🟢 CAMBIO: Gris claro (casi blanco) para que resalte en fondo negro */
+  --color-borde: #AAAAAA;
   
-  /* 🟢 BORDE: Gris claro casi blanco para contraste en negro */
-  --color-borde: #AAAAAA;         
-  
-  --color-texto-principal: #FFFFFF;
-  --color-texto-secundario: #E0E0E0;
+  --color-texto-principal: #FAFAFA;
+  --color-texto-secundario: #CCCCCC;
 
   --cafe-dark: var(--color-primario-hover);
   --cafe-medium: var(--color-primario);
@@ -61,17 +52,23 @@
   --texto-principal: var(--color-texto-principal);
   --texto-secundario: var(--color-texto-secundario);
 
-  /* Mapeo a Bootstrap */
   --bs-body-bg: var(--color-fondo);
   --bs-body-color: var(--color-texto-principal);
   --bs-border-color: var(--color-borde);
   --bs-card-bg: var(--color-fondo-tarjeta);
   --bs-tertiary-bg: #1E1E1E;
 
-  --bs-secondary-color: #BBBBBB;
-  
-  --sombra-suave: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-  --sombra-hover: 0 20px 40px -10px rgba(255, 82, 82, 0.15);
+  /* Arregla .text-muted (precio original y "carrito vacío") */
+  --bs-secondary-color: var(--color-texto-secundario);
+
+  /* Variables de Bootstrap para tablas */
+  --bs-table-color: var(--color-texto-principal);
+  --bs-table-bg: transparent;
+  --bs-table-border-color: var(--color-borde);
+  --bs-table-striped-color: var(--color-texto-principal);
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.05);
+  --bs-table-hover-color: var(--color-texto-principal);
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.075);
 }
 
 /* ============================ */
@@ -81,19 +78,13 @@ body {
   font-family: 'Lato', sans-serif;
   background-color: var(--bs-body-bg);
   color: var(--bs-body-color);
-  transition: var(--transicion);
-  padding-top: 80px; /* Ajustado para el navbar */
-  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  padding-top: 70px;
 }
 
 h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
   font-family: 'Playfair Display', serif;
-  letter-spacing: -0.5px;
-}
-
-h2 {
-  font-weight: 900;
-  margin-bottom: 1.5rem;
+  letter-spacing: 0.5px;
 }
 
 .section-padding {
@@ -106,41 +97,36 @@ h2 {
 }
 
 /* =============================== */
-/* === NAVBAR ELEGANTE (MEJORADO) === */
+/* === NAVBAR ELEGANTE === */
 /* =============================== */
 .navbar.navbar-light-theme {
-  background-color: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(15px); /* Efecto vidrio */
-  -webkit-backdrop-filter: blur(15px);
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--bs-border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  padding: 0.8rem 1rem;
+  padding: 0.5rem 1rem;
 }
 
+/* Navbar oscuro */
 [data-bs-theme="picante"] .navbar.navbar-light-theme {
-  background-color: rgba(18, 18, 18, 0.85);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(25, 25, 25, 0.95);
+  border-bottom-color: var(--bs-border-color);
 }
 
 .navbar-brand-text {
   font-weight: 800;
-  font-size: 1.8rem;
-  background: linear-gradient(45deg, var(--color-primario), var(--color-secundario));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  font-size: 1.6rem;
+  color: var(--color-primario);
+  letter-spacing: 0.5px;
 }
 
 .navbar.navbar-light-theme .nav-link {
   color: var(--color-texto-secundario) !important;
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.9rem;
+  font-weight: 500;
   margin: 0 0.6rem;
   position: relative;
   transition: all 0.3s ease;
-  letter-spacing: 1px;
 }
 
 [data-bs-theme="picante"] .navbar.navbar-light-theme .nav-link {
@@ -206,7 +192,7 @@ h2 {
 .offcanvas-header {
   border-bottom: 1px solid var(--bs-border-color);
   padding: 1.5rem;
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .offcanvas-title {
@@ -241,22 +227,23 @@ h2 {
 .offcanvas-body .nav-link:hover,
 .offcanvas-body .nav-link.active {
   color: var(--color-primario) !important;
-  background-color: rgba(var(--color-primario), 0.05);
+  background-color: rgba(255, 255, 255, 0.05);
   transform: scale(1.05);
 }
 
+/* Footer del menú */
 .offcanvas-footer {
   border-top: 1px solid var(--bs-border-color);
   padding: 1rem 1.5rem;
   font-size: 1rem;
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 1.5rem;
 }
 
-/* Botón cerrar sesión Offcanvas */
+/* --- BOTÓN CERRAR SESIÓN --- */
 .offcanvas-body .logout-container {
   margin-top: auto;
   padding: 1.5rem;
@@ -273,21 +260,22 @@ h2 {
   color: var(--color-primario);
   background-color: transparent;
   border: 2px solid var(--color-primario);
-  border-radius: 12px;
+  border-radius: 8px;
   text-align: center;
   text-decoration: none;
   transition: all 0.3s ease;
 }
 
 .offcanvas-logout-btn:hover {
-  background-color: var(--color-primario);
-  color: #FFF;
+  background-color: var(--color-primario-hover);
+  border-color: var(--color-primario-hover);
+  color: var(--bs-tertiary-bg);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
 
 /* ============================ */
-/* === HERO SECTION (INTACTO) === */
+/* === HERO SECTION === */
 /* ============================ */
 .hero-classic-section.hero-full-width {
   position: relative;
@@ -300,7 +288,7 @@ h2 {
   background-position: center;
   color: white;
   overflow: hidden;
-  margin-top: -80px; /* Ajustado por el navbar */
+  margin-top: -70px;
   margin-bottom: 3rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 }
@@ -309,7 +297,7 @@ h2 {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2));
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.15));
   z-index: 0;
 }
 
@@ -332,71 +320,78 @@ h2 {
   100% { transform: translateY(0px); }
 }
 
-/* ======================= */
-/* === BOTONES MODERNOS === */
-/* ======================= */
 .btn-primary {
-  background-color: var(--color-primario);
-  border: none;
-  border-radius: 50px; /* Pill shape */
-  font-weight: 800;
+  background-color: var(--cafe-medium);
+  border-color: var(--cafe-medium);
+  border-width: 2px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 0.8rem 2rem;
-  transition: var(--transicion);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  padding: 0.6rem 1.2rem;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 15px rgba(255, 128, 171, 0.4);
   color: #fff;
 }
 
 .btn-primary:hover {
-  background-color: var(--color-primario-hover) !important;
+  background-color: var(--cafe-dark);
+  border-color: var(--cafe-dark);
   transform: scale(1.05);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* ======================= */
-/* === TARJETAS (MEJORADAS) === */
+/* === TARJETAS === */
 /* ======================= */
 .card {
   background-color: var(--bs-card-bg);
-  /* 🟢 IMPORTANTE: Borde de 2px sólido para visibilidad */
+  /* 🟢 CAMBIO: Borde de 2px sólido para mejor visibilidad */
   border: 2px solid var(--color-borde) !important;
-  border-radius: var(--radio-borde);
+  border-radius: 12px;
   overflow: hidden;
-  transition: var(--transicion);
-  box-shadow: var(--sombra-suave);
+  transition: all 0.3s ease;
 }
 
-/* Asegurar visibilidad en modo oscuro */
+/* Esta regla pone el texto de la tarjeta en blanco */
 [data-bs-theme="picante"] .card {
-  box-shadow: var(--sombra-suave);
+  box-shadow: 0 4px 15px rgba(255, 82, 82, 0.25);
   color: var(--color-texto-principal);
+  /* Aseguramos que el borde se vea en modo oscuro */
   border-color: var(--color-borde) !important;
 }
 
 .card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--sombra-hover);
-  border-color: var(--color-primario) !important;
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
 }
 
 .card.en-oferta {
   border-color: var(--color-primario) !important;
 }
 
-/* Badge descuento */
+/* =============================================================== */
+/* === INICIO: MODIFICACIÓN CREATIVA DE ETIQUETA DE DESCUENTO === */
+/* =============================================================== */
 .discount-badge {
   position: absolute;
-  top: 10px; right: 10px;
-  background-color: var(--color-primario);
-  color: #fff;
-  width: 55px; height: 55px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.85em; font-weight: 700;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  z-index: 2;
+  top: 10px;
+  right: 10px;
+  background-color: var(--color-primario); 
+  color: #fff; 
+  width: 55px; 
+  height: 55px; 
+  border-radius: 50%; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85em; 
+  font-weight: 700;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); 
+  z-index: 2; 
 }
+/* ============================================================= */
+/* === FIN: MODIFICACIÓN CREATIVA DE ETIQUETA DE DESCUENTO === */
+/* ============================================================= */
+
 
 /* ======================= */
 /* === PRECIOS === */
@@ -413,6 +408,7 @@ h2 {
   font-weight: 700;
 }
 
+/* Esta regla es para el precio verde en modo oscuro */
 [data-bs-theme="picante"] .precio-descuento {
   color: #81C784 !important;
 }
@@ -421,17 +417,17 @@ h2 {
 /* === FOOTER === */
 /* ======================= */
 footer {
-  background: var(--color-fondo-tarjeta); /* Coherencia con el tema */
+  background: var(--color-secundario);
   color: var(--color-texto-principal);
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 2rem 1rem;
   font-weight: 500;
   border-top: 2px solid var(--color-borde);
-  margin-top: 4rem;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
 }
 
 [data-bs-theme="picante"] footer {
-  background: #1E1E1E;
+  background: #1A1A1A;
   color: #E0E0E0;
   border-top-color: #333;
 }
@@ -453,15 +449,17 @@ footer {
   right: 20px;
   background-color: var(--cafe-medium);
   color: white;
-  width: 60px; height: 60px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   border: none;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.5rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: var(--transicion);
-  z-index: 1000;
+  transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .boton-carrito-flotante:hover {
@@ -485,69 +483,42 @@ footer {
 }
 
 /* ================================================= */
-/* === CORRECCIÓN DE TABLAS (FIX DEFINITIVO) === */
+/* === CORRECCIÓN DE LA TABLA === */
 /* ================================================= */
-
-/* Estilos generales de tabla */
-.table-responsive {
-  border-radius: var(--radio-borde);
-  box-shadow: var(--sombra-suave);
-  background-color: var(--bs-card-bg);
-  padding: 1rem;
-  border: 2px solid var(--color-borde);
+[data-bs-theme="picante"] .table {
+  color: var(--color-texto-principal) !important;
+  border-color: var(--color-borde) !important;
 }
 
-.table {
-  color: var(--color-texto-principal);
-  margin-bottom: 0;
-  vertical-align: middle;
+[data-bs-theme="picante"] .table th {
+  color: var(--color-texto-principal) !important;
 }
 
-.table th {
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+[data-bs-theme="picante"] .table td {
+  color: var(--color-texto-principal) !important;
 }
 
-/* 🔴 ESTO ARREGLA LA BARRA BLANCA EN MODO OSCURO 🔴 */
-
-/* Neutralizamos la clase .table-light cuando estamos en picante */
-[data-bs-theme="picante"] .table-light,
-[data-bs-theme="picante"] .table-light th,
-[data-bs-theme="picante"] .table-light td,
-[data-bs-theme="picante"] .table thead th {
-  background-color: #2D2D2D !important; /* Gris oscuro */
-  color: #FFFFFF !important;             /* Letra blanca */
-  border-color: #555 !important;
+[data-bs-theme="picante"] .table-hover > tbody > tr:hover > * {
+  color: var(--color-texto-principal) !important;
+  background-color: rgba(255, 255, 255, 0.075) !important;
 }
 
-[data-bs-theme="picante"] .table tbody td {
-  background-color: transparent !important;
-  color: #E0E0E0 !important;
-  border-color: #444 !important;
-}
-
-[data-bs-theme="picante"] .table-hover tbody tr:hover td {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  color: #FFF !important;
-}
 
 /* =================================== */
-/* === SUB-NAVEGACIÓN (TABS) === */
+/* === SUB-NAVEGACIÓN PÁGINA === */
 /* =================================== */
 .nav-tabs {
-  border-bottom: 2px solid var(--color-borde);
-  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--bs-border-color);
 }
 
 .nav-tabs .nav-item {
-  margin-bottom: -2px;
+  margin-bottom: -1px;
 }
 
 .nav-tabs .nav-link {
   font-family: 'Lato', sans-serif;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   color: var(--color-texto-secundario);
   text-decoration: none;
   margin: 0 1rem;
@@ -557,37 +528,57 @@ footer {
   transition: all 0.3s ease;
 }
 
-.nav-tabs .nav-link:hover {
+/* Modo Claro (Dona) */
+.nav-tabs .nav-link:hover,
+.nav-tabs .nav-link:focus {
   color: var(--color-primario);
+  border-color: transparent;
+  isolation: isolate;
 }
 
 .nav-tabs .nav-link.active {
-  color: var(--color-texto-principal) !important;
-  background-color: transparent !important;
-  border-bottom: 3px solid var(--color-primario) !important;
+  color: var(--color-texto-principal);
+  border-bottom-color: var(--color-primario);
+  background-color: transparent;
+  border-color: transparent;
+  border-bottom: 3px solid var(--color-primario);
 }
 
-/* Fix para modo oscuro en tabs */
+/* Modo Oscuro (Picante) - Forzamos los colores */
 [data-bs-theme="picante"] .nav-tabs .nav-link {
-  color: var(--color-texto-secundario);
+  color: var(--color-texto-secundario) !important;
+  border-color: transparent !important;
 }
+[data-bs-theme="picante"] .nav-tabs .nav-link:hover,
+[data-bs-theme="picante"] .nav-tabs .nav-link:focus {
+  color: var(--color-primario) !important;
+  border-color: transparent !important;
+}
+
 [data-bs-theme="picante"] .nav-tabs .nav-link.active {
-  color: #FFF !important;
+  color: var(--color-texto-principal) !important;
+  background-color: transparent !important;
+  border-bottom-color: var(--color-primario) !important;
 }
+
 
 /* ============================ */
 /* === SECCIÓN RECOMPENSAS === */
 /* ============================ */
 .card.shadow-sm {
-  box-shadow: var(--sombra-suave) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
 }
 
-/* Iconos */
+[data-bs-theme="picante"] .card.shadow-sm {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Clases de color para los iconos */
 .text-primary { color: var(--color-primario) !important; }
 .text-success { color: #28a745 !important; }
 [data-bs-theme="picante"] .text-success { color: #4CAF50 !important; }
 
-/* === Tarjeta de Sellos === */
+/* === Tarjeta de Sellos (Stamp Card) === */
 .stamp-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -600,13 +591,16 @@ footer {
   aspect-ratio: 1 / 1;
   border: 3px dashed var(--color-borde);
   border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 2.5rem;
   color: var(--color-borde);
   transition: all 0.3s ease;
   background-color: var(--bs-body-bg);
 }
 
+/* El sello final, la recompensa */
 .stamp-item.reward {
   border-style: solid;
   border-color: var(--color-primario);
@@ -614,6 +608,7 @@ footer {
   background-color: var(--color-fondo-tarjeta);
 }
 
+/* Cuando el sello esté "lleno" (activo) */
 .stamp-item.filled {
   border-style: solid;
   border-color: var(--color-primario);
@@ -623,7 +618,10 @@ footer {
   box-shadow: 0 0 10px var(--color-primario);
 }
 
-/* === Estilo "Aún no tienes recompensas" === */
+/* =============================================================== */
+/* === ESTILOS "AÚN NO TIENES RECOMPENSAS" (CAJA) === */
+/* =============================================================== */
+
 .recompensas-container {
   display: flex; justify-content: flex-start; align-items: center;
   padding: 3rem 0;
@@ -631,14 +629,18 @@ footer {
 
 .recompensas-caja-vacia {
   background-color: var(--color-fondo-tarjeta);
-  border: 2px dashed var(--color-borde);
-  border-radius: 20px;
-  padding: 3rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  padding: 2.5rem 2rem;
   text-align: center;
   max-width: 550px;
   width: 90%;
-  box-shadow: var(--sombra-suave);
-  transition: var(--transicion);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+[data-bs-theme="picante"] .recompensas-caja-vacia {
+  box-shadow: 0 6px 15px rgba(255, 82, 82, 0.25);
 }
 
 .recompensas-icono {
@@ -655,32 +657,47 @@ footer {
 }
 
 .recompensas-caja-vacia p {
-  font-size: 1rem; color: var(--color-texto-secundario);
+  font-size: 1rem;
+  color: var(--color-texto-secundario);
+  line-height: 1.5;
 }
 
+/* === RESPONSIVO (para Recompensas) === */
 @media (max-width: 767.98px) {
   .stamp-grid { gap: 0.5rem; }
   .stamp-item { font-size: 1.8rem; border-width: 2px; }
+  .display-2 { font-size: 4rem; }
 }
 
-/* Footer Créditos */
-footer .text-body-secondary, footer .text-body-secondary a {
-  color: var(--color-texto-secundario) !important; text-decoration: none;
+/* ======================= */
+/* === FOOTER (Créditos) === */
+/* ======================= */
+footer .text-body-secondary,
+footer .text-body-secondary a {
+  color: var(--color-texto-secundario) !important;
+  text-decoration: none;
 }
-footer .text-body-secondary a:hover { text-decoration: underline; }
+
+footer .text-body-secondary a:hover {
+  text-decoration: underline;
+}
 
 /* ===================================== */
-/* === LOGIN Y FORMS MEJORADOS === */
+/* === ESTILOS LOGIN === */
 /* ===================================== */
 .login-box {
   max-width: 480px;
   margin: 4rem auto;
   padding: 2.5rem;
   background-color: var(--color-fondo-tarjeta);
-  border: 2px solid var(--color-borde); /* Borde más visible */
-  border-radius: 20px;
-  box-shadow: var(--sombra-suave);
-  transition: var(--transicion);
+  border: 1px solid var(--color-borde);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+[data-bs-theme="picante"] .login-box {
+  box-shadow: 0 6px 15px rgba(255, 82, 82, 0.25);
 }
 
 .login-box button {
@@ -688,77 +705,62 @@ footer .text-body-secondary a:hover { text-decoration: underline; }
   margin: 1.5rem auto 0 auto; text-align: center;
 }
 
+/* ===================================== */
+/* === ARREGLO LOGIN MÓVIL === */
+/* ===================================== */
 @media (max-width: 576px) {
   .login-box { width: 95%; padding: 1.5rem; margin: 2rem auto; }
   .login-box h2 { font-size: 1.8rem; text-align: center; }
   .login-box button { width: 90%; margin: 1rem auto 0 auto; }
 }
 
-/* Inputs Bonitos */
-.form-control, .form-select {
-  background-color: #FFF; /* Fondo blanco en modo claro */
-  border: 2px solid transparent;
-  border-radius: 12px;
-  padding: 0.8rem 1rem;
-  color: var(--color-texto-principal);
-  transition: var(--transicion);
-  background-color: rgba(0,0,0,0.03); /* Ligero gris */
-}
-
-.form-control:focus, .form-select:focus {
-  background-color: #FFF;
-  border-color: var(--color-primario);
-  box-shadow: 0 0 0 4px rgba(var(--color-primario), 0.15);
-}
-
 /* ================================================= */
-/* === PARCHES FINALES PARA MODO OSCURO (FIXES) === */
+/* === CORRECCIÓN BOTÓN 'X' (btn-close) MODO OSCURO === */
 /* ================================================= */
-
-/* Botón cerrar modal (X) */
 [data-bs-theme="picante"] .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
 }
 
-/* Textos que Bootstrap pone negros por defecto */
+/* =============================================== */
+/* === PARCHES PARA BOOTSTRAP EN MODO PICANTE === */
+/* =============================================== */
+
 [data-bs-theme="picante"] .text-dark,
 [data-bs-theme="picante"] .text-muted,
 [data-bs-theme="picante"] .form-check-label {
   color: var(--color-texto-principal) !important;
 }
 
-/* Inputs en modo oscuro */
+/* Inputs (Cajas de texto) en modo oscuro */
 [data-bs-theme="picante"] .form-control,
 [data-bs-theme="picante"] .form-select {
-  background-color: #2D2D2D;
+  background-color: #2b2b2b;
   border-color: #444;
-  color: #FFF;
+  color: #fff;
 }
 
 [data-bs-theme="picante"] .form-control:focus {
   background-color: #333;
+  color: #fff;
   border-color: var(--color-primario);
 }
 
-/* Botones outline (para el carrito) */
+/* Botones outline (para que se vean los - y + del carrito) */
 [data-bs-theme="picante"] .btn-outline-secondary {
-  color: #E0E0E0;
+  color: #e0e0e0;
   border-color: #666;
 }
-[data-bs-theme="picante"] .btn-outline-secondary:hover {
-  background-color: #444;
-  color: #FFF;
-}
 
-/* List groups transparentes */
 [data-bs-theme="picante"] .list-group-item {
-  background-color: transparent;
+  background-color: transparent; /* Para que tome el color de la tarjeta */
   color: var(--color-texto-principal);
   border-color: var(--color-borde);
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: var(--bs-body-bg); }
-::-webkit-scrollbar-thumb { background: var(--color-borde); border-radius: 5px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-primario); }
+/* 🟢 FIX CRÍTICO: REPARAR LA BARRA BLANCA EN LA TABLA 🟢 */
+/* Esto anula la clase 'bg-light' de bootstrap cuando estamos en modo picante */
+[data-bs-theme="picante"] .bg-light {
+  background-color: var(--color-fondo-tarjeta) !important;
+  color: var(--color-texto-principal) !important;
+  border-top: 1px solid var(--color-borde);
+}

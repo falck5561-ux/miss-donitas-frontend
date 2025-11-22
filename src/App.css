@@ -11,7 +11,7 @@
   --color-fondo: #FFF8E1;
   --color-fondo-tarjeta: #FFF0F5;
   
-  /* Borde más visible en modo claro */
+  /* Borde más fuerte para modo claro */
   --color-borde: #EC407A; 
   
   --color-texto-principal: #5D4037;
@@ -24,7 +24,6 @@
   --texto-principal: var(--color-texto-principal);
   --texto-secundario: var(--color-texto-secundario);
 
-  /* Bootstrap Variables Override */
   --bs-body-bg: var(--color-fondo);
   --bs-body-color: var(--color-texto-principal);
   --bs-border-color: var(--color-borde);
@@ -40,8 +39,8 @@
   --color-fondo: #121212;
   --color-fondo-tarjeta: #1E1E1E;
   
-  /* Gris medio para bordes */
-  --color-borde: #555555;
+  /* Gris claro para resaltar en negro */
+  --color-borde: #666666;
   
   --color-texto-principal: #FAFAFA;
   --color-texto-secundario: #CCCCCC;
@@ -62,7 +61,7 @@
   /* Arregla .text-muted */
   --bs-secondary-color: var(--color-texto-secundario);
 
-  /* Reset tablas */
+  /* Reset de tablas */
   --bs-table-color: var(--color-texto-principal);
   --bs-table-bg: transparent;
   --bs-table-border-color: var(--color-borde);
@@ -345,7 +344,6 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
   transition: all 0.3s ease;
 }
 
-/* Tarjeta en modo oscuro */
 [data-bs-theme="picante"] .card {
   box-shadow: 0 4px 15px rgba(255, 82, 82, 0.25);
   color: var(--color-texto-principal);
@@ -361,7 +359,6 @@ h1, h2, h3, h4, h5, .navbar-brand, .display-4 {
   border-color: var(--color-primario) !important;
 }
 
-/* Etiqueta Descuento */
 .discount-badge {
   position: absolute;
   top: 10px;
@@ -468,7 +465,6 @@ footer {
   .btn-primary { width: 80%; }
 }
 
-
 /* =================================== */
 /* === SUB-NAVEGACIÓN PÁGINA === */
 /* =================================== */
@@ -509,7 +505,7 @@ footer {
   border-bottom: 3px solid var(--color-primario);
 }
 
-/* Modo Oscuro (Picante) - Forzamos los colores */
+/* Modo Oscuro (Picante) */
 [data-bs-theme="picante"] .nav-tabs .nav-link {
   color: var(--color-texto-secundario) !important;
   border-color: transparent !important;
@@ -525,7 +521,6 @@ footer {
   background-color: transparent !important;
   border-bottom-color: var(--color-primario) !important;
 }
-
 
 /* ============================ */
 /* === SECCIÓN RECOMPENSAS === */
@@ -580,9 +575,6 @@ footer {
   box-shadow: 0 0 10px var(--color-primario);
 }
 
-/* =============================================================== */
-/* === ESTILOS "AÚN NO TIENES RECOMPENSAS" === */
-/* =============================================================== */
 .recompensas-container {
   display: flex; justify-content: flex-start; align-items: center;
   padding: 3rem 0;
@@ -639,12 +631,11 @@ footer .text-body-secondary a:hover {
   text-decoration: underline;
 }
 
+/* ================================================================ */
+/* === FIX DEFINITIVO TABLAS, FORMULARIOS Y TEXTOS (MODO OSCURO) === */
+/* ================================================================ */
 
-/* ################################################################ */
-/* ### ZONA DE CORRECCIONES MAESTRAS: TABLAS Y FORMULARIOS (MODALES) ### */
-/* ################################################################ */
-
-/* 1. FIX DEFINITIVO PARA TABLAS EN MODO OSCURO */
+/* 1. TABLAS (Evitar barras blancas) */
 [data-bs-theme="picante"] .table {
   color: var(--color-texto-principal) !important;
   border-color: var(--color-borde) !important;
@@ -652,7 +643,6 @@ footer .text-body-secondary a:hover {
   --bs-table-color: var(--color-texto-principal);
 }
 
-/* Header de Tabla Oscuro (Sin barra blanca) */
 [data-bs-theme="picante"] .table thead,
 [data-bs-theme="picante"] .table thead th,
 [data-bs-theme="picante"] .table-light {
@@ -673,19 +663,19 @@ footer .text-body-secondary a:hover {
   background-color: rgba(255, 255, 255, 0.075) !important;
 }
 
-/* 2. FIX DEFINITIVO PARA FORMULARIOS Y MODALES (Tu problema actual) */
+/* 2. FIX FORMULARIOS Y MODALES (LO QUE SE VEÍA FEO EN LA FOTO) */
 
-/* Esto arregla los INPUTS que se ven crema brillante */
+/* Esto cambia el fondo de los Inputs a Gris Oscuro y texto Blanco */
 [data-bs-theme="picante"] .form-control,
 [data-bs-theme="picante"] .form-select,
-[data-bs-theme="picante"] input, 
+[data-bs-theme="picante"] input:not([type="checkbox"]):not([type="radio"]), 
 [data-bs-theme="picante"] textarea {
-  background-color: #2D2D2D !important; /* Gris oscuro elegante */
+  background-color: #2D2D2D !important; 
   border: 1px solid #555 !important;
-  color: #FFFFFF !important; /* Texto blanco */
+  color: #FFFFFF !important; 
 }
 
-/* Cuando haces click en el input (Focus) */
+/* Estilo cuando haces clic (Focus) en un input oscuro */
 [data-bs-theme="picante"] .form-control:focus,
 [data-bs-theme="picante"] .form-select:focus {
   background-color: #333333 !important;
@@ -694,12 +684,12 @@ footer .text-body-secondary a:hover {
   box-shadow: 0 0 0 0.25rem rgba(255, 82, 82, 0.25);
 }
 
-/* Texto de ayuda (Placeholder) para que no desaparezca */
+/* El texto de ejemplo (placeholder) que sea gris claro */
 [data-bs-theme="picante"] .form-control::placeholder {
   color: #AAAAAA !important;
 }
 
-/* Modales coherentes con el tema oscuro */
+/* Asegurar que el Modal completo sea oscuro */
 [data-bs-theme="picante"] .modal-content {
   background-color: var(--color-fondo-tarjeta);
   color: var(--color-texto-principal);
@@ -711,14 +701,12 @@ footer .text-body-secondary a:hover {
   border-color: var(--color-borde);
 }
 
-/* Botón cerrar modal (X) */
+/* Botón cerrar modal (X) en blanco */
 [data-bs-theme="picante"] .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
 }
 
-/* 3. PARCHES GLOBALES PARA ELEMENTOS REBELDES */
-
-/* Forzar textos oscuros a blanco en modo picante */
+/* 3. FIXES GLOBALES DE TEXTO */
 [data-bs-theme="picante"] .text-dark,
 [data-bs-theme="picante"] .text-muted,
 [data-bs-theme="picante"] .form-check-label,
@@ -731,7 +719,7 @@ footer .text-body-secondary a:hover {
   color: var(--color-texto-principal) !important;
 }
 
-/* Forzar fondo oscuro en contenedores claros */
+/* Forzar contenedores claros a oscuros */
 [data-bs-theme="picante"] .bg-light,
 [data-bs-theme="picante"] .bg-white {
   background-color: var(--color-fondo-tarjeta) !important;
@@ -739,7 +727,7 @@ footer .text-body-secondary a:hover {
   border: 1px solid var(--color-borde);
 }
 
-/* Estilos para Login Box */
+/* Login Box */
 .login-box {
   max-width: 480px;
   margin: 4rem auto;

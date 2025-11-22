@@ -11,8 +11,8 @@
   --color-fondo: #FFF8E1;
   --color-fondo-tarjeta: #FFF0F5;
   
-  /* 🟢 CAMBIO: Rosa más oscuro para que se vea el borde en fondo claro */
-  --color-borde: #F48FB1; 
+  /* 🟢 CAMBIO: Rosa FUERTE para que el borde se vea sí o sí en modo claro */
+  --color-borde: #EC407A; 
   
   --color-texto-principal: #5D4037;
   --color-texto-secundario: #8D6E63;
@@ -39,8 +39,8 @@
   --color-fondo: #121212;
   --color-fondo-tarjeta: #1E1E1E;
   
-  /* 🟢 CAMBIO: Gris medio para que resalte sobre el negro */
-  --color-borde: #666666; 
+  /* 🟢 CAMBIO: Gris CLARO casi blanco para que resalte en el negro */
+  --color-borde: #AAAAAA; 
   
   --color-texto-principal: #FAFAFA;
   --color-texto-secundario: #CCCCCC;
@@ -58,7 +58,7 @@
   --bs-card-bg: var(--color-fondo-tarjeta);
   --bs-tertiary-bg: #1E1E1E;
 
-  /* Arregla .text-muted (precio original y "carrito vacío") */
+  /* Arregla .text-muted */
   --bs-secondary-color: var(--color-texto-secundario);
 
   /* Variables de Bootstrap para tablas */
@@ -346,21 +346,22 @@ h5,
 }
 
 /* ======================= */
-/* === TARJETAS === */
+/* === TARJETAS (CARDS) === */
 /* ======================= */
 .card {
   background-color: var(--bs-card-bg);
-  /* 🟢 CAMBIO: Borde de 2px para mejor visibilidad */
-  border: 2px solid var(--color-borde); 
+  /* 🟢 CAMBIO: Se fuerza el color del borde con !important y 2px de grosor */
+  border: 2px solid var(--color-borde) !important; 
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
 }
 
-/* Esta regla pone el texto de la tarjeta en blanco */
+/* Aseguramos que el borde se respete en modo Picante */
 [data-bs-theme="picante"] .card {
-  box-shadow: 0 4px 15px rgba(255, 82, 82, 0.25);
+  box-shadow: 0 4px 15px rgba(255, 82, 82, 0.1);
   color: var(--color-texto-principal);
+  border-color: var(--color-borde) !important;
 }
 
 .card:hover {
@@ -369,11 +370,11 @@ h5,
 }
 
 .card.en-oferta {
-  border: 2px solid var(--color-primario);
+  border-color: var(--color-primario) !important;
 }
 
 /* =============================================================== */
-/* === INICIO: MODIFICACIÓN CREATIVA DE ETIQUETA DE DESCUENTO === */
+/* === ETIQUETA DE DESCUENTO === */
 /* =============================================================== */
 .discount-badge {
   position: absolute;
@@ -392,10 +393,6 @@ h5,
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); 
   z-index: 2; 
 }
-/* ============================================================= */
-/* === FIN: MODIFICACIÓN CREATIVA DE ETIQUETA DE DESCUENTO === */
-/* ============================================================= */
-
 
 /* ======================= */
 /* === PRECIOS === */
@@ -412,7 +409,6 @@ h5,
   font-weight: 700;
 }
 
-/* Esta regla es para el precio verde en modo oscuro */
 [data-bs-theme="picante"] .precio-descuento {
   color: #81C784 !important;
 }
@@ -514,7 +510,6 @@ footer {
   background-color: rgba(255, 255, 255, 0.075) !important;
 }
 
-
 /* =================================== */
 /* === SUB-NAVEGACIÓN PÁGINA === */
 /* =================================== */
@@ -539,7 +534,7 @@ footer {
   transition: all 0.3s ease;
 }
 
-/* Modo Claro (Dona) */
+/* Modo Claro */
 .nav-tabs .nav-link:hover,
 .nav-tabs .nav-link:focus {
   color: var(--color-primario);
@@ -555,7 +550,7 @@ footer {
   border-bottom: 3px solid var(--color-primario);
 }
 
-/* Modo Oscuro (Picante) - Forzamos los colores */
+/* Modo Oscuro */
 [data-bs-theme="picante"] .nav-tabs .nav-link {
   color: var(--color-texto-secundario) !important;
   border-color: transparent !important;
@@ -565,13 +560,11 @@ footer {
   color: var(--color-primario) !important;
   border-color: transparent !important;
 }
-
 [data-bs-theme="picante"] .nav-tabs .nav-link.active {
   color: var(--color-texto-principal) !important;
   background-color: transparent !important;
   border-bottom-color: var(--color-primario) !important;
 }
-
 
 /* ============================ */
 /* === SECCIÓN RECOMPENSAS === */
@@ -584,7 +577,6 @@ footer {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Clases de color para los iconos */
 .text-primary {
   color: var(--color-primario) !important;
 }
@@ -597,7 +589,7 @@ footer {
   color: #4CAF50 !important;
 }
 
-/* === Tarjeta de Sellos (Stamp Card) === */
+/* === Stamp Card === */
 .stamp-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -619,7 +611,6 @@ footer {
   background-color: var(--bs-body-bg);
 }
 
-/* El sello final, la recompensa */
 .stamp-item.reward {
   border-style: solid;
   border-color: var(--color-primario);
@@ -627,7 +618,6 @@ footer {
   background-color: var(--color-fondo-tarjeta);
 }
 
-/* Cuando el sello esté "lleno" (activo) */
 .stamp-item.filled {
   border-style: solid;
   border-color: var(--color-primario);
@@ -637,10 +627,9 @@ footer {
   box-shadow: 0 0 10px var(--color-primario);
 }
 
-/* =============================================================== */
-/* === ESTILOS "AÚN NO TIENES RECOMPENSAS" (CAJA) === */
-/* =============================================================== */
-
+/* ==================================== */
+/* === ESTILOS "NO TIENES RECOMPENSAS" === */
+/* ==================================== */
 .recompensas-container {
   display: flex;
   justify-content: flex-start;
@@ -686,29 +675,19 @@ footer {
   line-height: 1.5;
 }
 
-/* === RESPONSIVO (para Recompensas) === */
 @media (max-width: 767.98px) {
-  .stamp-grid {
-    gap: 0.5rem;
-  }
-  .stamp-item {
-    font-size: 1.8rem;
-    border-width: 2px;
-  }
-  .display-2 {
-    font-size: 4rem;
-  }
+  .stamp-grid { gap: 0.5rem; }
+  .stamp-item { font-size: 1.8rem; border-width: 2px; }
 }
 
 /* ======================= */
-/* === FOOTER (Créditos) === */
+/* === FOOTER CREDITS === */
 /* ======================= */
 footer .text-body-secondary,
 footer .text-body-secondary a {
   color: var(--color-texto-secundario) !important;
   text-decoration: none;
 }
-
 footer .text-body-secondary a:hover {
   text-decoration: underline;
 }
@@ -716,7 +695,6 @@ footer .text-body-secondary a:hover {
 /* ===================================== */
 /* === ESTILOS LOGIN === */
 /* ===================================== */
-
 .login-box {
   max-width: 480px;
   margin: 4rem auto;
@@ -740,37 +718,18 @@ footer .text-body-secondary a:hover {
   text-align: center;
 }
 
-/* ===================================== */
-/* === ARREGLO LOGIN MÓVIL === */
-/* ===================================== */
 @media (max-width: 576px) {
-  .login-box {
-    width: 95%;
-    padding: 1.5rem;
-    margin: 2rem auto;
-  }
-
-  .login-box h2 {
-    font-size: 1.8rem;
-    text-align: center;
-  }
-
-  .login-box button {
-    width: 90%;
-    margin: 1rem auto 0 auto;
-  }
+  .login-box { width: 95%; padding: 1.5rem; margin: 2rem auto; }
+  .login-box h2 { font-size: 1.8rem; text-align: center; }
+  .login-box button { width: 90%; margin: 1rem auto 0 auto; }
 }
 
 /* ================================================= */
-/* === CORRECCIÓN BOTÓN 'X' (btn-close) MODO OSCURO === */
+/* === UTILIDADES MODO OSCURO === */
 /* ================================================= */
 [data-bs-theme="picante"] .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
 }
-
-/* =============================================== */
-/* === PARCHES PARA BOOTSTRAP EN MODO PICANTE === */
-/* =============================================== */
 
 [data-bs-theme="picante"] .text-dark,
 [data-bs-theme="picante"] .text-muted,
@@ -778,7 +737,6 @@ footer .text-body-secondary a:hover {
   color: var(--color-texto-principal) !important;
 }
 
-/* Inputs (Cajas de texto) en modo oscuro */
 [data-bs-theme="picante"] .form-control,
 [data-bs-theme="picante"] .form-select {
   background-color: #2b2b2b;
@@ -792,19 +750,13 @@ footer .text-body-secondary a:hover {
   border-color: var(--color-primario);
 }
 
-/* Botones outline (para que se vean los - y + del carrito) */
 [data-bs-theme="picante"] .btn-outline-secondary {
   color: #e0e0e0;
   border-color: #666;
 }
 
 [data-bs-theme="picante"] .list-group-item {
-  background-color: transparent; /* Para que tome el color de la tarjeta */
+  background-color: transparent;
   color: var(--color-texto-principal);
   border-color: var(--color-borde);
-}
-
-/* 🟢 CAMBIO: Forzar el color del borde en las tarjetas en modo oscuro */
-[data-bs-theme="picante"] .card {
-  border-color: var(--color-borde) !important;
 }

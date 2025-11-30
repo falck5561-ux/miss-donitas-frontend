@@ -242,8 +242,14 @@ function PosPage() {
       // 3. Si no tiene productos, los pedimos al servidor
       if (!tieneProductos) {
           try {
-              // Hacemos petición al backend para obtener la venta completa
-              const res = await apiClient.get(`/ventas/${venta.id}`);
+              // CORRECCIÓN: Si estamos en la pestaña 'pedidos', buscamos en la tabla de pedidos
+              // Si estamos en 'historial', buscamos en la tabla de ventas
+              const endpoint = activeTab === 'pedidos' 
+                  ? `/pedidos/${venta.id}` 
+                  : `/ventas/${venta.id}`;
+
+              const res = await apiClient.get(endpoint);
+
               if (res.data) {
                   const datosCompletos = { 
                       ...datosIniciales, 
@@ -257,7 +263,6 @@ function PosPage() {
               console.error("Error cargando detalles extra:", error);
           }
       }
-  };
 
   const handleCloseDetailsModal = () => { setShowDetailsModal(false); setSelectedOrderDetails(null); };
 

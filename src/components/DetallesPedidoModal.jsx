@@ -1,34 +1,20 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 
-// --- COLORES EXACTOS (Iguales a tu AdminPage) ---
+// --- COLORES EXACTOS ---
 const getModalColors = (mode) => {
-  const isPicante = mode === 'picante'; // Detectamos el modo exacto
+  const isPicante = mode === 'picante';
   
   return {
-    overlay: 'rgba(0, 0, 0, 0.85)', // Fondo oscuro detrás del modal
-    
-    // FONDO DEL MODAL
+    overlay: 'rgba(0, 0, 0, 0.85)',
     bg: isPicante ? '#1E1E1E' : '#FFF8E1', 
-    
-    // TEXTOS
-    textMain: isPicante ? '#FFFFFF' : '#3E2723', // Blanco vs Café Oscuro
-    textLight: isPicante ? '#B0B0B0' : '#8D6E63', // Gris vs Café Claro
-    
-    // BORDES Y LÍNEAS
+    textMain: isPicante ? '#FFFFFF' : '#3E2723',
+    textLight: isPicante ? '#B0B0B0' : '#8D6E63',
     border: isPicante ? '#333333' : '#D7CCC8',
-    
-    // TARJETAS INTERNAS
     cardBg: isPicante ? '#2C2C2C' : '#FFFFFF',
-    
-    // ACENTOS
-    accent: isPicante ? '#FF1744' : '#FF4081', // Rojo Neón vs Rosa Fresa
-    
-    // BOTONES MAPA
-    mapBtnBg: '#1976D2', // Azul estándar de Google Maps
+    accent: isPicante ? '#FF1744' : '#FF4081',
+    mapBtnBg: '#1976D2',
     mapBtnText: '#FFFFFF',
-    
-    // BOTÓN CERRAR
     closeBtnBg: isPicante ? '#FF1744' : '#FF4081',
     closeBtnText: '#FFFFFF'
   };
@@ -40,21 +26,21 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
 
   if (!pedido) return null;
 
-  // 1. Detectar lista de productos (Soporte para diferentes estructuras de datos)
-  const listaProductos = pedido.detalles_pedido || pedido.productos || pedido.detalles || [];
+  const listaProductos = pedido.detalles_pedido || pedido.productos || pedido.detalles || pedido.items || [];
+  
+  // DETECTAR SI ES VENTA POS (MOSTRADOR)
+  // Si tipo_orden es 'mostrador' o el cliente es genérico de mostrador
+  const isPosSale = pedido.tipo_orden === 'mostrador' || pedido.nombre_cliente === 'Venta de Mostrador';
 
-  // 2. Generar URL de Google Maps (Corregido)
+  // URL Mapa (Solo para domicilios reales)
   let mapUrl = '';
-  if (pedido.latitude && pedido.longitude) {
-    // Si hay coordenadas GPS exactas
+  if (!isPosSale && (pedido.latitude && pedido.longitude)) {
     mapUrl = `https://www.google.com/maps/search/?api=1&query=${pedido.latitude},${pedido.longitude}`;
-  } else if (pedido.direccion_entrega || pedido.direccion) {
-    // Si es por dirección escrita
+  } else if (!isPosSale && (pedido.direccion_entrega || pedido.direccion)) {
     const dir = pedido.direccion_entrega || pedido.direccion;
     mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dir + ", Campeche, Mexico")}`;
   }
 
-  // --- ESTILOS (Sin animaciones raras, todo sólido) ---
   const styles = {
     overlay: {
       position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
@@ -64,79 +50,42 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
     },
     modal: {
       backgroundColor: colors.bg,
-      width: '95%', maxWidth: '600px',
-      borderRadius: '20px',
+      width: '95%', maxWidth: '500px', // Un poco más angosto para parecer ticket
+      borderRadius: '16px',
       border: `1px solid ${colors.border}`,
       boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
       overflow: 'hidden', display: 'flex', flexDirection: 'column',
       maxHeight: '90vh'
     },
     header: {
-      padding: '20px 25px', 
-      backgroundColor: colors.bg, // El mismo fondo para continuidad
+      padding: '20px', 
+      backgroundColor: colors.bg,
       borderBottom: `2px solid ${colors.border}`,
       display: 'flex', justifyContent: 'space-between', alignItems: 'center'
     },
-    title: { margin: 0, fontSize: '1.5rem', fontWeight: '800', color: colors.accent },
-    closeX: { 
-        background: 'none', border: 'none', fontSize: '2rem', 
-        color: colors.textMain, cursor: 'pointer', lineHeight: 0.8 
-    },
-    
-    body: { padding: '25px', overflowY: 'auto' },
-    
-    // Filas de información
-    row: { display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '1rem', color: colors.textMain },
-    label: { fontWeight: 'bold', color: colors.textLight, textTransform: 'uppercase', fontSize: '0.8rem' },
-    value: { fontWeight: 'bold', fontSize: '1.1rem' },
-    
-    // Badge de estado
-    badge: {
-      padding: '6px 14px', borderRadius: '50px', fontWeight: 'bold', fontSize: '0.85rem',
-      backgroundColor: pedido.estado === 'Pendiente' ? '#D32F2F' : (pedido.estado === 'Completado' ? '#388E3C' : '#FBC02D'),
-      color: '#FFFFFF'
-    },
-
-    // Sección Productos
+    title: { margin: 0, fontSize: '1.2rem', fontWeight: '800', color: colors.accent, textTransform: 'uppercase' },
+    closeX: { background: 'none', border: 'none', fontSize: '2rem', color: colors.textMain, cursor: 'pointer', lineHeight: 0.8 },
+    body: { padding: '20px', overflowY: 'auto' },
+    row: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.95rem', color: colors.textMain },
+    label: { fontWeight: 'bold', color: colors.textLight, textTransform: 'uppercase', fontSize: '0.75rem' },
     sectionHeader: { 
-      marginTop: '30px', marginBottom: '15px', paddingBottom: '8px',
+      marginTop: '20px', marginBottom: '10px', paddingBottom: '5px',
       borderBottom: `1px solid ${colors.border}`, 
-      fontWeight: 'bold', color: colors.accent, textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '1px'
+      fontWeight: 'bold', color: colors.textMain, textTransform: 'uppercase', fontSize: '0.85rem'
     },
-    productCard: {
-      backgroundColor: colors.cardBg, 
-      padding: '15px', 
-      borderRadius: '12px', marginBottom: '10px',
-      border: `1px solid ${colors.border}`,
-      display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+    productRow: {
+      display: 'flex', justifyContent: 'space-between', alignItems: 'start',
+      marginBottom: '10px', paddingBottom: '10px', borderBottom: `1px dashed ${colors.border}`
     },
-    
-    // Sección Entrega
-    deliveryBox: {
-      backgroundColor: colors.cardBg, padding: '20px',
-      borderRadius: '12px', marginTop: '10px',
-      border: `1px solid ${colors.border}`
-    },
-    mapBtn: {
-      display: 'block', width: '100%', textAlign: 'center',
-      backgroundColor: colors.mapBtnBg, color: colors.mapBtnText,
-      padding: '12px', borderRadius: '50px', textDecoration: 'none',
-      fontWeight: 'bold', marginTop: '15px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-    },
-
-    // Footer
     footer: {
-      padding: '20px 25px', borderTop: `2px solid ${colors.border}`,
-      backgroundColor: colors.bg,
+      padding: '20px', borderTop: `2px solid ${colors.border}`,
+      backgroundColor: colors.cardBg,
       display: 'flex', justifyContent: 'space-between', alignItems: 'center'
     },
-    totalLabel: { display:'block', fontSize:'0.9rem', color: colors.textLight, fontWeight: 'bold', textTransform: 'uppercase' },
-    totalPrice: { fontSize: '2rem', fontWeight: '900', color: colors.textMain },
+    totalPrice: { fontSize: '1.8rem', fontWeight: '900', color: colors.textMain },
     closeBtn: {
       backgroundColor: colors.closeBtnBg, color: colors.closeBtnText, border: 'none',
-      padding: '12px 35px', borderRadius: '50px', fontWeight: 'bold', fontSize: '1rem',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.2)', cursor: 'pointer'
+      padding: '10px 30px', borderRadius: '50px', fontWeight: 'bold', cursor: 'pointer'
     }
   };
 
@@ -144,113 +93,90 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.modal} onClick={e => e.stopPropagation()}>
         
-        {/* ENCABEZADO */}
+        {/* HEADER */}
         <div style={styles.header}>
-          <h3 style={styles.title}>Pedido #{pedido.id}</h3>
+          <h3 style={styles.title}>{isPosSale ? 'TICKET DE VENTA' : `PEDIDO #${pedido.id}`}</h3>
           <button style={styles.closeX} onClick={onClose}>×</button>
         </div>
 
-        {/* CONTENIDO */}
+        {/* BODY */}
         <div style={styles.body}>
           
-          {/* Info Principal */}
           <div style={styles.row}>
             <div>
-                <span style={styles.label}>Cliente</span><br/>
-                <span style={styles.value}>{pedido.nombre_cliente}</span>
+                <span style={styles.label}>CLIENTE</span><br/>
+                <span style={{fontWeight: 'bold'}}>{pedido.nombre_cliente}</span>
             </div>
             <div style={{textAlign: 'right'}}>
-                <span style={styles.label}>Hora</span><br/>
-                <span style={styles.value}>{new Date(pedido.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                <span style={styles.label}>HORA</span><br/>
+                <span style={{fontWeight: 'bold'}}>{new Date(pedido.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
             </div>
           </div>
 
-          <div style={{marginTop: '10px', textAlign: 'center'}}>
-             <span style={styles.badge}>{pedido.estado.toUpperCase()}</span>
-          </div>
+          {!isPosSale && (
+             <div style={{marginTop: '10px', textAlign: 'center'}}>
+                <span className="badge bg-secondary">{pedido.estado ? pedido.estado.toUpperCase() : 'ESTADO DESCONOCIDO'}</span>
+             </div>
+          )}
 
-          {/* Lista de Productos */}
-          <div style={styles.sectionHeader}>📦 Productos Ordenados</div>
+          {/* LISTA DE PRODUCTOS (LIMPIA, SIN EMOJIS) */}
+          <div style={styles.sectionHeader}>DETALLE DE PRODUCTOS</div>
           
           {listaProductos.map((prod, idx) => {
-              // Ajuste para leer opciones/toppings
               const opciones = prod.opciones || prod.selectedOptions || [];
+              // Manejo de precio si viene como string o número
               const precioUnitario = Number(prod.precio || prod.precio_unitario || 0);
               const subtotal = precioUnitario * prod.cantidad;
 
               return (
-                <div key={idx} style={styles.productCard}>
-                  <div style={{flex: 1}}>
-                    <div style={{fontSize: '1.1rem', fontWeight: 'bold', color: colors.textMain}}>
-                      {prod.cantidad}x {prod.nombre || prod.nombre_producto}
+                <div key={idx} style={styles.productRow}>
+                  <div style={{flex: 1, paddingRight: '10px'}}>
+                    <div style={{fontWeight: 'bold', color: colors.textMain}}>
+                      {prod.cantidad} x {prod.nombre || prod.nombre_producto}
                     </div>
-                    
-                    {/* Toppings / Opciones */}
+                    {/* Toppings solo texto */}
                     {opciones.length > 0 && (
-                      <div style={{fontSize: '0.85rem', color: colors.textLight, marginTop:'4px', fontStyle:'italic'}}>
-                        {opciones.map((op, i) => (
-                          <span key={i}>+ {op.nombre}{i < opciones.length -1 ? ', ' : ''}</span>
-                        ))}
+                      <div style={{fontSize: '0.8rem', color: colors.textLight, fontStyle: 'italic'}}>
+                         {/* Si opciones es array de objetos o string */}
+                         {Array.isArray(opciones) 
+                            ? opciones.map(op => op.nombre).join(', ') 
+                            : opciones}
                       </div>
                     )}
-                    
-                    {/* Notas del producto si las hay */}
-                    {prod.descripcion && (
-                        <div style={{fontSize: '0.8rem', color: colors.accent, marginTop:'4px'}}>
-                            Nota: {prod.descripcion}
-                        </div>
-                    )}
                   </div>
-                  
-                  <div style={{fontWeight: '900', fontSize: '1.1rem', color: colors.textMain}}>
+                  <div style={{fontWeight: 'bold', color: colors.textMain}}>
                      ${subtotal.toFixed(2)}
                   </div>
                 </div>
               );
           })}
 
-          {/* Sección de Envío */}
-          <div style={styles.sectionHeader}>🛵 Datos de Entrega</div>
-          {pedido.tipo_orden === 'domicilio' ? (
-            <div style={styles.deliveryBox}>
-              <div style={{marginBottom: '15px'}}>
-                <span style={styles.label}>Dirección:</span>
-                <div style={{fontSize:'1.1rem', color: colors.textMain, marginTop: '5px', lineHeight: '1.4'}}>
-                  {pedido.direccion_entrega || pedido.direccion || "Sin dirección registrada"}
-                </div>
-              </div>
-              
-              {(pedido.referencia) && (
-                 <div style={{marginBottom: '15px'}}>
-                   <span style={styles.label}>Referencia:</span>
-                   <div style={{fontStyle:'italic', color: colors.textMain}}>"{pedido.referencia}"</div>
-                 </div>
-              )}
-              
-              <div style={{marginBottom: '5px'}}>
-                 <span style={styles.label}>Teléfono:</span> <span style={{color: colors.textMain}}>{pedido.telefono || '---'}</span>
-              </div>
-
-              {mapUrl && (
-                <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={styles.mapBtn}>
-                  📍 ABRIR EN GOOGLE MAPS
-                </a>
-              )}
-            </div>
-          ) : (
-            <div style={{textAlign:'center', padding:'25px', backgroundColor: colors.cardBg, borderRadius:'12px', border:`1px solid ${colors.border}`}}>
-               <div style={{fontSize:'2rem', marginBottom:'10px'}}>👜</div>
-               <span style={{fontSize:'1.2rem', fontWeight:'bold', color: colors.textMain}}>Recoger en Tienda</span>
-               <p style={{margin:'5px 0 0 0', color: colors.textLight}}>El cliente pasará por su pedido.</p>
-            </div>
+          {/* SOLO MOSTRAR DATOS DE ENTREGA SI ES PEDIDO WEB (NO POS) */}
+          {!isPosSale && (
+            <>
+                <div style={styles.sectionHeader}>DATOS DE ENTREGA</div>
+                {pedido.tipo_orden === 'domicilio' ? (
+                    <div style={{fontSize: '0.9rem', color: colors.textMain}}>
+                        <p style={{marginBottom: '5px'}}><strong>Dirección:</strong> {pedido.direccion_entrega || pedido.direccion}</p>
+                        {pedido.referencia && <p style={{marginBottom: '5px'}}><strong>Ref:</strong> {pedido.referencia}</p>}
+                        {mapUrl && <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{color: colors.accent, fontWeight:'bold', textDecoration:'none'}}>📍 Ver Mapa</a>}
+                    </div>
+                ) : (
+                    <div style={{textAlign: 'center', padding: '10px', backgroundColor: colors.cardBg, borderRadius: '8px', border: `1px dashed ${colors.border}`}}>
+                        <strong style={{color: colors.textMain}}>RECOGER EN TIENDA</strong>
+                    </div>
+                )}
+            </>
           )}
+
         </div>
 
         {/* FOOTER */}
         <div style={styles.footer}>
           <div>
-            <span style={styles.totalLabel}>Total a Pagar</span>
-            <span style={styles.totalPrice}>${Number(pedido.total).toFixed(2)}</span>
+            <span style={styles.label}>TOTAL PAGADO</span>
+            <div style={styles.totalPrice}>${Number(pedido.total).toFixed(2)}</div>
+            {isPosSale && pedido.metodo_pago && <small style={{color: colors.textLight, textTransform: 'uppercase'}}>{pedido.metodo_pago}</small>}
           </div>
           <button style={styles.closeBtn} onClick={onClose}>CERRAR</button>
         </div>

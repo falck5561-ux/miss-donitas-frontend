@@ -82,14 +82,9 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
     },
     productCard: {
       display: 'flex', alignItems: 'center', gap: '15px',
-      backgroundColor: colors.cardSection, padding: '12px',
+      backgroundColor: colors.cardSection, padding: '15px', // Más padding ya que no hay imagen
       borderRadius: '16px', marginBottom: '10px',
       border: `1px solid ${colors.border}`
-    },
-    imgBox: {
-      width: '55px', height: '55px', borderRadius: '12px',
-      backgroundColor: colors.border, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      overflow: 'hidden', flexShrink: 0, fontSize: '0.7rem', color: colors.textLight
     },
     
     deliveryBox: {
@@ -145,35 +140,28 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
             <span style={styles.badge}>{pedido.estado}</span>
           </div>
 
-          {/* Lista de Productos */}
+          {/* Lista de Productos (SIN IMAGENES) */}
           <div style={styles.sectionHeader}>📦 Productos</div>
           {listaProductos.map((prod, idx) => {
-             // --- CORRECCIÓN DE LA IMAGEN AQUÍ ---
-             // Ahora buscamos 'imagen_url', 'imagen', 'img' y dentro de array 'imagenes'
-             const imgUrl = 
-                prod.imagen_url || 
-                prod.imagen || 
-                prod.img || 
-                (Array.isArray(prod.imagenes) && prod.imagenes[0] ? prod.imagenes[0] : null);
-             
              const opciones = prod.opciones || prod.selectedOptions || [];
 
              return (
                <div key={idx} style={styles.productCard}>
-                 <div style={styles.imgBox}>
-                   {imgUrl ? (
-                      <img src={imgUrl} alt="prod" style={{width:'100%', height:'100%', objectFit:'cover'}} onError={(e) => {e.target.style.display='none'}} />
-                   ) : (
-                      <span>Sin img</span>
-                   )}
-                 </div>
+                 {/* Solo Texto */}
                  <div style={{flex: 1}}>
-                   <div style={{display:'flex', justifyContent:'space-between', fontWeight:'bold', color: colors.textMain}}>
-                     <span>{prod.cantidad}x {prod.nombre || prod.nombre_producto}</span>
-                     <span>${(Number(prod.precio || prod.precio_unitario) * prod.cantidad).toFixed(2)}</span>
+                   <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', fontSize: '1.05rem', color: colors.textMain}}>
+                     {/* Nombre del producto destacado */}
+                     <span style={{fontWeight: '800'}}>
+                       {prod.cantidad}x {prod.nombre || prod.nombre_producto}
+                     </span>
+                     <span style={{fontWeight:'bold'}}>
+                        ${(Number(prod.precio || prod.precio_unitario) * prod.cantidad).toFixed(2)}
+                     </span>
                    </div>
+                   
+                   {/* Ingredientes / Opciones */}
                    {opciones.length > 0 && (
-                     <div style={{fontSize: '0.8rem', color: colors.textLight, marginTop:'4px'}}>
+                     <div style={{fontSize: '0.85rem', color: colors.textLight, marginTop:'6px', fontStyle:'italic'}}>
                        {opciones.map((op, i) => (
                          <span key={i}>• {op.nombre} {i < opciones.length -1 ? ', ' : ''}</span>
                        ))}

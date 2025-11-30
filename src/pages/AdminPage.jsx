@@ -9,39 +9,34 @@ import { getProducts, createProduct, updateProduct, deleteProduct } from '../ser
 import apiClient from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
-// --- NUEVO COMPONENTE: Modal de Confirmación Estético y Reutilizable ---
-const ConfirmationModal = ({ show, onClose, onConfirm, title, message, theme }) => {
+// --- SUSTITUYE TU "ConfirmationModal" POR ESTE ---
+const ConfirmationModal = ({ show, onClose, onConfirm, title, message }) => {
   if (!show) return null;
 
-  // Adapta el estilo del modal al tema actual (luz/noche)
-  const modalClass = theme === 'dark' ? 'modal-content text-bg-dark' : 'modal-content';
-  const closeButtonClass = theme === 'dark' ? 'btn-close btn-close-white' : 'btn-close';
+  // 🎨 ESTILO FORZADO: Crema y Café (Ignoramos el modo oscuro para que se vea lindo)
+  const modalStyle = { backgroundColor: '#FFF8E7', color: '#5D4037', border: '1px solid #E0C097' };
+  const borderStyle = { borderColor: '#E0C097' };
 
   return (
     <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.6)' }}>
       <div className="modal-dialog modal-dialog-centered">
-        <div className={modalClass}>
-          <div className="modal-header">
+        <div className="modal-content" style={modalStyle}>
+          <div className="modal-header" style={borderStyle}>
             <h5 className="modal-title">{title}</h5>
-            <button type="button" className={closeButtonClass} onClick={onClose}></button>
+            <button type="button" className="btn-close" onClick={onClose}></button>
           </div>
           <div className="modal-body">
             <p>{message}</p>
           </div>
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
-              Cancelar
-            </button>
-            <button type="button" className="btn btn-danger" onClick={onConfirm}>
-              Confirmar
-            </button>
+          <div className="modal-footer" style={borderStyle}>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+            <button type="button" className="btn btn-danger" onClick={onConfirm}>Confirmar</button>
           </div>
         </div>
       </div>
     </div>
   );
 };
-
 
 function AdminPage() {
   const { theme } = useTheme(); // Obtenemos el tema actual
@@ -258,7 +253,7 @@ function AdminPage() {
                     <td>{p.id}</td><td>{p.nombre}</td><td>${Number(p.precio).toFixed(2)}</td><td>{p.en_oferta ? `${p.descuento_porcentaje}%` : 'No'}</td>
                     <td>{p.stock}</td><td>{p.categoria}</td>
                     <td>
-                      <button className="btn btn-sm btn-outline-warning me-2" onClick={() => handleOpenProductModal(p)}>Editar</button>
+                      <button className="btn btn-sm btn-info text-white me-2" onClick={() => handleOpenProductModal(p)}>Editar</button>
                       {/* ✅ MEJORA: Pasamos el objeto 'p' completo para usar su nombre en el mensaje */}
                       <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteProducto(p)}>Eliminar</button>
                     </td>
@@ -329,7 +324,7 @@ function AdminPage() {
                       </span>
                     </td>
                     <td>
-                      <button className="btn btn-sm btn-outline-warning me-2" onClick={() => handleOpenComboModal(combo)}>Editar</button>
+                      <button className="btn btn-sm btn-info text-white me-2" onClick={() => handleOpenComboModal(combo)}>Editar</button>
                       {/* Solo mostramos "Eliminar" si el combo está activo */}
                       {combo.esta_activo && (
                         <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteCombo(combo)}>Eliminar</button>

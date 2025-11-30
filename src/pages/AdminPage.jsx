@@ -9,46 +9,41 @@ import { getProducts, createProduct, updateProduct, deleteProduct } from '../ser
 import apiClient from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
-// --- ESTILOS DINÁMICOS (Para limpiar el JSX) ---
+// --- ESTILOS VISUALES REFINADOS ---
 const getThemeStyles = (isPicante) => ({
-  bg: isPicante ? '#121212' : '#F4F6F9', // Fondo general más suave
-  text: isPicante ? '#FFFFFF' : '#212529',
-  cardBg: isPicante ? '#1E1E1E' : '#FFFFFF',
-  accent: isPicante ? '#FF1744' : '#E91E63', // Rosa fuerte en modo claro
-  border: isPicante ? '1px solid #333' : '1px solid #E0E0E0',
-  tableHeader: isPicante ? '#2C2C2C' : '#E9ECEF',
-  muted: isPicante ? '#B0B0B0' : '#6c757d'
+  bg: isPicante ? '#121212' : '#F8F9FA', // Fondo general
+  text: isPicante ? '#E0E0E0' : '#333333',
+  // Fondo de las tarjetas (ahora más sutil)
+  cardBg: isPicante ? '#1A1A1A' : '#FFFFFF', 
+  // Bordes más suaves
+  border: isPicante ? '1px solid #2D2D2D' : '1px solid #F0F0F0',
+  // Acento (Botones/Links)
+  accent: isPicante ? '#FF1744' : '#0d6efd', 
+  muted: isPicante ? '#888888' : '#999999',
+  // Sombra más elegante y difuminada
+  shadow: isPicante ? '0 10px 30px rgba(0,0,0,0.5)' : '0 10px 30px rgba(0,0,0,0.05)'
 });
 
-// --- COMPONENTE AUXILIAR: BADGES MEJORADOS ---
+// --- BADGES (Etiquetas de estado) ---
 const StatusBadge = ({ status, type }) => {
   let badgeClass = 'badge rounded-pill px-3 py-2 fw-bold ';
-  
-  const styles = {
-    letterSpacing: '0.5px',
-    fontSize: '0.7rem'
-  };
-
   if (type === 'order') {
-     if (status === 'Pendiente') badgeClass += 'bg-danger text-white shadow-sm';
+     if (status === 'Pendiente') badgeClass += 'bg-danger text-white';
      else if (status === 'En Preparacion') badgeClass += 'bg-warning text-dark';
      else if (status === 'En Camino') badgeClass += 'bg-info text-white';
      else if (status === 'Listo') badgeClass += 'bg-success text-white';
      else if (status === 'Completado') badgeClass += 'bg-secondary text-white';
   } else if (type === 'boolean') {
-     badgeClass += status ? 'bg-success text-white' : 'bg-secondary text-white opacity-75';
+     badgeClass += status ? 'bg-success text-white' : 'bg-secondary text-white opacity-50';
   }
-
-  return <span className={badgeClass} style={styles}>{status === true ? 'ACTIVO' : status === false ? 'INACTIVO' : status}</span>;
+  return <span className={badgeClass} style={{fontSize: '0.7rem', letterSpacing: '0.5px'}}>{status === true ? 'ACTIVO' : status === false ? 'INACTIVO' : status}</span>;
 };
 
-// --- COMPONENTE PRINCIPAL ---
 function AdminPage() {
   const { theme } = useTheme(); 
   const isPicante = theme === 'picante';
   const styles = getThemeStyles(isPicante);
 
-  // --- ESTADOS ---
   const [activeTab, setActiveTab] = useState('pedidosEnLinea');
   const [productos, setProductos] = useState([]);
   const [pedidos, setPedidos] = useState([]);
@@ -56,7 +51,7 @@ function AdminPage() {
   const [combos, setCombos] = useState([]);
   const [loading, setLoading] = useState(false);
   
-  // --- MODALES ---
+  // Modales
   const [showProductModal, setShowProductModal] = useState(false);
   const [productoActual, setProductoActual] = useState(null);
   const [showComboModal, setShowComboModal] = useState(false);
@@ -64,7 +59,6 @@ function AdminPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
 
-  // --- FETCH DATA ---
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -78,106 +72,94 @@ function AdminPage() {
 
   useEffect(() => { fetchData(); }, [activeTab]);
 
-  // --- HANDLERS ---
-  const handleOpenProductModal = (p = null) => { 
-      setProductoActual(p ? { ...p, imagenes: p.imagen_url ? [p.imagen_url] : [] } : null); 
-      setShowProductModal(true); 
-  };
+  // Handlers
+  const handleOpenProductModal = (p = null) => { setProductoActual(p ? { ...p, imagenes: p.imagen_url ? [p.imagen_url] : [] } : null); setShowProductModal(true); };
   const handleSaveProducto = async (p) => { try { const d = { ...p, imagen_url: p.imagenes?.[0] || null }; delete d.imagenes; if (d.id) await updateProduct(d.id, d); else await createProduct(d); toast.success('Guardado'); fetchData(); setShowProductModal(false); } catch { toast.error('Error'); } };
   const handleDeleteProducto = async (id) => { if(window.confirm('¿Ocultar producto?')) { await deleteProduct(id); fetchData(); }};
-  
   const handleOpenComboModal = (c = null) => { setComboActual(c); setShowComboModal(true); };
   const handleSaveCombo = async (c) => { try { if(c.id) await apiClient.put(`/combos/${c.id}`, c); else await apiClient.post('/combos', c); toast.success('Guardado'); fetchData(); setShowComboModal(false); } catch { toast.error('Error'); } };
   const handleDeleteCombo = async (c) => { if(window.confirm('¿Desactivar combo?')) { await apiClient.patch(`/combos/${c.id}/desactivar`); toast.success('Desactivado'); fetchData(); }};
-  
   const handleUpdateStatus = async (id, est) => { try { await apiClient.put(`/pedidos/${id}/estado`, { estado: est }); toast.success(`Estado: ${est}`); fetchData(); } catch { toast.error('Error'); } };
 
   return (
-    <div style={{ backgroundColor: styles.bg, minHeight: '100vh', color: styles.text, transition: 'all 0.3s ease' }}>
+    <div style={{ backgroundColor: styles.bg, minHeight: '100vh', color: styles.text, transition: 'background 0.3s ease' }}>
       
       <div className="container-fluid px-4 py-5">
         
-        {/* HEADER FLUIDO */}
+        {/* HEADER */}
         <div className="d-flex flex-wrap justify-content-between align-items-center mb-5">
           <div>
-            <h1 className="fw-bold m-0" style={{ fontFamily: 'Playfair Display, serif', letterSpacing: '-0.5px' }}>Miss Donitas Admin</h1>
-            <p className="m-0" style={{color: styles.muted}}>Panel de control general</p>
+            <h2 className="fw-bold m-0" style={{ fontFamily: 'Playfair Display, serif' }}>Panel de Control</h2>
+            <p className="m-0 small" style={{color: styles.muted}}>Administración general</p>
           </div>
-          <div>
-             <span className="badge rounded-pill px-4 py-2 text-uppercase shadow-sm" 
-                   style={{backgroundColor: styles.cardBg, color: styles.text, border: `1px solid ${styles.accent}`}}>
-                {isPicante ? '🔥 Modo Picante' : '🍩 Modo Dona'}
-             </span>
+          <div className={`px-3 py-1 rounded-pill small fw-bold border ${isPicante ? 'text-danger border-danger' : 'text-primary border-primary'}`}>
+             {isPicante ? 'MODO PICANTE' : 'MODO DONA'}
           </div>
         </div>
 
-        {/* MENU DE NAVEGACION (TABS MODERNAS) */}
-        <div className="mb-4 overflow-auto pb-2">
-          <div className="d-flex gap-2">
+        {/* TABS DE NAVEGACIÓN */}
+        <div className="mb-5 overflow-auto pb-1">
+          <div className="d-flex gap-3">
             {[
-                { id: 'pedidosEnLinea', label: '🛎️ Pedidos', count: pedidos.filter(p => p.estado === 'Pendiente').length },
-                { id: 'productos', label: '🍩 Inventario', count: 0 },
-                { id: 'combos', label: '🎁 Combos', count: 0 },
-                { id: 'reporteGeneral', label: '📊 Finanzas', count: 0 },
-                { id: 'reporteProductos', label: '📈 Métricas', count: 0 }
-            ].map(tab => (
-                <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className="btn fw-bold rounded-pill px-4 py-2"
-                    style={{
-                        backgroundColor: activeTab === tab.id ? styles.accent : 'transparent',
-                        color: activeTab === tab.id ? '#FFF' : styles.muted,
-                        border: activeTab === tab.id ? 'none' : styles.border,
-                        transition: 'all 0.2s',
-                        whiteSpace: 'nowrap'
-                    }}
-                >
-                    {tab.label} {tab.count > 0 && <span className="badge bg-white text-dark ms-2 rounded-pill">{tab.count}</span>}
-                </button>
-            ))}
+                { id: 'pedidosEnLinea', label: 'Pedidos', icon: '🛎️' },
+                { id: 'productos', label: 'Inventario', icon: '🍩' },
+                { id: 'combos', label: 'Combos', icon: '🎁' },
+                { id: 'reporteGeneral', label: 'Finanzas', icon: '📊' },
+                { id: 'reporteProductos', label: 'Métricas', icon: '📈' }
+            ].map(tab => {
+                const isActive = activeTab === tab.id;
+                return (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className="btn d-flex align-items-center gap-2 px-4 py-2 rounded-pill"
+                        style={{
+                            backgroundColor: isActive ? styles.accent : 'transparent',
+                            color: isActive ? '#FFF' : styles.muted,
+                            border: isActive ? 'none' : styles.border,
+                            fontWeight: isActive ? '700' : '500',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        <span>{tab.icon}</span> {tab.label}
+                    </button>
+                )
+            })}
           </div>
         </div>
 
-        {/* CONTENIDO PRINCIPAL (Sin marco de tarjeta rígido, estilo Dashboard abierto) */}
-        <div className="fade-in-up">
-           
+        {/* CONTENEDOR PRINCIPAL */}
+        <div>
            {loading && <div className="text-center py-5"><div className="spinner-border" style={{color: styles.accent}} role="status"></div></div>}
 
-           {/* === TABLA PEDIDOS === */}
+           {/* PEDIDOS */}
            {!loading && activeTab === 'pedidosEnLinea' && (
-               <div className="p-4 rounded-4 shadow-sm" style={{backgroundColor: styles.cardBg, border: isPicante ? 'none' : styles.border}}>
-                   <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h4 className="fw-bold m-0">Pedidos Recientes</h4>
-                   </div>
+               <div className="p-4 rounded-4" style={{backgroundColor: styles.cardBg, boxShadow: styles.shadow}}>
+                   <h5 className="fw-bold mb-4">Pedidos Recientes</h5>
                    <div className="table-responsive">
                        <table className="table align-middle" style={{color: styles.text}}>
-                           <thead style={{backgroundColor: styles.tableHeader, color: styles.muted, textTransform: 'uppercase', fontSize: '0.8rem'}}>
+                           <thead style={{borderBottom: `2px solid ${styles.border}`, borderColor: isPicante ? '#333' : '#eee'}}>
                                <tr>
-                                   <th className="py-3 ps-3">Orden</th>
-                                   <th>Cliente</th>
-                                   <th>Total</th>
-                                   <th>Tipo</th>
-                                   <th>Estado</th>
-                                   <th className="text-end pe-3">Acciones</th>
+                                   <th className="pb-3 fw-bold small text-uppercase" style={{color: styles.muted}}>Orden</th>
+                                   <th className="pb-3 fw-bold small text-uppercase" style={{color: styles.muted}}>Cliente</th>
+                                   <th className="pb-3 fw-bold small text-uppercase" style={{color: styles.muted}}>Total</th>
+                                   <th className="pb-3 fw-bold small text-uppercase" style={{color: styles.muted}}>Estado</th>
+                                   <th className="pb-3 text-end fw-bold small text-uppercase" style={{color: styles.muted}}>Acciones</th>
                                </tr>
                            </thead>
-                           <tbody style={{borderTop: 'none'}}>
+                           <tbody>
                                {pedidos.map(p => (
                                    <tr key={p.id} style={{borderBottom: styles.border}}>
-                                       <td className="ps-3 fw-bold" style={{color: styles.accent}}>#{p.id}</td>
-                                       <td>
+                                       <td className="py-3 fw-bold" style={{color: styles.accent}}>#{p.id}</td>
+                                       <td className="py-3">
                                             <div className="fw-bold">{p.nombre_cliente}</div>
-                                            <small style={{color: styles.muted}}>{new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                                            <small style={{color: styles.muted, fontSize: '0.75rem'}}>{new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
                                        </td>
-                                       <td className="fw-bold fs-5">${Number(p.total).toFixed(2)}</td>
-                                       <td>{p.tipo_orden === 'domicilio' ? '🛵 Moto' : '🏪 Local'}</td>
-                                       <td><StatusBadge status={p.estado} type="order"/></td>
-                                       <td className="text-end pe-3">
-                                            <button className="btn btn-sm btn-light rounded-pill border me-2" onClick={() => {setSelectedOrderDetails(p); setShowDetailsModal(true);}}>Ver</button>
-                                            {p.estado === 'Pendiente' && <button className="btn btn-sm fw-bold text-white rounded-pill" style={{backgroundColor: styles.accent}} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Preparar</button>}
-                                            {p.estado === 'En Preparacion' && <button className="btn btn-sm btn-success fw-bold text-white rounded-pill" onClick={() => handleUpdateStatus(p.id, p.tipo_orden === 'domicilio' ? 'En Camino' : 'Listo')}>Avanzar</button>}
-                                            {(p.estado === 'En Camino' || p.estado === 'Listo') && <button className="btn btn-sm btn-outline-success fw-bold rounded-pill" onClick={() => handleUpdateStatus(p.id, 'Completado')}>Finalizar</button>}
+                                       <td className="py-3 fw-bold">${Number(p.total).toFixed(2)}</td>
+                                       <td className="py-3"><StatusBadge status={p.estado} type="order"/></td>
+                                       <td className="py-3 text-end">
+                                            <button className="btn btn-sm btn-link text-decoration-none" style={{color: styles.muted}} onClick={() => {setSelectedOrderDetails(p); setShowDetailsModal(true);}}>Ver</button>
+                                            {p.estado === 'Pendiente' && <button className="btn btn-sm text-white px-3 rounded-pill fw-bold ms-2" style={{backgroundColor: styles.accent}} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Atender</button>}
                                        </td>
                                    </tr>
                                ))}
@@ -187,34 +169,34 @@ function AdminPage() {
                </div>
            )}
 
-           {/* === TABLA PRODUCTOS === */}
+           {/* PRODUCTOS */}
            {!loading && activeTab === 'productos' && (
-               <div className="p-4 rounded-4 shadow-sm" style={{backgroundColor: styles.cardBg, border: isPicante ? 'none' : styles.border}}>
+               <div className="p-4 rounded-4" style={{backgroundColor: styles.cardBg, boxShadow: styles.shadow}}>
                     <div className="d-flex justify-content-between align-items-center mb-4">
-                        <h4 className="fw-bold m-0">Catálogo</h4>
-                        <button className="btn rounded-pill px-4 fw-bold text-white shadow" style={{backgroundColor: styles.accent}} onClick={() => handleOpenProductModal()}>+ Nuevo</button>
+                        <h5 className="fw-bold m-0">Catálogo</h5>
+                        <button className="btn btn-sm px-4 py-2 rounded-pill fw-bold text-white shadow-sm" style={{backgroundColor: styles.accent}} onClick={() => handleOpenProductModal()}>+ Nuevo Producto</button>
                     </div>
                     <div className="table-responsive">
                         <table className="table align-middle" style={{color: styles.text}}>
-                            <thead style={{backgroundColor: styles.tableHeader, color: styles.muted, textTransform: 'uppercase', fontSize: '0.8rem'}}>
+                            <thead style={{borderBottom: `2px solid ${styles.border}`}}>
                                 <tr>
-                                    <th className="py-3 ps-3">Nombre</th>
-                                    <th>Categoría</th>
-                                    <th>Precio</th>
-                                    <th>Stock</th>
-                                    <th className="text-end pe-3">Opciones</th>
+                                    <th className="pb-3 fw-bold small text-uppercase ps-3" style={{color: styles.muted}}>Nombre</th>
+                                    <th className="pb-3 fw-bold small text-uppercase" style={{color: styles.muted}}>Categoría</th>
+                                    <th className="pb-3 fw-bold small text-uppercase" style={{color: styles.muted}}>Precio</th>
+                                    <th className="pb-3 fw-bold small text-uppercase" style={{color: styles.muted}}>Stock</th>
+                                    <th className="pb-3 text-end fw-bold small text-uppercase pe-3" style={{color: styles.muted}}>Opciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {productos.map(p => (
                                     <tr key={p.id} style={{borderBottom: styles.border}}>
-                                        <td className="ps-3 fw-bold">{p.nombre} {p.en_oferta && <span className="badge bg-success ms-1" style={{fontSize: '0.6rem'}}>OFERTA</span>}</td>
+                                        <td className="ps-3 py-3 fw-bold">{p.nombre}</td>
                                         <td style={{color: styles.muted}}>{p.categoria}</td>
                                         <td className="fw-bold" style={{color: styles.accent}}>${Number(p.precio).toFixed(2)}</td>
-                                        <td>{p.stock <= 5 ? <span className="text-danger fw-bold">Bajo ({p.stock})</span> : <span>{p.stock}</span>}</td>
+                                        <td>{p.stock}</td>
                                         <td className="text-end pe-3">
-                                            <button className="btn btn-sm btn-link text-decoration-none" style={{color: styles.text}} onClick={() => handleOpenProductModal(p)}>Editar</button>
-                                            <button className="btn btn-sm btn-link text-danger text-decoration-none" onClick={() => handleDeleteProducto(p.id)}>Ocultar</button>
+                                            <button className="btn btn-sm btn-link text-decoration-none me-2" style={{color: styles.text}} onClick={() => handleOpenProductModal(p)}>Editar</button>
+                                            <button className="btn btn-sm btn-link text-decoration-none text-danger opacity-75" onClick={() => handleDeleteProducto(p.id)}>Ocultar</button>
                                         </td>
                                     </tr>
                                 ))}
@@ -224,27 +206,25 @@ function AdminPage() {
                </div>
            )}
 
-           {/* === COMBOS (GRID) === */}
+           {/* COMBOS */}
            {!loading && activeTab === 'combos' && (
                <div>
                     <div className="d-flex justify-content-between align-items-center mb-4">
-                        <h4 className="fw-bold m-0">Combos Activos</h4>
-                        <button className="btn rounded-pill px-4 fw-bold text-white shadow" style={{backgroundColor: styles.accent}} onClick={() => handleOpenComboModal()}>+ Crear Combo</button>
+                        <h4 className="fw-bold m-0">Combos</h4>
+                        <button className="btn rounded-pill px-4 text-white shadow-sm" style={{backgroundColor: styles.accent}} onClick={() => handleOpenComboModal()}>+ Nuevo Combo</button>
                     </div>
                     <div className="row g-4">
                         {combos.map(combo => (
                             <div className="col-md-6 col-lg-4" key={combo.id}>
-                                <div className="h-100 p-4 rounded-4 shadow-sm position-relative" 
-                                     style={{backgroundColor: styles.cardBg, border: combo.esta_activo ? `1px solid ${styles.accent}` : styles.border, opacity: combo.esta_activo ? 1 : 0.7}}>
+                                <div className="h-100 p-4 rounded-4" style={{backgroundColor: styles.cardBg, boxShadow: styles.shadow, border: combo.esta_activo ? 'none' : `1px solid ${styles.accent}`}}>
                                     <div className="d-flex justify-content-between align-items-start mb-2">
                                         <h5 className="fw-bold mb-0">{combo.nombre}</h5>
                                         <StatusBadge status={combo.esta_activo} type="boolean" />
                                     </div>
                                     <h2 className="fw-bold mb-3" style={{color: styles.accent}}>${Number(combo.precio).toFixed(2)}</h2>
-                                    <p className="small mb-4" style={{color: styles.muted, minHeight: '40px'}}>{combo.descripcion}</p>
+                                    <p className="small mb-4" style={{color: styles.muted}}>{combo.descripcion || 'Sin descripción'}</p>
                                     <div className="d-flex gap-2">
-                                        <button className="btn btn-sm btn-outline-secondary flex-fill rounded-pill" onClick={() => handleOpenComboModal(combo)}>Editar</button>
-                                        {combo.esta_activo && <button className="btn btn-sm btn-outline-danger flex-fill rounded-pill" onClick={() => handleDeleteCombo(combo)}>Desactivar</button>}
+                                        <button className="btn btn-sm btn-light flex-fill rounded-pill border" onClick={() => handleOpenComboModal(combo)}>Editar</button>
                                     </div>
                                 </div>
                             </div>
@@ -253,19 +233,11 @@ function AdminPage() {
                </div>
            )}
 
-           {/* === REPORTES === */}
+           {/* REPORTES */}
            {!loading && activeTab === 'reporteGeneral' && (
-               <div className="p-4 rounded-4 shadow-sm" style={{backgroundColor: styles.cardBg, border: isPicante ? 'none' : styles.border}}>
+               <div className="p-4 rounded-4" style={{backgroundColor: styles.cardBg, boxShadow: styles.shadow}}>
                    <h4 className="fw-bold mb-4">Reporte Financiero</h4>
-                   <div className="mb-4">
-                        <h1 className="display-4 fw-bold" style={{color: styles.accent}}>
-                            ${reportData.reduce((acc, curr) => acc + Number(curr.total_ventas), 0).toFixed(2)}
-                        </h1>
-                        <span style={{color: styles.muted}}>Ventas totales acumuladas</span>
-                   </div>
-                   <div style={{height: '400px'}}>
-                        <SalesReportChart reportData={reportData} theme={theme} />
-                   </div>
+                   <SalesReportChart reportData={reportData} theme={theme} />
                </div>
            )}
            
@@ -274,25 +246,9 @@ function AdminPage() {
         </div>
       </div>
 
-      {/* MODALES - NOTA: Pasamos isPicante para arreglar el diseño interno en el siguiente paso */}
-      <ProductModal 
-        show={showProductModal} 
-        handleClose={() => setShowProductModal(false)} 
-        handleSave={handleSaveProducto} 
-        productoActual={productoActual} 
-        isPicante={isPicante} 
-      />
-      
-      <ComboModal 
-        show={showComboModal} 
-        handleClose={() => setShowComboModal(false)} 
-        handleSave={handleSaveCombo} 
-        comboActual={comboActual} 
-        isPicante={isPicante}
-      />
-      
+      <ProductModal show={showProductModal} handleClose={() => setShowProductModal(false)} handleSave={handleSaveProducto} productoActual={productoActual} isPicante={isPicante} />
+      <ComboModal show={showComboModal} handleClose={() => setShowComboModal(false)} handleSave={handleSaveCombo} comboActual={comboActual} isPicante={isPicante} />
       {showDetailsModal && <DetallesPedidoModal pedido={selectedOrderDetails} onClose={() => setShowDetailsModal(false)} />}
-
     </div>
   );
 }

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react'; // Agregamos useMemo
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
+// --- CAMBIO: IMPORTAMOS ICONOS MODERNOS ---
+import { Trash2, Package, Eye, Utensils, Truck, CheckCircle, Search } from 'lucide-react';
 import apiClient from '../services/api';
 import DetallesPedidoModal from '../components/DetallesPedidoModal';
 import ProductDetailModal from '../components/ProductDetailModal';
@@ -18,7 +20,6 @@ const getThemeStyles = (isPicante) => ({
   tableHeaderBg: isPicante ? '#1E1E1E' : '#FBE9E7'
 });
 
-// --- BADGE DE ESTADO ---
 const StatusBadge = ({ status }) => {
   const st = status ? status.toLowerCase() : '';
   let style = { fontSize: '0.75rem', padding: '6px 12px', fontWeight: '800', borderRadius: '50px', textTransform: 'uppercase' };
@@ -60,7 +61,6 @@ function PosPage() {
   const [clienteEncontrado, setClienteEncontrado] = useState(null);
   const [recompensaAplicadaId, setRecompensaAplicadaId] = useState(null);
 
-  // --- CARGA DE DATOS ---
   const fetchData = async () => {
     setLoading(true);
     setError('');
@@ -112,6 +112,40 @@ function PosPage() {
     const nuevoTotal = ventaActual.reduce((sum, item) => sum + (item.cantidad * Number(item.precioFinal)), 0);
     setTotalVenta(nuevoTotal);
   }, [ventaActual]);
+
+  // --- LOGICA AGREGADA: CALCULAR RESUMEN DE VENTAS ---
+  // Transforma la lista de tickets en una lista de productos vendidos
+  const resumenVentas = useMemo(() => {
+    const resumen = {};
+    let granTotal = 0;
+
+    ventasDelDia.forEach(venta => {
+        // Intentamos obtener los items de donde sea que vengan (items o detalles_pedido)
+        const items = venta.items || venta.detalles_pedido || [];
+        
+        items.forEach(item => {
+            const nombre = item.nombre || item.producto_nombre || 'Producto Desconocido';
+            const cantidad = Number(item.cantidad);
+            // Si el backend no devuelve el precio unitario en el item, tratamos de inferirlo o usar el total
+            const precioTotalLinea = item.precio ? (Number(item.precio) * cantidad) : 0; 
+
+            if (resumen[nombre]) {
+                resumen[nombre].cantidad += cantidad;
+                resumen[nombre].total += precioTotalLinea;
+            } else {
+                resumen[nombre] = { nombre, cantidad, total: precioTotalLinea };
+            }
+            granTotal += precioTotalLinea;
+        });
+    });
+
+    // Convertimos el objeto en array y ordenamos por cantidad vendida (descendente)
+    return {
+        items: Object.values(resumen).sort((a, b) => b.cantidad - a.cantidad),
+        granTotal
+    };
+  }, [ventasDelDia]);
+
 
   // --- LOGICA POS ---
   const agregarProductoAVenta = (item) => {
@@ -208,33 +242,23 @@ function PosPage() {
     }
   };
 
-  // --- LOGICA VER DETALLES ---
-  // Esta función sirve tanto para pedidos online como para ventas POS
   const handleShowDetails = (pedidoOVenta) => {
-      // Si es una venta del historial POS, adaptamos los datos para que el modal los entienda
       let datosParaModal = { ...pedidoOVenta };
-
-      // Si viene del historial de ventas, suele no tener "estado" o "tipo_orden", se los ponemos:
       if (!datosParaModal.estado) datosParaModal.estado = 'Completado';
       if (!datosParaModal.tipo_orden) datosParaModal.tipo_orden = 'mostrador';
       if (!datosParaModal.nombre_cliente) datosParaModal.nombre_cliente = 'Venta de Mostrador';
       
-      // Aseguramos que los productos estén en una propiedad que el modal lea
-      // (El modal busca: detalles_pedido, productos o detalles)
       if (!datosParaModal.detalles_pedido && datosParaModal.items) {
           datosParaModal.detalles_pedido = datosParaModal.items;
       }
-
       setSelectedOrderDetails(datosParaModal);
       setShowDetailsModal(true);
   };
 
   const handleCloseDetailsModal = () => { setShowDetailsModal(false); setSelectedOrderDetails(null); };
 
-  // --- LOGICA PEDIDOS EN LINEA ---
   const handleUpdateStatus = async (pedidoId, nuevoEstado) => { try { await apiClient.put(`/pedidos/${pedidoId}/estado`, { estado: nuevoEstado }); fetchData(); toast.success(`Pedido #${pedidoId} actualizado.`); } catch (err) { toast.error('No se pudo actualizar el estado.'); } };
 
-  // --- HELPERS RENDER BOTONES ---
   const renderActionButtons = (p) => {
       const status = p.estado ? p.estado.toLowerCase().trim() : '';
       if (status === 'pendiente') {
@@ -247,10 +271,10 @@ function PosPage() {
       if (status.includes('listo') || status === 'en camino') {
           return <button className="btn btn-sm btn-dark text-white fw-bold rounded-pill px-3" onClick={() => handleUpdateStatus(p.id, 'Completado')}>✅ Finalizar</button>;
       }
-      return <span className="text-muted small fw-bold">✓ Archivar</span>;
+      // --- CAMBIO: ELIMINADO EL BOTON DE ARCHIVAR ---
+      return null; 
   };
 
-  // --- LOGICA RECOMPENSAS ---
   const handleBuscarCliente = async (e) => {
     e.preventDefault();
     setRecompensaAplicadaId(null);
@@ -305,7 +329,6 @@ function PosPage() {
   const handleProductClick = (item) => setProductoSeleccionadoParaModal(item);
   const handleCloseProductModal = () => setProductoSeleccionadoParaModal(null);
   
-  // --- HELPERS VISUALES ---
   const renderContenido = () => {
     if (loading) return <div className="text-center py-5"><div className="spinner-border" style={{color: styles.accent}} role="status"></div></div>;
     if (error) return <div className="alert alert-danger">{error}</div>;
@@ -343,7 +366,10 @@ function PosPage() {
                           <td><StatusBadge status={p.estado} /></td>
                           <td className="text-center">
                             <div className="d-flex justify-content-center gap-2">
-                                <button className="btn btn-sm fw-bold rounded-pill px-3" style={{border: `1px solid ${styles.muted}`, color: styles.text}} onClick={() => handleShowDetails(p)}>👁️ Ver</button>
+                                {/* CAMBIO: Uso de Icono para Ver */}
+                                <button className="btn btn-sm d-flex align-items-center gap-1 fw-bold rounded-pill px-3" style={{border: `1px solid ${styles.muted}`, color: styles.text}} onClick={() => handleShowDetails(p)}>
+                                    <Eye size={14}/> Ver
+                                </button>
                                 {renderActionButtons(p)}
                             </div>
                           </td>
@@ -372,7 +398,10 @@ function PosPage() {
                         style={{ cursor: 'pointer', backgroundColor: isPicante ? '#222' : '#FFF', border: item.en_oferta ? `1px solid ${styles.accent}` : styles.border }}>
                         {item.en_oferta && (<span className="badge bg-danger position-absolute top-0 end-0 m-2">OFERTA</span>)}
                         <div className="card-body d-flex flex-column justify-content-center p-3">
-                        <div style={{fontSize: '2rem', marginBottom: '10px'}}>🍩</div>
+                        {/* --- CAMBIO: Reemplazo del Emoji de Dona por Icono Lucide --- */}
+                        <div className="d-flex justify-content-center mb-3">
+                            <Package size={40} className="text-secondary" strokeWidth={1.5} />
+                        </div>
                         <h6 className="card-title fw-bold mb-1" style={{fontSize: '0.9rem'}}>{item.nombre}</h6>
                         <div className="fw-bold" style={{color: styles.accent}}>${Number(item.precio).toFixed(2)}</div>
                         </div>
@@ -388,8 +417,10 @@ function PosPage() {
               <div className="card-body p-4">
                 <h4 className="card-title text-center fw-bold mb-3">Ticket de Venta</h4>
                 <form onSubmit={handleBuscarCliente} className="d-flex mb-3 gap-2">
-                  <input type="email" className="form-control shadow-none" placeholder="Email cliente..." value={emailCliente} onChange={(e) => setEmailCliente(e.target.value)} style={{backgroundColor: isPicante ? '#222' : '#FFF', color: styles.text, border: styles.border}}/>
-                  <button type="submit" className="btn btn-dark">🔍</button>
+                    <div className="input-group">
+                        <span className="input-group-text bg-transparent" style={{borderColor: styles.border}}><Search size={16} color={styles.muted}/></span>
+                        <input type="email" className="form-control shadow-none" placeholder="Email cliente..." value={emailCliente} onChange={(e) => setEmailCliente(e.target.value)} style={{backgroundColor: isPicante ? '#222' : '#FFF', color: styles.text, border: styles.border, borderLeft: 'none'}}/>
+                    </div>
                 </form>
                 {clienteEncontrado && (
                   <div className="p-2 mb-3 rounded border" style={{borderColor: styles.accent, backgroundColor: isPicante ? '#220000' : '#FFF0F5'}}>
@@ -413,9 +444,16 @@ function PosPage() {
                         <span className="fw-bold">{item.cantidad}</span>
                         <button className="btn btn-sm btn-outline-secondary px-2 py-0" onClick={() => incrementarCantidad(item.idUnicoTicket, item.esRecompensa)} disabled={item.esRecompensa}>+</button>
                       </div>
-                      <div className="text-end ms-3" style={{minWidth: '50px'}}>
+                      <div className="text-end ms-3 d-flex align-items-center gap-3" style={{minWidth: '50px'}}>
                           <div className="fw-bold">${(item.cantidad * Number(item.precioFinal)).toFixed(2)}</div>
-                          <small className="text-danger" style={{cursor:'pointer'}} onClick={() => eliminarProducto(item.idUnicoTicket, item.esRecompensa)}>x</small>
+                          {/* --- CAMBIO: "x" reemplazada por Icono de Basura Trash2 --- */}
+                          <button 
+                            onClick={() => eliminarProducto(item.idUnicoTicket, item.esRecompensa)}
+                            className="btn btn-link p-0 text-danger"
+                            title="Eliminar del ticket"
+                          >
+                             <Trash2 size={16} />
+                          </button>
                       </div>
                     </li>
                   ))}
@@ -435,37 +473,57 @@ function PosPage() {
       );
     }
 
-    // --- PESTAÑA: HISTORIAL (CON CLICK PARA VER DETALLES) ---
+    // --- CAMBIO COMPLETO: PESTAÑA HISTORIAL AHORA ES RESUMEN DE INVENTARIO ---
     if (activeTab === 'historial') {
+      const { items, granTotal } = resumenVentas;
+
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <div className="p-4 rounded-3 shadow-sm" style={{backgroundColor: styles.cardBg, border: styles.border}}>
-              <h4 className="fw-bold mb-4">Ventas del Punto de Venta (Hoy)</h4>
-              {ventasDelDia.length === 0 ? <p className="text-muted">No se han registrado ventas hoy.</p> : (
-                <div className="list-group">
-                  {ventasDelDia.map(venta => (
-                    <motion.div 
-                        key={venta.id} 
-                        whileHover={{ backgroundColor: isPicante ? '#222' : '#F9F9F9' }}
-                        onClick={() => handleShowDetails(venta)}
-                        className="list-group-item border-0 border-bottom p-3" 
-                        style={{backgroundColor: 'transparent', color: styles.text, borderColor: isPicante ? '#333' : '#eee', cursor: 'pointer'}}
-                    >
-                      <div className="d-flex w-100 justify-content-between align-items-center">
-                        <div>
-                            <h5 className="mb-1 fw-bold text-uppercase">
-                                Venta #{venta.id} 
-                                <span className="ms-2 badge bg-light text-dark border" style={{fontSize: '0.7rem'}}>Ver Detalles</span>
-                            </h5>
-                            <small className="text-muted">{new Date(venta.fecha).toLocaleTimeString()}</small>
-                        </div>
-                        <div className="text-end">
-                            <h5 className="mb-0 fw-bold" style={{color: styles.accent}}>${Number(venta.total).toFixed(2)}</h5>
-                            <small className="text-muted">{venta.metodo_pago}</small>
-                        </div>
+          <div className="row mb-4">
+              <div className="col-md-12">
+                  <div className="p-4 rounded-3 shadow-sm d-flex justify-content-between align-items-center" style={{backgroundColor: styles.accent, color: '#FFF'}}>
+                      <div>
+                        <h2 className="fw-bold m-0">${granTotal.toFixed(2)}</h2>
+                        <span className="opacity-75">Ventas Totales de Hoy</span>
                       </div>
-                    </motion.div>
-                  ))}
+                      <div className="text-end opacity-75">
+                         <h5 className="m-0">{ventasDelDia.length}</h5>
+                         <small>Tickets Generados</small>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          <div className="p-4 rounded-3 shadow-sm" style={{backgroundColor: styles.cardBg, border: styles.border}}>
+              <h4 className="fw-bold mb-4">Resumen de Productos Vendidos</h4>
+              {items.length === 0 ? <p className="text-muted">No se han registrado ventas hoy.</p> : (
+                <div className="table-responsive">
+                    <table className="table align-middle" style={{color: styles.text}}>
+                        <thead style={{backgroundColor: styles.tableHeaderBg}}>
+                            <tr>
+                                <th className="ps-3 py-3">Producto</th>
+                                <th className="text-center">Cant. Vendida</th>
+                                <th className="text-end pe-3">Ingreso Generado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items.map((prod, idx) => (
+                                <tr key={idx} style={{borderBottom: `1px solid ${isPicante ? '#222' : '#eee'}`}}>
+                                    <td className="ps-3 fw-bold">
+                                        {prod.nombre}
+                                    </td>
+                                    <td className="text-center">
+                                        <span className="badge bg-secondary text-white rounded-pill px-3">
+                                            {prod.cantidad}
+                                        </span>
+                                    </td>
+                                    <td className="text-end pe-3 fw-bold" style={{color: styles.accent}}>
+                                        ${prod.total.toFixed(2)}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
               )}
           </div>
@@ -493,7 +551,7 @@ function PosPage() {
             {[
                 {id: 'pos', label: '🖥️ PUNTO DE VENTA'},
                 {id: 'pedidos', label: '🛎️ PEDIDOS ONLINE'},
-                {id: 'historial', label: '📅 VENTAS DE HOY'}
+                {id: 'historial', label: '📊 VENTAS DE HOY'} // Cambio de icono y etiqueta
             ].map(tab => (
                 <button 
                     key={tab.id}

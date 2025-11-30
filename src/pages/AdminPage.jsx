@@ -9,65 +9,54 @@ import { getProducts, createProduct, updateProduct, deleteProduct } from '../ser
 import apiClient from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
-// --- PALETA DE COLORES EXTREMA (DÍA VS NOCHE) ---
+// --- PALETA DE COLORES (CON NÚMEROS ROJOS EN DARK MODE) ---
 const getThemeColors = (mode) => {
   const isDark = mode === 'dark';
 
   return {
     // === FONDOS ===
-    // Dark: Azul Espacial Profundo | Light: Blanco Humo (muy suave)
-    bg: isDark ? '#020617' : '#F3F4F6',
-    
-    // Cards: Dark: Gris Azulado Oscuro | Light: Blanco Puro
-    cardBg: isDark ? '#111827' : '#FFFFFF',
-    
-    // Elementos internos (inputs, items): Dark: Gris Plomo | Light: Gris Nube
-    elementBg: isDark ? '#1F2937' : '#F9FAFB',
+    bg: isDark ? '#020617' : '#F3F4F6',          // Dark: Negro Azulado | Light: Gris Humo
+    cardBg: isDark ? '#111827' : '#FFFFFF',      // Dark: Gris muy oscuro | Light: Blanco
+    elementBg: isDark ? '#1F2937' : '#F9FAFB',   // Fondos de inputs/items
 
-    // === TEXTOS (Aquí está la gran diferencia) ===
-    // Dark: Blanco Brillante | Light: Gris Carbón (Casi negro)
-    textMain: isDark ? '#F9FAFB' : '#111827',
-    
-    // Subtítulos: Dark: Gris Plateado | Light: Gris Acero
-    textSecondary: isDark ? '#9CA3AF' : '#4B5563',
+    // === TEXTOS ===
+    textMain: isDark ? '#F9FAFB' : '#111827',      // Blanco vs Negro
+    textSecondary: isDark ? '#9CA3AF' : '#4B5563', // Gris medio
     
     // === BORDES ===
     borderColor: isDark ? '#374151' : '#E5E7EB',
 
-    // === MARCA (Diferente personalidad) ===
-    // Dark: Rosa Neón Brillante
-    // Light: Índigo Profesional
+    // === MARCA ===
     primary: isDark ? '#F472B6' : '#4F46E5', 
     primaryGradient: isDark 
-      ? 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)' // Rosa Neón
-      : 'linear-gradient(135deg, #4F46E5 0%, #4338CA 100%)', // Azul Corporativo
+      ? 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)' 
+      : 'linear-gradient(135deg, #4F46E5 0%, #4338CA 100%)',
 
     // === TABLAS ===
     tableHeaderBg: isDark ? '#030712' : '#E5E7EB',
     tableHeaderText: isDark ? '#E5E7EB' : '#374151',
 
-    // === DINERO Y NÚMEROS (El cambio que pediste) ===
-    // Dark: Cian Eléctrico (Resalta en la noche)
-    // Light: Verde Bosque (Estilo bancario/serio)
-    money: isDark ? '#22D3EE' : '#047857', 
+    // === DINERO Y NÚMEROS (EL CAMBIO SOLICITADO) ===
+    // Dark: ROJO NEÓN (#FF5252) -> Resalta agresivo sobre fondo oscuro
+    // Light: VERDE BOSQUE (#047857) -> Serio y financiero sobre fondo blanco
+    money: isDark ? '#FF5252' : '#047857', 
 
-    // === ESTADOS (Semáforo) ===
-    // Adaptamos la intensidad según el modo
-    success: isDark ? '#34D399' : '#059669', // Verde brillante vs Verde oscuro
-    successBg: isDark ? 'rgba(52, 211, 153, 0.2)' : '#D1FAE5',
+    // === ESTADOS ===
+    success: isDark ? '#34D399' : '#059669', 
+    successBg: isDark ? 'rgba(52, 211, 153, 0.15)' : '#D1FAE5',
 
-    warning: isDark ? '#FBBF24' : '#D97706', // Amarillo luz vs Naranja quemado
-    warningBg: isDark ? 'rgba(251, 191, 36, 0.2)' : '#FEF3C7',
+    warning: isDark ? '#FBBF24' : '#D97706', 
+    warningBg: isDark ? 'rgba(251, 191, 36, 0.15)' : '#FEF3C7',
 
-    danger: isDark ? '#F87171' : '#DC2626', // Rojo suave vs Rojo fuerte
-    dangerBg: isDark ? 'rgba(248, 113, 113, 0.2)' : '#FEE2E2',
+    danger: isDark ? '#F87171' : '#DC2626', 
+    dangerBg: isDark ? 'rgba(248, 113, 113, 0.15)' : '#FEE2E2',
 
     info: isDark ? '#38BDF8' : '#0284C7',
-    infoBg: isDark ? 'rgba(56, 189, 248, 0.2)' : '#E0F2FE',
+    infoBg: isDark ? 'rgba(56, 189, 248, 0.15)' : '#E0F2FE',
   };
 };
 
-// --- STATCARD (Con borde lateral para destacar) ---
+// --- STATCARD ---
 const StatCard = ({ title, value, color, icon, styles, colors }) => (
   <div style={{
       ...styles.card, 
@@ -78,8 +67,8 @@ const StatCard = ({ title, value, color, icon, styles, colors }) => (
   }}>
     <div>
         <h6 style={{ color: colors.textSecondary, fontWeight: '700', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px', marginBottom: '5px' }}>{title}</h6>
-        {/* El valor usa textMain para cambiar drásticamente entre blanco y negro */}
-        <h3 style={{ color: colors.textMain, fontWeight: '800', margin: 0, fontSize: '2rem' }}>{value}</h3>
+        {/* Aquí forzamos el color del dinero para los KPIs */}
+        <h3 style={{ color: title.includes('Venta') ? colors.money : colors.textMain, fontWeight: '800', margin: 0, fontSize: '2rem' }}>{value}</h3>
     </div>
     <div style={{
       fontSize: '2rem', 
@@ -98,7 +87,7 @@ const StatCard = ({ title, value, color, icon, styles, colors }) => (
 const ConfirmationModal = ({ show, onClose, onConfirm, title, message, colors }) => {
     if (!show) return null;
     return (
-      <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)', zIndex: 1050 }}>
+      <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content" style={{ borderRadius: '16px', border: `1px solid ${colors.borderColor}`, backgroundColor: colors.cardBg }}>
             <div className="modal-header border-0 pb-0 pt-4 px-4">
@@ -170,11 +159,10 @@ function AdminPage() {
       color: colors.textMain,
       borderRadius: '20px',
       border: `1px solid ${colors.borderColor}`,
-      // Sombra fuerte en light mode, suave en dark mode
       boxShadow: theme === 'dark' ? '0 10px 30px rgba(0,0,0,0.5)' : '0 10px 25px rgba(0,0,0,0.08)',
       padding: '30px',
     },
-    // --- TABLA REFORZADA ---
+    // --- TABLA ---
     table: {
        '--bs-table-bg': 'transparent', 
        '--bs-table-color': colors.textMain,
@@ -201,7 +189,7 @@ function AdminPage() {
     tableCell: {
        padding: '16px',
        verticalAlign: 'middle',
-       color: colors.textMain, // Forzamos el color del texto principal
+       color: colors.textMain,
        borderBottom: `1px solid ${colors.borderColor}`
     },
     // --- BOTONES ---
@@ -311,7 +299,7 @@ function AdminPage() {
         <div className="text-center mb-4 pt-3">
           <h1 style={styles.headerTitle}>🍩 Miss Donitas Admin</h1>
           <p style={{color: colors.textSecondary, fontWeight: '600'}}>
-             {theme === 'dark' ? '✨ Modo Nocturno Activo' : '☀️ Modo Día Activo'}
+             {theme === 'dark' ? '✨ Modo Nocturno: Números Rojos' : '☀️ Modo Día: Estilo Clásico'}
           </p>
         </div>
 
@@ -363,7 +351,7 @@ function AdminPage() {
                             <div className="fw-bold" style={{color: colors.textMain}}>{p.nombre}</div>
                             <small style={{color: colors.textSecondary}}>{p.categoria}</small>
                         </td>
-                        {/* PRECIO: Aquí el color cambia drásticamente (Cian en Dark, Verde en Light) */}
+                        {/* PRECIO: ROJO EN DARK, VERDE EN LIGHT */}
                         <td style={{...styles.tableCell, color: colors.money, fontWeight: '800', fontSize: '1.1rem'}}>${Number(p.precio).toFixed(2)}</td>
                         <td style={styles.tableCell}>
                             {p.stock <= 5 
@@ -421,7 +409,7 @@ function AdminPage() {
                             </div>
                           </div>
                        </td>
-                       {/* TOTAL: Resalta mucho en ambos modos por separado */}
+                       {/* TOTAL: ROJO EN DARK */}
                        <td style={{...styles.tableCell, color: colors.money, fontWeight: '900', fontSize: '1.2rem'}}>${Number(p.total).toFixed(2)}</td>
                        <td style={styles.tableCell}>
                          {p.tipo_orden === 'domicilio' 

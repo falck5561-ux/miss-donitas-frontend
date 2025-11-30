@@ -7,7 +7,7 @@ import ProductDetailModal from '../components/ProductDetailModal';
 import PaymentMethodModal from '../components/PaymentMethodModal';
 import { useTheme } from '../context/ThemeContext';
 
-// --- ESTILOS VISUALES (Iguales al Admin) ---
+// --- ESTILOS VISUALES ---
 const getThemeStyles = (isPicante) => ({
   bg: isPicante ? '#000000' : '#FFF8E1', 
   text: isPicante ? '#FFFFFF' : '#3E2723', 
@@ -20,14 +20,16 @@ const getThemeStyles = (isPicante) => ({
 
 // --- BADGE DE ESTADO ---
 const StatusBadge = ({ status }) => {
+  const st = status ? status.toLowerCase() : '';
   let style = { fontSize: '0.75rem', padding: '6px 12px', fontWeight: '800', borderRadius: '50px', textTransform: 'uppercase' };
   let className = 'badge ';
 
-  if (status === 'Pendiente') className += 'bg-danger text-white';
-  else if (status === 'En Preparacion') className += 'bg-warning text-dark';
-  else if (status === 'En Camino') className += 'bg-info text-dark'; 
-  else if (status === 'Listo') className += 'bg-success text-white';
-  else if (status === 'Completado') className += 'bg-dark text-white';
+  if (st === 'pendiente') className += 'bg-danger text-white';
+  else if (st.includes('preparacion')) className += 'bg-warning text-dark';
+  else if (st.includes('camino')) className += 'bg-info text-dark'; 
+  else if (st.includes('listo')) className += 'bg-success text-white';
+  else if (st === 'completado') className += 'bg-dark text-white';
+  else className += 'bg-secondary text-white';
   
   return <span className={className} style={style}>{status}</span>;
 };
@@ -111,7 +113,7 @@ function PosPage() {
     setTotalVenta(nuevoTotal);
   }, [ventaActual]);
 
-  // --- LOGICA POS (Agrupamiento y Tickets) ---
+  // --- LOGICA POS ---
   const agregarProductoAVenta = (item) => {
     let idUnicoTicket;
     const opciones = item.opcionesSeleccionadas || [];
@@ -206,10 +208,47 @@ function PosPage() {
     }
   };
 
-  // --- LOGICA PEDIDOS EN LINEA (ACTUALIZAR ESTADO) ---
+  // --- LOGICA PEDIDOS EN LINEA ---
   const handleUpdateStatus = async (pedidoId, nuevoEstado) => { try { await apiClient.put(`/pedidos/${pedidoId}/estado`, { estado: nuevoEstado }); fetchData(); toast.success(`Pedido #${pedidoId} actualizado.`); } catch (err) { toast.error('No se pudo actualizar el estado.'); } };
   const handleShowDetails = (pedido) => { setSelectedOrderDetails(pedido); setShowDetailsModal(true); };
   const handleCloseDetailsModal = () => { setShowDetailsModal(false); setSelectedOrderDetails(null); };
+
+  // --- HELPERS PARA RENDERIZAR BOTONES (CORREGIDO) ---
+  const renderActionButtons = (p) => {
+      // Normalizamos el estado a minúsculas para evitar errores de "LISTO" vs "Listo"
+      const status = p.estado ? p.estado.toLowerCase().trim() : '';
+
+      // CASO 1: PENDIENTE
+      if (status === 'pendiente') {
+          return (
+            <button className="btn btn-sm text-white fw-bold rounded-pill px-3" style={{backgroundColor: styles.accent, border:'none'}} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>
+                👨‍🍳 Preparar
+            </button>
+          );
+      }
+      
+      // CASO 2: EN PREPARACIÓN
+      if (status === 'en preparacion' || status === 'preparando') {
+          if (p.tipo_orden === 'domicilio') {
+              return <button className="btn btn-sm btn-info text-white fw-bold rounded-pill px-3" onClick={() => handleUpdateStatus(p.id, 'En Camino')}>🛵 Enviar</button>;
+          } else {
+              return <button className="btn btn-sm btn-success text-white fw-bold rounded-pill px-3" onClick={() => handleUpdateStatus(p.id, 'Listo')}>🥡 Listo</button>;
+          }
+      }
+
+      // CASO 3: EN CAMINO / LISTO (Aquí fallaba antes, ahora incluye variaciones)
+      // Si dice "listo", "listo para recoger", "en camino", etc.
+      if (status.includes('listo') || status === 'en camino') {
+          return <button className="btn btn-sm btn-dark text-white fw-bold rounded-pill px-3" onClick={() => handleUpdateStatus(p.id, 'Completado')}>✅ Finalizar</button>;
+      }
+
+      // CASO 4: COMPLETADO
+      if (status === 'completado') {
+          return <span className="text-muted small fw-bold">✓ Archivar</span>;
+      }
+
+      return <span className="text-muted small">---</span>;
+  };
 
   // --- LOGICA RECOMPENSAS POS ---
   const handleBuscarCliente = async (e) => {
@@ -233,7 +272,6 @@ function PosPage() {
     let precioMaximo = -1;
     const nombreRecompensaLower = recompensa.nombre ? recompensa.nombre.toLowerCase() : '';
 
-    // Lógica básica de recompensas (ajusta según tus reglas)
     if (nombreRecompensaLower.includes('pikulito') || nombreRecompensaLower.includes('mojadito')) {
       const productosElegibles = ['Tito Pikulito', 'Tito Mojadito']; 
       ventaActual.forEach(item => {
@@ -244,7 +282,6 @@ function PosPage() {
       });
       if (!itemParaDescontar) return toast.error('Añade un Tito Pikulito o Mojadito para aplicar.');
     } else {
-        // Fallback genérico para café/dona
         ventaActual.forEach(item => {
             if (!item.esRecompensa && Number(item.precioFinal) > precioMaximo) {
                 precioMaximo = Number(item.precioFinal);
@@ -279,7 +316,7 @@ function PosPage() {
     if (loading) return <div className="text-center py-5"><div className="spinner-border" style={{color: styles.accent}} role="status"></div></div>;
     if (error) return <div className="alert alert-danger">{error}</div>;
 
-    // --- PESTAÑA: PEDIDOS EN LINEA (MEJORADA) ---
+    // --- PESTAÑA: PEDIDOS EN LINEA ---
     if (activeTab === 'pedidos') {
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -319,7 +356,6 @@ function PosPage() {
                           <td><StatusBadge status={p.estado} /></td>
                           <td className="text-center">
                             <div className="d-flex justify-content-center gap-2">
-                                {/* Botón Ver (Siempre visible) */}
                                 <button 
                                     className="btn btn-sm fw-bold rounded-pill px-3"
                                     style={{border: `1px solid ${styles.muted}`, color: styles.text}}
@@ -328,20 +364,8 @@ function PosPage() {
                                     👁️ Ver
                                 </button>
 
-                                {/* Botón de Acción Dinámico */}
-                                {p.estado === 'Pendiente' && (
-                                    <button className="btn btn-sm text-white fw-bold rounded-pill px-3" style={{backgroundColor: styles.accent, border:'none'}} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>
-                                        👨‍🍳 Preparar
-                                    </button>
-                                )}
-                                {p.estado === 'En Preparacion' && (
-                                    p.tipo_orden === 'domicilio' 
-                                    ? <button className="btn btn-sm btn-info text-white fw-bold rounded-pill px-3" onClick={() => handleUpdateStatus(p.id, 'En Camino')}>🛵 Enviar</button>
-                                    : <button className="btn btn-sm btn-success text-white fw-bold rounded-pill px-3" onClick={() => handleUpdateStatus(p.id, 'Listo')}>🥡 Listo</button>
-                                )}
-                                {(p.estado === 'En Camino' || p.estado === 'Listo') && (
-                                    <button className="btn btn-sm btn-dark text-white fw-bold rounded-pill px-3" onClick={() => handleUpdateStatus(p.id, 'Completado')}>✅ Finalizar</button>
-                                )}
+                                {/* AQUI USAMOS LA NUEVA FUNCIÓN CORREGIDA */}
+                                {renderActionButtons(p)}
                             </div>
                           </td>
                         </tr>
@@ -359,7 +383,6 @@ function PosPage() {
     if (activeTab === 'pos') {
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="row g-4">
-          {/* Columna Menú */}
           <div className="col-md-7">
             <div className="p-3 rounded-3 shadow-sm h-100" style={{backgroundColor: styles.cardBg, border: styles.border}}>
                 <h4 className="mb-4 fw-bold">Menú</h4>
@@ -385,13 +408,11 @@ function PosPage() {
             </div>
           </div>
 
-          {/* Columna Ticket */}
           <div className="col-md-5">
             <div className="card position-sticky shadow-sm border-0" style={{ top: '20px', backgroundColor: styles.cardBg, border: styles.border }}>
               <div className="card-body p-4">
                 <h4 className="card-title text-center fw-bold mb-3">Ticket de Venta</h4>
                 
-                {/* Buscador Cliente */}
                 <form onSubmit={handleBuscarCliente} className="d-flex mb-3 gap-2">
                   <input type="email" className="form-control shadow-none" placeholder="Email cliente..." value={emailCliente} onChange={(e) => setEmailCliente(e.target.value)} 
                          style={{backgroundColor: isPicante ? '#222' : '#FFF', color: styles.text, border: styles.border}}/>
@@ -411,7 +432,6 @@ function PosPage() {
 
                 <hr style={{borderColor: styles.muted}} />
 
-                {/* Lista Items */}
                 <ul className="list-group list-group-flush mb-3" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                   {ventaActual.length === 0 && <div className="text-center text-muted py-4">Ticket vacío</div>}
                   
@@ -452,7 +472,7 @@ function PosPage() {
       );
     }
 
-    // --- PESTAÑA: HISTORIAL (MEJORADA) ---
+    // --- PESTAÑA: HISTORIAL ---
     if (activeTab === 'historial') {
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -478,11 +498,8 @@ function PosPage() {
     }
   };
 
-  // --- RENDER PRINCIPAL ---
   return (
     <div style={{ backgroundColor: styles.bg, minHeight: '100vh', color: styles.text, fontFamily: "'Nunito', sans-serif" }}>
-      
-      {/* HEADER */}
       <div className="container-fluid px-4 py-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -496,7 +513,6 @@ function PosPage() {
             </div>
         </div>
 
-        {/* PESTAÑAS (Estilo Botón) */}
         <div className="d-flex gap-2 mb-4 overflow-auto pb-2">
             {[
                 {id: 'pos', label: '🖥️ PUNTO DE VENTA'},
@@ -518,11 +534,9 @@ function PosPage() {
             ))}
         </div>
         
-        {/* CONTENIDO */}
         {renderContenido()}
       </div>
 
-      {/* MODALES */}
       {showDetailsModal && (<DetallesPedidoModal pedido={selectedOrderDetails} onClose={handleCloseDetailsModal} isPicante={isPicante} />)}
 
       {productoSeleccionadoParaModal && (

@@ -9,202 +9,206 @@ import { getProducts, createProduct, updateProduct, deleteProduct } from '../ser
 import apiClient from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
-// --- NUEVA PALETA DE COLORES (MODERNA Y ALTO CONTRASTE) ---
+// --- NUEVA PALETA DE ALTO CONTRASTE ---
 const getThemeColors = (mode) => {
   const isDark = mode === 'dark';
 
   return {
-    // FONDOS: Usamos escala "Slate" (Gris azulado) que es más premium que el negro puro
-    bg: isDark ? '#0F172A' : '#F3F4F6', 
-    cardBg: isDark ? '#1E293B' : '#FFFFFF',
-    elementBg: isDark ? '#334155' : '#F9FAFB',
+    isDark, // Flag útil para lógica
+    // FONDOS
+    bg: isDark ? '#000000' : '#F2F4F8',        // Negro absoluto vs Gris azulado muy claro
+    cardBg: isDark ? '#141414' : '#FFFFFF',    // Gris muy oscuro vs Blanco puro
+    elementBg: isDark ? '#262626' : '#F8F9FA', // Para inputs y filas alternas
     
-    // TEXTOS: Blanco puro en dark mode para máxima legibilidad
-    textMain: isDark ? '#F8FAFC' : '#111827', 
-    textSecondary: isDark ? '#94A3B8' : '#6B7280',
-    textHeader: isDark ? '#F472B6' : '#DB2777', // Rosa moderno
+    // TEXTOS (LA CLAVE PARA QUE SE VEA BIEN)
+    textMain: isDark ? '#FFFFFF' : '#111111',       // Blanco puro en dark
+    textSecondary: isDark ? '#D4D4D4' : '#555555',  // Gris claro en dark
+    textMuted: isDark ? '#A0A0A0' : '#888888',
+    
+    // BORDES
+    borderColor: isDark ? '#404040' : '#DEE2E6',
 
-    // BORDES Y SEPARADORES
-    borderColor: isDark ? '#334155' : '#E5E7EB',
+    // COLOR PRINCIPAL (BOTONES Y ACENTOS)
+    primary: isDark ? '#FF3D00' : '#E91E63', // Naranja/Rojo Neón en Dark (Se ve mucho más que el rojo oscuro)
+    primaryGradient: isDark 
+      ? 'linear-gradient(90deg, #FF3D00 0%, #DD2C00 100%)' // Fuego Brillante
+      : 'linear-gradient(90deg, #FF4081 0%, #C2185B 100%)', // Rosa Intenso
     
-    // ACCIONES
-    primary: '#EC4899', // Rosa vibrante
-    primaryHover: '#DB2777',
-    
-    // ESTADOS (Pasteles en light, Neón suave en dark)
-    successBg: isDark ? 'rgba(34, 197, 94, 0.2)' : '#DCFCE7',
-    successTxt: isDark ? '#4ADE80' : '#166534',
-    
-    warnBg: isDark ? 'rgba(234, 179, 8, 0.2)' : '#FEF9C3',
-    warnTxt: isDark ? '#FACC15' : '#854D0E',
-    
-    dangerBg: isDark ? 'rgba(239, 68, 68, 0.2)' : '#FEE2E2',
-    dangerTxt: isDark ? '#F87171' : '#991B1B',
-    
-    infoBg: isDark ? 'rgba(59, 130, 246, 0.2)' : '#DBEAFE',
-    infoTxt: isDark ? '#60A5FA' : '#1E40AF',
+    // DINERO / NÚMEROS IMPORTANTES
+    // En Dark usamos un rojo casi naranja (#FF5252) porque el rojo puro (#FF0000) no se lee bien sobre negro.
+    money: isDark ? '#FF5252' : '#00C853', 
 
-    // SOMBRAS (Suaves y difusas)
-    shadow: isDark 
-      ? '0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3)'
-      : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+    // ESTADOS (Badges) - Fondo oscuro/Texto brillante en Dark Mode
+    badgeSuccessBg: isDark ? '#1B5E20' : '#D1E7DD',
+    badgeSuccessTxt: isDark ? '#69F0AE' : '#0F5132', // Verde neón en dark
+
+    badgePendingBg: isDark ? '#3E2723' : '#FFF3CD',
+    badgePendingTxt: isDark ? '#FFAB40' : '#856404', // Naranja neón en dark
+
+    badgeDangerBg: isDark ? '#B71C1C' : '#F8D7DA',
+    badgeDangerTxt: isDark ? '#FF8A80' : '#842029', // Rojo claro en dark
+    
+    shadow: isDark ? '0 8px 32px rgba(0,0,0,0.8)' : '0 8px 30px rgba(0,0,0,0.08)',
   };
 };
 
-// --- COMPONENTE KPI MEJORADO ---
-const StatCard = ({ title, value, icon, colors, styles }) => (
+// --- ESTILOS GLOBALES FORZADOS (Para arreglar Bootstrap) ---
+const GlobalFixes = ({ colors }) => (
+  <style>{`
+    .table { --bs-table-color: ${colors.textMain}; --bs-table-bg: transparent; }
+    .table td, .table th { border-bottom-color: ${colors.borderColor}; color: ${colors.textMain}; }
+    .btn-close { filter: ${colors.isDark ? 'invert(1) grayscale(100%) brightness(200%)' : 'none'}; }
+    .form-control { background-color: ${colors.elementBg}; color: ${colors.textMain}; border-color: ${colors.borderColor}; }
+    .form-control:focus { background-color: ${colors.elementBg}; color: ${colors.textMain}; border-color: ${colors.primary}; box-shadow: 0 0 0 0.25rem ${colors.primary}40; }
+    /* Scrollbar personalizada */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: ${colors.bg}; }
+    ::-webkit-scrollbar-thumb { background: ${colors.borderColor}; border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: ${colors.primary}; }
+  `}</style>
+);
+
+// --- COMPONENTES AUXILIARES ---
+
+const StatCard = ({ title, value, icon, colors }) => (
   <div style={{
-      backgroundColor: colors.cardBg,
-      borderRadius: '16px',
-      padding: '24px',
-      boxShadow: colors.shadow,
-      border: `1px solid ${colors.borderColor}`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between'
+    backgroundColor: colors.cardBg,
+    borderRadius: '16px',
+    padding: '25px',
+    border: `1px solid ${colors.borderColor}`,
+    boxShadow: colors.shadow,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between'
   }}>
     <div>
-        <p style={{ color: colors.textSecondary, fontSize: '0.875rem', fontWeight: '600', marginBottom: '4px', textTransform: 'uppercase' }}>{title}</p>
-        <h3 style={{ color: colors.textMain, fontWeight: '800', margin: 0, fontSize: '1.8rem' }}>{value}</h3>
+      <h6 style={{ color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.75rem', fontWeight: 'bold', marginBottom: '5px' }}>
+        {title}
+      </h6>
+      <h2 style={{ color: colors.money, margin: 0, fontWeight: '900', fontSize: '2.2rem' }}>
+        {value}
+      </h2>
     </div>
     <div style={{ 
-        width: '50px', height: '50px', borderRadius: '12px', 
-        backgroundColor: colors.elementBg, display: 'flex', 
-        alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' 
+      fontSize: '2.5rem', 
+      color: colors.primary, 
+      opacity: 0.8,
+      backgroundColor: colors.elementBg,
+      padding: '15px',
+      borderRadius: '12px'
     }}>
       {icon}
     </div>
   </div>
 );
 
+const Badge = ({ children, bg, txt }) => (
+  <span style={{
+    backgroundColor: bg,
+    color: txt,
+    padding: '5px 12px',
+    borderRadius: '50px',
+    fontWeight: '800',
+    fontSize: '0.75rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    display: 'inline-block'
+  }}>
+    {children}
+  </span>
+);
+
+const ConfirmationModal = ({ show, onClose, onConfirm, title, message, colors }) => {
+  if (!show) return null;
+  return (
+    <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1055 }}>
+      <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-content" style={{ backgroundColor: colors.cardBg, color: colors.textMain, border: `1px solid ${colors.borderColor}` }}>
+          <div className="modal-header border-0">
+            <h5 className="modal-title fw-bold">{title}</h5>
+            <button type="button" className="btn-close" onClick={onClose}></button>
+          </div>
+          <div className="modal-body">
+            <p style={{ color: colors.textSecondary }}>{message}</p>
+          </div>
+          <div className="modal-footer border-0">
+            <button className="btn" style={{ color: colors.textMain, fontWeight: 'bold' }} onClick={onClose}>Cancelar</button>
+            <button className="btn btn-danger rounded-pill px-4 fw-bold" onClick={onConfirm}>Confirmar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- COMPONENTE PRINCIPAL ---
+
 function AdminPage() {
   const { theme } = useTheme(); 
   const colors = getThemeColors(theme);
-  const isDark = theme === 'dark';
 
+  // Estilos inline baseados en la paleta generada
   const styles = {
     container: {
       backgroundColor: colors.bg,
       minHeight: '100vh',
-      fontFamily: '"Inter", "Segoe UI", sans-serif', // Fuente más limpia
-      padding: '20px',
+      fontFamily: '"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      padding: '40px 20px',
       color: colors.textMain,
       transition: 'background-color 0.3s ease'
     },
-    // Eliminamos el efecto "Card Gigante", ahora es un contenedor invisible
-    mainWrapper: {
-      maxWidth: '1400px',
-      margin: '0 auto',
+    title: {
+      background: colors.primaryGradient,
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      fontWeight: '900',
+      fontSize: '2.5rem',
+      marginBottom: '0',
     },
-    headerTitle: {
-      color: colors.textMain,
-      fontWeight: '800',
-      fontSize: '2rem',
-      letterSpacing: '-0.5px',
-      marginBottom: '0'
-    },
-    // Navegación estilo "Pestañas flotantes"
-    navContainer: {
-      display: 'flex',
-      gap: '8px',
-      overflowX: 'auto',
-      paddingBottom: '10px',
-      marginBottom: '25px',
-      borderBottom: `1px solid ${colors.borderColor}`
-    },
-    navLink: (isActive) => ({
+    navPill: (isActive) => ({
       backgroundColor: isActive ? colors.primary : 'transparent',
-      color: isActive ? '#fff' : colors.textSecondary,
-      padding: '10px 20px',
-      borderRadius: '8px',
-      fontWeight: '600',
-      border: 'none',
-      fontSize: '0.95rem',
-      cursor: 'pointer',
+      color: isActive ? '#FFFFFF' : colors.textSecondary,
+      border: isActive ? 'none' : `1px solid ${colors.borderColor}`,
+      borderRadius: '30px',
+      padding: '10px 24px',
+      margin: '0 5px 10px 5px',
+      fontWeight: '700',
       transition: 'all 0.2s',
-      whiteSpace: 'nowrap'
+      cursor: 'pointer'
     }),
-    // Contenedor de contenido limpio
-    contentSection: {
+    card: {
       backgroundColor: colors.cardBg,
-      borderRadius: '20px',
+      borderRadius: '24px',
+      padding: '30px',
       border: `1px solid ${colors.borderColor}`,
       boxShadow: colors.shadow,
-      padding: '30px',
-      marginBottom: '30px'
+      marginTop: '30px'
     },
-    // TABLAS LIMPIAS
-    table: {
-       width: '100%',
-       borderCollapse: 'separate',
-       borderSpacing: '0 8px' // Espacio entre filas
+    headerRow: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '25px'
     },
-    tableHeader: {
-      color: colors.textSecondary,
-      fontWeight: '700',
-      textTransform: 'uppercase',
-      fontSize: '0.75rem',
-      padding: '15px',
-      borderBottom: 'none',
-      letterSpacing: '0.05em'
+    // Botones de acción
+    btnMain: {
+        background: colors.primaryGradient,
+        border: 'none',
+        color: 'white',
+        padding: '10px 25px',
+        borderRadius: '50px',
+        fontWeight: 'bold',
+        boxShadow: `0 4px 15px ${colors.primary}66` // Sombra con color
     },
-    tableRow: {
-       backgroundColor: isDark ? colors.elementBg : '#fff',
-       transition: 'transform 0.1s',
-       boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-    },
-    tableCell: {
-       padding: '16px 15px',
-       verticalAlign: 'middle',
-       color: colors.textMain,
-       borderTop: `1px solid ${colors.borderColor}`,
-       borderBottom: `1px solid ${colors.borderColor}`,
-       fontSize: '0.95rem'
-    },
-    // Celdas bordes redondeados
-    firstCell: { borderRadius: '12px 0 0 12px', borderLeft: `1px solid ${colors.borderColor}` },
-    lastCell: { borderRadius: '0 12px 12px 0', borderRight: `1px solid ${colors.borderColor}` },
-
-    // BOTONES
-    btnPrimary: {
-      background: colors.primary,
-      color: 'white',
-      border: 'none',
-      padding: '10px 24px',
-      borderRadius: '10px',
-      fontWeight: '600',
-      boxShadow: `0 4px 12px ${isDark ? 'rgba(236, 72, 153, 0.4)' : 'rgba(236, 72, 153, 0.2)'}`,
-      transition: 'transform 0.1s'
-    },
-    btnAction: (textColor, borderColor) => ({
-        padding: '6px 12px',
-        borderRadius: '8px',
-        border: `1px solid ${borderColor}`,
-        color: textColor,
-        backgroundColor: 'transparent',
-        fontSize: '0.8rem',
-        fontWeight: '600',
-        marginRight: '8px',
-        cursor: 'pointer'
-    }),
-    badge: (bg, txt) => ({
-        backgroundColor: bg,
-        color: txt,
-        padding: '6px 12px',
-        borderRadius: '20px',
-        fontSize: '0.75rem',
-        fontWeight: '700',
-        display: 'inline-block'
-    }),
-    // INPUTS (Arreglo para modo oscuro)
-    input: {
-        backgroundColor: colors.elementBg,
-        border: `1px solid ${colors.borderColor}`,
+    btnGhost: {
+        background: 'transparent',
+        border: `2px solid ${colors.borderColor}`,
         color: colors.textMain,
-        padding: '10px',
-        borderRadius: '8px',
-        width: '100%',
-        outline: 'none'
+        padding: '6px 15px',
+        borderRadius: '12px',
+        fontWeight: '600',
+        fontSize: '0.85rem',
+        marginRight: '8px'
     }
   };
 
@@ -215,8 +219,8 @@ function AdminPage() {
   const [combos, setCombos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
-  // Modales states
+
+  // Modales
   const [showProductModal, setShowProductModal] = useState(false);
   const [productoActual, setProductoActual] = useState(null);
   const [showComboModal, setShowComboModal] = useState(false);
@@ -237,310 +241,264 @@ function AdminPage() {
       else if (activeTab === 'reporteGeneral') { const res = await apiClient.get('/ventas/reporte'); setReportData(res.data); } 
       else if (activeTab === 'pedidosEnLinea') { const res = await apiClient.get('/pedidos'); setPedidos(res.data); } 
       else if (activeTab === 'combos') { const res = await apiClient.get('/combos/admin/todos'); setCombos(res.data); }
-    } catch (err) { setError(`Error de conexión.`); console.error(err); } 
+    } catch (err) { setError('Error de conexión con el servidor.'); } 
     finally { setLoading(false); }
   };
 
   useEffect(() => { fetchData(); }, [activeTab]);
-  
+
   // Handlers
   const handleOpenProductModal = (p = null) => { setProductoActual(p ? { ...p, imagenes: p.imagen_url ? [p.imagen_url] : [] } : null); setShowProductModal(true); };
-  const handleSaveProducto = async (p) => { try { const d = { ...p, imagen_url: p.imagenes?.[0] || null }; delete d.imagenes; if (d.id) await updateProduct(d.id, d); else await createProduct(d); toast.success('Guardado con éxito'); fetchData(); setShowProductModal(false); } catch { toast.error('Error al guardar'); } };
-  const handleDeleteProducto = (p) => { setConfirmTitle('Ocultar Producto'); setConfirmMessage(`¿Ocultar "${p.nombre}"?`); setConfirmAction(() => async () => { await deleteProduct(p.id); toast.success('Producto ocultado'); fetchData(); setShowConfirmModal(false); }); setShowConfirmModal(true); };
+  const handleSaveProducto = async (p) => { try { const d = { ...p, imagen_url: p.imagenes?.[0] || null }; delete d.imagenes; if (d.id) await updateProduct(d.id, d); else await createProduct(d); toast.success('Guardado'); fetchData(); setShowProductModal(false); } catch { toast.error('Error'); } };
+  const handleDeleteProducto = (p) => { setConfirmTitle('Ocultar Producto'); setConfirmMessage(`¿Ocultar "${p.nombre}"?`); setConfirmAction(() => async () => { await deleteProduct(p.id); toast.success('Ocultado'); fetchData(); setShowConfirmModal(false); }); setShowConfirmModal(true); };
   const handleOpenComboModal = (c = null) => { setComboActual(c); setShowComboModal(true); };
-  const handleSaveCombo = async (c) => { try { if(c.id) await apiClient.put(`/combos/${c.id}`, c); else await apiClient.post('/combos', c); toast.success('Combo guardado'); fetchData(); setShowComboModal(false); } catch { toast.error('Error'); } };
-  const handleDeleteCombo = (c) => { setConfirmTitle('Ocultar Combo'); setConfirmMessage(`¿Ocultar "${c.nombre}"?`); setConfirmAction(() => async () => { await apiClient.patch(`/combos/${c.id}/desactivar`); toast.success('Ocultado'); fetchData(); setShowConfirmModal(false); }); setShowConfirmModal(true); };
+  const handleSaveCombo = async (c) => { try { if(c.id) await apiClient.put(`/combos/${c.id}`, c); else await apiClient.post('/combos', c); toast.success('Guardado'); fetchData(); setShowComboModal(false); } catch { toast.error('Error'); } };
+  const handleDeleteCombo = (c) => { setConfirmTitle('Desactivar Combo'); setConfirmMessage(`¿Ocultar "${c.nombre}"?`); setConfirmAction(() => async () => { await apiClient.patch(`/combos/${c.id}/desactivar`); toast.success('Desactivado'); fetchData(); setShowConfirmModal(false); }); setShowConfirmModal(true); };
   const handleUpdateStatus = async (id, est) => { try { await apiClient.put(`/pedidos/${id}/estado`, { estado: est }); toast.success(`Pedido #${id}: ${est}`); fetchData(); } catch { toast.error('Error'); } };
-  const handlePurge = async () => { if(purgeConfirmText !== 'ELIMINAR') return toast.error('Escribe ELIMINAR'); await apiClient.delete('/pedidos/purgar'); toast.success('Historial borrado'); setShowPurgeModal(false); fetchData(); };
+  const handlePurge = async () => { if(purgeConfirmText !== 'ELIMINAR') return toast.error('Escribe ELIMINAR'); await apiClient.delete('/pedidos/purgar'); toast.success('Historial Eliminado'); setShowPurgeModal(false); fetchData(); };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.mainWrapper}>
-        
-        {/* HEADER LIMPIO */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <div>
-            <h1 style={styles.headerTitle}>Miss Donitas <span style={{color: colors.primary}}>.</span></h1>
-            <p style={{color: colors.textSecondary, margin: 0}}>Panel de Administración</p>
+    <>
+      <GlobalFixes colors={colors} /> {/* AQUÍ SE INYECTA LA CORRECCIÓN DE BOOTSTRAP */}
+      
+      <div style={styles.container}>
+        <div className="container-fluid px-lg-5">
+          
+          {/* HEADER */}
+          <div className="text-center mb-5">
+            <h1 style={styles.title}>Miss Donitas Admin</h1>
+            <p style={{ color: colors.primary, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.8rem' }}>
+              {theme === 'dark' ? '🔥 MODO PICANTE (DARK)' : '🧁 MODO DULCE (LIGHT)'}
+            </p>
           </div>
-          <div style={{textAlign: 'right'}}>
-             {/* Aquí podrías poner el toggle de tema si no está en el navbar global */}
-          </div>
-        </div>
 
-        {/* NAVEGACIÓN TIPO TABS (Sin cajas) */}
-        <div style={styles.navContainer}>
+          {/* TABS */}
+          <div className="d-flex justify-content-center flex-wrap mb-4">
             {[
               { id: 'pedidosEnLinea', label: '🛎️ Pedidos' },
               { id: 'productos', label: '🍩 Inventario' },
-              { id: 'combos', label: '🎁 Promociones' },
+              { id: 'combos', label: '🎁 Combos' },
               { id: 'reporteGeneral', label: '📊 Finanzas' },
-              { id: 'reporteProductos', label: '📈 Métricas' }
+              { id: 'reporteProductos', label: '📈 Ranking' }
             ].map(tab => (
               <button 
                 key={tab.id} 
-                style={styles.navLink(activeTab === tab.id)} 
+                style={styles.navPill(activeTab === tab.id)} 
                 onClick={() => setActiveTab(tab.id)}
               >
                 {tab.label}
               </button>
             ))}
-        </div>
+          </div>
 
-        {/* CONTENIDO PRINCIPAL */}
-        <div>
-          {loading && <div className="text-center py-5"><div className="spinner-border" style={{color: colors.primary}} role="status"></div></div>}
-          {error && <div className="alert alert-danger">{error}</div>}
+          {/* ÁREA DE CONTENIDO */}
+          <div style={styles.card}>
+            
+            {loading && <div className="text-center py-5"><div className="spinner-border" style={{color: colors.primary}} role="status"></div></div>}
+            {error && <div className="alert alert-danger">{error}</div>}
 
-          {/* TABLA INVENTARIO */}
-          {!loading && !error && activeTab === 'productos' && (
-            <div style={styles.contentSection}>
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <h4 className="fw-bold m-0" style={{color: colors.textMain}}>Catálogo de Productos</h4>
-                <button style={styles.btnPrimary} onClick={() => handleOpenProductModal()}>+ Nuevo Producto</button>
-              </div>
-              <div className="table-responsive">
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th style={styles.tableHeader}>Producto</th>
-                      <th style={styles.tableHeader}>Precio</th>
-                      <th style={styles.tableHeader}>Stock</th>
-                      <th style={styles.tableHeader}>Estado</th>
-                      <th style={{...styles.tableHeader, textAlign: 'right'}}>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {productos.map((p) => (
-                      <tr key={p.id} style={styles.tableRow}>
-                        <td style={{...styles.tableCell, ...styles.firstCell}}>
+            {/* TABLA: PRODUCTOS */}
+            {!loading && !error && activeTab === 'productos' && (
+              <div>
+                <div style={styles.headerRow}>
+                  <h3 className="fw-bold m-0">Inventario</h3>
+                  <button style={styles.btnMain} onClick={() => handleOpenProductModal()}>+ Nuevo</button>
+                </div>
+                <div className="table-responsive">
+                  <table className="table align-middle">
+                    <thead>
+                      <tr>
+                        <th style={{color: colors.textSecondary}}>PRODUCTO</th>
+                        <th style={{color: colors.textSecondary}}>PRECIO</th>
+                        <th style={{color: colors.textSecondary}}>STOCK</th>
+                        <th style={{color: colors.textSecondary}}>ESTADO</th>
+                        <th className="text-end" style={{color: colors.textSecondary}}>ACCIONES</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {productos.map((p) => (
+                        <tr key={p.id}>
+                          <td>
                             <div className="fw-bold">{p.nombre}</div>
                             <small style={{color: colors.textSecondary}}>{p.categoria}</small>
-                        </td>
-                        <td style={styles.tableCell}>${Number(p.precio).toFixed(2)}</td>
-                        <td style={styles.tableCell}>
-                             {p.stock <= 5 
-                                ? <span style={styles.badge(colors.dangerBg, colors.dangerTxt)}>Bajo: {p.stock}</span> 
-                                : <span style={{color: colors.textSecondary}}>{p.stock} u.</span>}
-                        </td>
-                        <td style={styles.tableCell}>
+                          </td>
+                          <td style={{ color: colors.money, fontWeight: '900', fontSize: '1.1rem' }}>
+                            ${Number(p.precio).toFixed(2)}
+                          </td>
+                          <td>
+                            {p.stock <= 5 
+                              ? <Badge bg={colors.badgeDangerBg} txt={colors.badgeDangerTxt}>Bajo: {p.stock}</Badge> 
+                              : <span className="fw-bold" style={{color: colors.textMain}}>{p.stock} u.</span>}
+                          </td>
+                          <td>
                             {p.en_oferta 
-                                ? <span style={styles.badge(colors.infoBg, colors.infoTxt)}>Oferta -{p.descuento_porcentaje}%</span> 
-                                : <span style={{color: colors.textSecondary, fontSize: '0.85rem'}}>Normal</span>}
-                        </td>
-                        <td style={{...styles.tableCell, ...styles.lastCell, textAlign: 'right'}}>
-                          <button style={styles.btnAction(colors.textSecondary, colors.borderColor)} onClick={() => handleOpenProductModal(p)}>Editar</button>
-                          <button style={styles.btnAction(colors.dangerTxt, colors.dangerBg)} onClick={() => handleDeleteProducto(p)}>Ocultar</button>
-                        </td>
+                              ? <Badge bg={colors.badgeSuccessBg} txt={colors.badgeSuccessTxt}>Oferta</Badge> 
+                              : <span style={{color: colors.textSecondary}}>Normal</span>}
+                          </td>
+                          <td className="text-end">
+                            <button style={styles.btnGhost} onClick={() => handleOpenProductModal(p)}>Editar</button>
+                            <button style={{...styles.btnGhost, color: colors.badgeDangerTxt, borderColor: colors.badgeDangerTxt}} onClick={() => handleDeleteProducto(p)}>Ocultar</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TABLA: PEDIDOS */}
+            {!loading && !error && activeTab === 'pedidosEnLinea' && (
+              <div>
+                <div style={styles.headerRow}>
+                  <h3 className="fw-bold m-0">Pedidos Entrantes</h3>
+                  {pedidos.filter(p => p.estado === 'Pendiente').length > 0 && 
+                    <Badge bg={colors.primary} txt="#FFF">{pedidos.filter(p => p.estado === 'Pendiente').length} Pendientes</Badge>
+                  }
+                </div>
+                <div className="table-responsive">
+                  <table className="table align-middle">
+                    <thead>
+                      <tr>
+                        <th style={{color: colors.textSecondary}}>CLIENTE</th>
+                        <th style={{color: colors.textSecondary}}>TOTAL</th>
+                        <th style={{color: colors.textSecondary}}>TIPO</th>
+                        <th style={{color: colors.textSecondary}}>ESTADO</th>
+                        <th style={{color: colors.textSecondary}}>ACCIONES</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* TABLA PEDIDOS */}
-          {!loading && !error && activeTab === 'pedidosEnLinea' && (
-             <div style={styles.contentSection}>
-             <div className="d-flex justify-content-between align-items-center mb-4">
-               <div>
-                  <h4 className="fw-bold m-0" style={{color: colors.textMain}}>Pedidos Activos</h4>
-                  <p style={{color: colors.textSecondary, fontSize: '0.9rem', margin: 0}}>Gestiona las órdenes entrantes</p>
-               </div>
-               <span style={styles.badge(colors.primary, '#fff')}>
-                 {pedidos.filter(p => p.estado === 'Pendiente').length} Pendientes
-               </span>
-             </div>
-             <div className="table-responsive">
-               <table style={styles.table}>
-                 <thead>
-                   <tr>
-                     <th style={styles.tableHeader}>Orden</th>
-                     <th style={styles.tableHeader}>Total</th>
-                     <th style={styles.tableHeader}>Tipo</th>
-                     <th style={styles.tableHeader}>Estado</th>
-                     <th style={{...styles.tableHeader, textAlign: 'right'}}>Control</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   {pedidos.map((p) => (
-                     <tr key={p.id} style={styles.tableRow}>
-                       <td style={{...styles.tableCell, ...styles.firstCell}}>
-                          <div className="d-flex align-items-center gap-3">
-                             <div style={{backgroundColor: colors.elementBg, padding: '8px', borderRadius: '8px', fontWeight: 'bold', color: colors.primary}}>#{p.id}</div>
-                             <div>
-                                 <div className="fw-bold">{p.nombre_cliente}</div>
-                                 <small style={{color: colors.textSecondary}}>{new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
-                             </div>
-                          </div>
-                       </td>
-                       <td style={{...styles.tableCell, fontWeight: '800'}}>${Number(p.total).toFixed(2)}</td>
-                       <td style={styles.tableCell}>
-                         {p.tipo_orden === 'domicilio' 
-                           ? <span style={styles.badge(colors.infoBg, colors.infoTxt)}>🛵 Moto</span> 
-                           : <span style={styles.badge(colors.warnBg, colors.warnTxt)}>🏪 Local</span>}
-                       </td>
-                       <td style={styles.tableCell}>
-                          <span style={styles.badge(
-                              p.estado === 'Pendiente' ? colors.dangerBg : (p.estado === 'Completado' ? colors.successBg : colors.elementBg),
-                              p.estado === 'Pendiente' ? colors.dangerTxt : (p.estado === 'Completado' ? colors.successTxt : colors.textMain)
-                          )}>
-                              {p.estado}
-                          </span>
-                       </td>
-                       <td style={{...styles.tableCell, ...styles.lastCell, textAlign: 'right'}}>
-                           <button style={styles.btnAction(colors.textMain, colors.borderColor)} onClick={() => {setSelectedOrderDetails(p); setShowDetailsModal(true);}}>Ver</button>
-                           {p.estado !== 'Completado' && (
+                    </thead>
+                    <tbody>
+                      {pedidos.map((p) => (
+                        <tr key={p.id}>
+                          <td>
+                             <span style={{color: colors.primary, fontWeight: 'bold'}}>#{p.id}</span>
+                             <div className="fw-bold">{p.nombre_cliente}</div>
+                             <small style={{color: colors.textSecondary}}>{new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                          </td>
+                          <td style={{ color: colors.money, fontWeight: '900', fontSize: '1.2rem' }}>
+                            ${Number(p.total).toFixed(2)}
+                          </td>
+                          <td>
+                            {p.tipo_orden === 'domicilio' 
+                              ? <span style={{color: colors.textMain}}>🛵 Domicilio</span> 
+                              : <span style={{color: colors.textMain}}>🏪 Recoger</span>}
+                          </td>
+                          <td>
+                             {p.estado === 'Pendiente' && <Badge bg={colors.badgeDangerBg} txt={colors.badgeDangerTxt}>Pendiente</Badge>}
+                             {p.estado === 'En Preparacion' && <Badge bg={colors.badgePendingBg} txt={colors.badgePendingTxt}>Cocinando</Badge>}
+                             {p.estado === 'En Camino' && <Badge bg={colors.badgePendingBg} txt={colors.badgePendingTxt}>En Camino</Badge>}
+                             {p.estado === 'Listo' && <Badge bg={colors.badgeSuccessBg} txt={colors.badgeSuccessTxt}>Listo</Badge>}
+                             {p.estado === 'Completado' && <span style={{color: colors.textSecondary, fontWeight:'bold'}}>✓ Completado</span>}
+                          </td>
+                          <td>
+                             <button className="btn btn-sm btn-light rounded-pill me-1" onClick={() => {setSelectedOrderDetails(p); setShowDetailsModal(true);}}>Ver</button>
+                             {p.estado !== 'Completado' && (
                                <>
-                                   <button style={styles.btnAction(colors.warnTxt, colors.warnBg)} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Prep</button>
-                                   {p.tipo_orden === 'domicilio' 
-                                       ? <button style={styles.btnAction(colors.infoTxt, colors.infoBg)} onClick={() => handleUpdateStatus(p.id, 'En Camino')}>Moto</button> 
-                                       : <button style={styles.btnAction(colors.successTxt, colors.successBg)} onClick={() => handleUpdateStatus(p.id, 'Listo')}>Listo</button>}
-                                   <button style={{...styles.btnAction('white', colors.successTxt), backgroundColor: colors.successTxt, border: 'none'}} onClick={() => handleUpdateStatus(p.id, 'Completado')}>✓</button>
+                                 <button className="btn btn-sm btn-outline-warning rounded-pill me-1" onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Prep</button>
+                                 {p.tipo_orden === 'domicilio' 
+                                   ? <button className="btn btn-sm btn-outline-info rounded-pill me-1" onClick={() => handleUpdateStatus(p.id, 'En Camino')}>Moto</button>
+                                   : <button className="btn btn-sm btn-outline-success rounded-pill me-1" onClick={() => handleUpdateStatus(p.id, 'Listo')}>Listo</button>
+                                 }
+                                 <button className="btn btn-sm btn-success rounded-pill" onClick={() => handleUpdateStatus(p.id, 'Completado')}>OK</button>
                                </>
-                           )}
-                       </td>
-                     </tr>
-                   ))}
-                 </tbody>
-               </table>
-             </div>
-           </div>
-          )}
+                             )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
-          {/* COMBOS (GRID) */}
-          {!loading && !error && activeTab === 'combos' && (
-             <div>
-             <div className="d-flex justify-content-between align-items-center mb-4">
-               <h4 className="fw-bold" style={{color: colors.textMain}}>Combos & Promociones</h4>
-               <button style={styles.btnPrimary} onClick={() => handleOpenComboModal()}>+ Nuevo Combo</button>
-             </div>
-             <div className="row g-4">
-               {combos.map((combo) => (
-                 <div className="col-md-6 col-lg-4" key={combo.id}>
-                   <div style={{
-                       backgroundColor: colors.cardBg, 
-                       borderRadius: '16px', 
-                       padding: '25px', 
-                       border: `1px solid ${colors.borderColor}`,
-                       boxShadow: colors.shadow,
-                       opacity: combo.esta_activo ? 1 : 0.7
-                   }}>
-                     <div className="d-flex justify-content-between mb-3">
-                       <h5 className="fw-bold mb-0" style={{color: colors.textMain}}>{combo.nombre}</h5>
-                       {combo.esta_activo 
-                           ? <span style={styles.badge(colors.successBg, colors.successTxt)}>ACTIVO</span>
-                           : <span style={styles.badge(colors.elementBg, colors.textSecondary)}>INACTIVO</span>}
-                     </div>
-                     <h3 style={{color: colors.primary, fontWeight: '800'}}>${Number(combo.precio).toFixed(2)}</h3>
-                     <p style={{color: colors.textSecondary, fontSize: '0.9rem'}}>{combo.descripcion}</p>
-                     <div className="mt-4 d-flex gap-2">
-                       <button style={{...styles.btnAction(colors.textMain, colors.borderColor), width: '100%'}} onClick={() => handleOpenComboModal(combo)}>Editar</button>
-                       {combo.esta_activo && <button style={{...styles.btnAction(colors.dangerTxt, colors.dangerBg), width: '100%'}} onClick={() => handleDeleteCombo(combo)}>Ocultar</button>}
-                     </div>
+            {/* TABLA: COMBOS (GRID) */}
+            {!loading && !error && activeTab === 'combos' && (
+               <div>
+                  <div style={styles.headerRow}>
+                    <h3 className="fw-bold m-0">Combos</h3>
+                    <button style={styles.btnMain} onClick={() => handleOpenComboModal()}>+ Nuevo Combo</button>
+                  </div>
+                  <div className="row g-4">
+                    {combos.map((combo) => (
+                      <div className="col-md-6 col-lg-4" key={combo.id}>
+                        <div style={{
+                          border: `1px solid ${combo.esta_activo ? colors.borderColor : colors.badgeDangerTxt}`,
+                          borderRadius: '16px',
+                          padding: '20px',
+                          backgroundColor: colors.elementBg
+                        }}>
+                          <div className="d-flex justify-content-between mb-2">
+                             <h5 className="fw-bold m-0">{combo.nombre}</h5>
+                             {combo.esta_activo ? <Badge bg={colors.badgeSuccessBg} txt={colors.badgeSuccessTxt}>ON</Badge> : <Badge bg={colors.badgeDangerBg} txt={colors.badgeDangerTxt}>OFF</Badge>}
+                          </div>
+                          <h3 style={{color: colors.money, fontWeight: '800'}}>${Number(combo.precio).toFixed(2)}</h3>
+                          <p style={{color: colors.textSecondary, fontSize: '0.9rem'}}>{combo.descripcion || 'Sin descripción'}</p>
+                          <div className="d-flex gap-2 mt-3">
+                             <button className="btn btn-sm w-100 fw-bold" style={{border: `1px solid ${colors.textSecondary}`, color: colors.textMain}} onClick={() => handleOpenComboModal(combo)}>Editar</button>
+                             {combo.esta_activo && <button className="btn btn-sm btn-outline-danger w-100 fw-bold" onClick={() => handleDeleteCombo(combo)}>Ocultar</button>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+               </div>
+            )}
+
+            {/* REPORTES */}
+            {!loading && !error && activeTab === 'reporteGeneral' && (
+              <div>
+                <div className="row g-4 mb-5">
+                   <div className="col-md-6">
+                      <StatCard title="Total Ventas" value={`$${reportData.reduce((acc, c) => acc + Number(c.total_ventas), 0).toFixed(2)}`} icon="💰" colors={colors} />
                    </div>
-                 </div>
-               ))}
-             </div>
-           </div>
-          )}
+                   <div className="col-md-6">
+                      <StatCard title="Promedio Pedido" value="$150.00" icon="📊" colors={colors} />
+                   </div>
+                </div>
+                <h5 className="fw-bold mb-3">Gráfico de Rendimiento</h5>
+                <div style={{backgroundColor: colors.elementBg, padding: '20px', borderRadius: '16px'}}>
+                    <SalesReportChart reportData={reportData} theme={theme} />
+                </div>
+                <div className="mt-5 text-end">
+                  <button className="btn btn-outline-danger btn-sm" onClick={() => setShowPurgeModal(true)}>⚠️ Purgar Base de Datos</button>
+                </div>
+              </div>
+            )}
+            {activeTab === 'reporteProductos' && <ProductSalesReport />}
 
-          {/* REPORTES */}
-          {!loading && !error && activeTab === 'reporteGeneral' && (
-            <div>
-               <div className="row mb-4 g-4">
-                 <div className="col-md-6">
-                   <StatCard 
-                     title="Ventas Totales" 
-                     value={`$${reportData.reduce((acc, curr) => acc + Number(curr.total_ventas), 0).toFixed(2)}`} 
-                     icon="💰" 
-                     colors={colors} 
-                     styles={styles} 
-                   />
-                 </div>
-                 <div className="col-md-6">
-                   <StatCard 
-                     title="Promedio por Ticket" 
-                     value="$150.00" 
-                     icon="📈" 
-                     colors={colors} 
-                     styles={styles} 
-                   />
-                 </div>
-               </div>
-               
-               <div style={styles.contentSection}>
-                    <h5 className="mb-4 fw-bold" style={{color: colors.textMain}}>Rendimiento de Ventas</h5>
-                    <SalesReportChart reportData={reportData} theme={theme} /> 
-               </div>
-               
-               <div className="mt-4 text-end">
-                   <button className="btn btn-outline-danger rounded-pill btn-sm" onClick={() => setShowPurgeModal(true)}>Opciones Avanzadas (Purgar)</button>
-               </div>
-            </div>
-          )}
-          {activeTab === 'reporteProductos' && <ProductSalesReport />}
-
+          </div>
         </div>
-      </div>
 
-      {/* MODALES PASADOS */}
-      <ProductModal show={showProductModal} handleClose={() => setShowProductModal(false)} handleSave={handleSaveProducto} productoActual={productoActual} />
-      <ComboModal show={showComboModal} handleClose={() => setShowComboModal(false)} handleSave={handleSaveCombo} comboActual={comboActual} />
-      {showDetailsModal && (<DetallesPedidoModal pedido={selectedOrderDetails} onClose={() => setShowDetailsModal(false)} />)}
-      <ConfirmationModal show={showConfirmModal} onClose={() => setShowConfirmModal(false)} onConfirm={confirmAction} title={confirmTitle} message={confirmMessage} colors={colors} />
+        {/* MODALES CONECTADOS */}
+        <ProductModal show={showProductModal} handleClose={() => setShowProductModal(false)} handleSave={handleSaveProducto} productoActual={productoActual} />
+        <ComboModal show={showComboModal} handleClose={() => setShowComboModal(false)} handleSave={handleSaveCombo} comboActual={comboActual} />
+        {showDetailsModal && (<DetallesPedidoModal pedido={selectedOrderDetails} onClose={() => setShowDetailsModal(false)} />)}
+        <ConfirmationModal show={showConfirmModal} onClose={() => setShowConfirmModal(false)} onConfirm={confirmAction} title={confirmTitle} message={confirmMessage} colors={colors} />
 
-      {/* MODAL PURGAR (ESTILO CORREGIDO) */}
-      {showPurgeModal && (
-        <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', zIndex: 1060 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content border-0 overflow-hidden" style={{backgroundColor: colors.cardBg, color: colors.textMain, borderRadius: '24px'}}>
-              <div className="modal-header border-0 p-4 pb-0">
-                  <h5 className="modal-title fw-bold text-danger">⚠️ Zona de Peligro</h5>
-                  <button type="button" className="btn-close" style={{filter: isDark ? 'invert(1)' : 'none'}} onClick={() => setShowPurgeModal(false)}></button>
-              </div>
-              <div className="modal-body p-4">
-                <p style={{color: colors.textSecondary}}>Esta acción eliminará <strong>todos</strong> los pedidos del historial. No se puede deshacer.</p>
-                <label className="mb-2 fw-bold" style={{fontSize: '0.8rem', textTransform: 'uppercase'}}>Escribe "ELIMINAR" para confirmar:</label>
-                <input 
-                    type="text" 
-                    style={styles.input}
-                    value={purgeConfirmText} 
-                    onChange={(e) => setPurgeConfirmText(e.target.value)} 
-                    placeholder="ELIMINAR"
-                />
-              </div>
-              <div className="modal-footer border-0 p-4 pt-0">
-                <button className="btn btn-danger w-100 py-3 rounded-pill fw-bold" onClick={handlePurge} disabled={purgeConfirmText !== 'ELIMINAR'}>Confirmar Borrado</button>
+        {/* MODAL DE PURGA */}
+        {showPurgeModal && (
+          <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content" style={{ backgroundColor: colors.cardBg, color: colors.textMain, border: '1px solid #FF0000' }}>
+                <div className="modal-header bg-danger text-white border-0">
+                  <h5 className="modal-title fw-bold">PELIGRO: BORRADO TOTAL</h5>
+                  <button type="button" className="btn-close btn-close-white" onClick={() => setShowPurgeModal(false)}></button>
+                </div>
+                <div className="modal-body p-4">
+                  <p>Escribe <strong>ELIMINAR</strong> para confirmar:</p>
+                  <input type="text" className="form-control" style={{backgroundColor: colors.elementBg, color: colors.textMain, borderColor: colors.borderColor}} value={purgeConfirmText} onChange={(e) => setPurgeConfirmText(e.target.value)} />
+                </div>
+                <div className="modal-footer border-0">
+                  <button className="btn btn-danger w-100 fw-bold" onClick={handlePurge} disabled={purgeConfirmText !== 'ELIMINAR'}>DESTRUIR DATOS</button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+      </div>
+    </>
   );
 }
-
-// Pequeño componente helper para el Modal de Confirmación si no lo tienes externo
-const ConfirmationModal = ({ show, onClose, onConfirm, title, message, colors }) => {
-    if (!show) return null;
-    return (
-      <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1055 }}>
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content" style={{ borderRadius: '20px', backgroundColor: colors.cardBg, color: colors.textMain, border: `1px solid ${colors.borderColor}` }}>
-            <div className="modal-body p-4 text-center">
-              <h5 className="fw-bold mb-3">{title}</h5>
-              <p style={{color: colors.textSecondary}}>{message}</p>
-              <div className="d-flex justify-content-center gap-2 mt-4">
-                <button className="btn px-4 rounded-pill fw-bold" style={{backgroundColor: colors.elementBg, color: colors.textMain}} onClick={onClose}>Cancelar</button>
-                <button className="btn btn-primary px-4 rounded-pill fw-bold" onClick={onConfirm}>Confirmar</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-};
 
 export default AdminPage;

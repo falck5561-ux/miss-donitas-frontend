@@ -208,26 +208,24 @@ function PosPage() {
     }
   };
 
-  // --- LOGICA MODIFICADA: VER DETALLES ---
-  const handleShowDetails = (data) => {
-      // Clonamos para no mutar
-      let detalles = { ...data };
+  // --- LOGICA VER DETALLES ---
+  // Esta función sirve tanto para pedidos online como para ventas POS
+  const handleShowDetails = (pedidoOVenta) => {
+      // Si es una venta del historial POS, adaptamos los datos para que el modal los entienda
+      let datosParaModal = { ...pedidoOVenta };
 
-      // ¿Es una venta del historial POS? (Generalmente tiene 'items' en vez de 'detalles_pedido')
-      const esVentaPOS = activeTab === 'historial' || !!detalles.items;
-
-      if (esVentaPOS) {
-          // FORZAMOS LA ETIQUETA 'mostrador' PARA QUE EL MODAL SEPA QUE NO DEBE MOSTRAR ENVÍO
-          detalles.tipo_orden = 'mostrador';
-          detalles.estado = 'Completado'; // Las ventas POS siempre están completadas
-          
-          if (!detalles.nombre_cliente) detalles.nombre_cliente = 'Venta de Mostrador';
-          
-          // Mapeamos los productos para que el modal los entienda
-          detalles.detalles_pedido = detalles.items || detalles.productos;
+      // Si viene del historial de ventas, suele no tener "estado" o "tipo_orden", se los ponemos:
+      if (!datosParaModal.estado) datosParaModal.estado = 'Completado';
+      if (!datosParaModal.tipo_orden) datosParaModal.tipo_orden = 'mostrador';
+      if (!datosParaModal.nombre_cliente) datosParaModal.nombre_cliente = 'Venta de Mostrador';
+      
+      // Aseguramos que los productos estén en una propiedad que el modal lea
+      // (El modal busca: detalles_pedido, productos o detalles)
+      if (!datosParaModal.detalles_pedido && datosParaModal.items) {
+          datosParaModal.detalles_pedido = datosParaModal.items;
       }
 
-      setSelectedOrderDetails(detalles);
+      setSelectedOrderDetails(datosParaModal);
       setShowDetailsModal(true);
   };
 
@@ -307,12 +305,12 @@ function PosPage() {
   const handleProductClick = (item) => setProductoSeleccionadoParaModal(item);
   const handleCloseProductModal = () => setProductoSeleccionadoParaModal(null);
   
-  // --- RENDER CONTENIDO ---
+  // --- HELPERS VISUALES ---
   const renderContenido = () => {
     if (loading) return <div className="text-center py-5"><div className="spinner-border" style={{color: styles.accent}} role="status"></div></div>;
     if (error) return <div className="alert alert-danger">{error}</div>;
 
-    // PESTAÑA PEDIDOS
+    // --- PESTAÑA: PEDIDOS EN LINEA ---
     if (activeTab === 'pedidos') {
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -321,6 +319,7 @@ function PosPage() {
                   <h4 className="fw-bold m-0">Gestión de Pedidos en Línea</h4>
                   <p className="small m-0" style={{color: styles.muted}}>Controla los pedidos entrantes de la web</p>
               </div>
+              
               {pedidos.length === 0 ? <div className="text-center py-5 text-muted">No hay pedidos pendientes.</div> : (
                 <div className="table-responsive">
                   <table className="table align-middle mb-0" style={{color: styles.text}}>
@@ -359,7 +358,7 @@ function PosPage() {
       );
     }
 
-    // PESTAÑA POS
+    // --- PESTAÑA: PUNTO DE VENTA (POS) ---
     if (activeTab === 'pos') {
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="row g-4">
@@ -436,7 +435,7 @@ function PosPage() {
       );
     }
 
-    // PESTAÑA HISTORIAL
+    // --- PESTAÑA: HISTORIAL (CON CLICK PARA VER DETALLES) ---
     if (activeTab === 'historial') {
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

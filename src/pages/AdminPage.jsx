@@ -9,45 +9,46 @@ import { getProducts, createProduct, updateProduct, deleteProduct } from '../ser
 import apiClient from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
-// --- GESTIÓN DE COLORES (DUAL THEME MEJORADO) ---
+// --- GESTIÓN DE COLORES (CORREGIDO PARA ALTO CONTRASTE) ---
 const getThemeColors = (mode) => {
   const isDark = mode === 'dark';
   
   return {
-    // Fondos
-    bg: isDark ? '#1a1212' : '#FFFDF5',
-    cardBg: isDark ? '#2b1f1f' : '#FFFFFF',
+    // FONDOS: Negro elegante vs Crema Vainilla
+    bg: isDark ? '#121212' : '#FFFDF5',
+    cardBg: isDark ? '#1E1E1E' : '#FFFFFF',
     
-    // Textos
-    textMain: isDark ? '#fff1e6' : '#5D4037',
-    textLight: isDark ? '#d7ccc8' : '#8D6E63',
+    // TEXTOS: Blanco Puro (para que se lea BIEN) vs Café Chocolate
+    textMain: isDark ? '#FFFFFF' : '#5D4037',
+    textLight: isDark ? '#B0B0B0' : '#8D6E63', // Gris claro en oscuro
     
-    // Botones Principales
-    primary: isDark ? '#ff1744' : '#FF80AB',
+    // BOTONES PRINCIPALES
+    primary: isDark ? '#FF4081' : '#FF80AB',
     primaryGradient: isDark 
-      ? 'linear-gradient(135deg, #d50000 0%, #ff1744 100%)' 
-      : 'linear-gradient(135deg, #FF80AB 0%, #F50057 100%)',
+      ? 'linear-gradient(135deg, #C2185B 0%, #FF4081 100%)' // Fucsia intenso
+      : 'linear-gradient(135deg, #FF80AB 0%, #F50057 100%)', // Rosa dulce
       
-    // Botones de Estado (ESTILO EMPLEADO)
-    btnPrepare: isDark ? '#FFAB00' : '#FFC107', // Amarillo/Naranja (Preparar)
-    btnWay: isDark ? '#F50057' : '#FF80AB',     // Rosa (En Camino)
-    btnReady: isDark ? '#9E9E9E' : '#E0E0E0',   // Gris (Listo)
-    btnDone: isDark ? '#00E676' : '#4CAF50',    // Verde (Entregado)
-    btnView: isDark ? '#00B0FF' : '#29B6F6',    // Azul (Ver)
+    // BOTONES DE CONTROL DE MANDO (Ajustados para contraste)
+    btnPrepare: '#FFC107', // Amarillo (Texto negro siempre)
+    btnWay: '#FF4081',     // Rosa neón (Texto blanco)
+    btnReady: isDark ? '#757575' : '#E0E0E0',   // Gris
+    btnDone: '#00E676',    // Verde neón
+    btnView: '#29B6F6',    // Azul neón
 
-    // Estados y Acciones Generales
-    accent: isDark ? '#00e5ff' : '#26C6DA',
-    danger: isDark ? '#ff5252' : '#EF5350',
-    success: isDark ? '#00e676' : '#66BB6A',
+    // ACENTOS Y ESTADOS
+    accent: isDark ? '#00E5FF' : '#26C6DA', // Cian
+    danger: isDark ? '#FF5252' : '#EF5350', // Rojo
+    success: isDark ? '#69F0AE' : '#66BB6A', // Verde
     
-    // UI
-    border: isDark ? '#4e342e' : '#FFF3E0',
+    // UI (Bordes y Sombras)
+    border: isDark ? '#333333' : '#FFF3E0',
     shadow: isDark 
-      ? '0 10px 30px rgba(0,0,0,0.5)' 
+      ? '0 10px 30px rgba(0,0,0,0.5)' // Sombra negra fuerte
       : '0 10px 30px rgba(255, 128, 171, 0.15)',
       
-    tableHeaderBg: isDark ? '#3e2723' : '#FFF0F5',
-    tableHeaderText: isDark ? '#ffccbc' : '#880E4F',
+    // TABLAS
+    tableHeaderBg: isDark ? '#2C2C2C' : '#FFF0F5',
+    tableHeaderText: isDark ? '#FF80AB' : '#880E4F', // Rosa en oscuro para resaltar
   };
 };
 
@@ -66,10 +67,10 @@ const ConfirmationModal = ({ show, onClose, onConfirm, title, message, themeColo
   return (
     <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(3px)' }}>
       <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content" style={{ borderRadius: '24px', border: 'none', backgroundColor: themeColors.cardBg, boxShadow: themeColors.shadow }}>
+        <div className="modal-content" style={{ borderRadius: '24px', border: `1px solid ${themeColors.border}`, backgroundColor: themeColors.cardBg, boxShadow: themeColors.shadow }}>
           <div className="modal-header border-0 pb-0 pt-4 px-4">
             <h5 className="modal-title fw-bold" style={{ color: themeColors.textMain }}>{title}</h5>
-            <button type="button" className="btn-close" style={{filter: themeColors.bg === '#1a1212' ? 'invert(1)' : 'none'}} onClick={onClose}></button>
+            <button type="button" className="btn-close" style={{filter: themeColors.bg === '#121212' ? 'invert(1)' : 'none'}} onClick={onClose}></button>
           </div>
           <div className="modal-body px-4 pt-3 pb-4">
             <p style={{color: themeColors.textLight, fontSize: '1.05rem'}}>{message}</p>
@@ -128,7 +129,7 @@ function AdminPage() {
     navLinkActive: {
       background: colors.primaryGradient,
       color: 'white',
-      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.4)', // Sombra más fuerte
     },
     card: {
       backgroundColor: colors.cardBg,
@@ -141,7 +142,7 @@ function AdminPage() {
     tableHeader: {
       backgroundColor: colors.tableHeaderBg,
       color: colors.tableHeaderText,
-      fontWeight: '700',
+      fontWeight: '800',
       borderBottom: 'none',
       textTransform: 'uppercase',
       fontSize: '0.85rem',
@@ -150,6 +151,10 @@ function AdminPage() {
     tableRow: {
       borderBottom: `1px solid ${colors.border}`,
       color: colors.textMain,
+      backgroundColor: colors.cardBg // Asegurar fondo correcto en filas
+    },
+    textLight: {
+      color: colors.textLight
     },
     btnAdd: {
       background: colors.primaryGradient,
@@ -160,16 +165,17 @@ function AdminPage() {
       fontWeight: '700',
       boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
     },
+    // Botones de Control (Optimizados para Dark/Light)
     btnControl: (bgColor, textColor = 'white') => ({
         backgroundColor: bgColor,
         color: textColor,
         border: 'none',
-        padding: '5px 10px',
+        padding: '6px 12px',
         borderRadius: '8px',
-        fontWeight: '700',
+        fontWeight: '800',
         fontSize: '0.75rem',
         textTransform: 'uppercase',
-        boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+        boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
         transition: 'transform 0.1s',
         whiteSpace: 'nowrap'
     }),
@@ -379,7 +385,7 @@ function AdminPage() {
                         <td>
                           {p.en_oferta 
                             ? <span style={styles.badge(theme === 'dark' ? '#0D47A1' : '#E3F2FD', theme === 'dark' ? '#80D8FF' : '#1976D2', theme === 'dark' ? '#448AFF' : 'transparent')}>Oferta -{p.descuento_porcentaje}%</span> 
-                            : <span style={styles.badge(theme === 'dark' ? '#212121' : '#F5F5F5', theme === 'dark' ? '#9E9E9E' : '#757575', theme === 'dark' ? '#424242' : 'transparent')}>Normal</span>}
+                            : <span style={styles.badge(theme === 'dark' ? '#212121' : '#F5F5F5', theme === 'dark' ? '#9E9E9E' : '#757575', theme === 'dark' ? '#BDBDBD' : 'transparent')}>Normal</span>}
                         </td>
                         <td className="text-center">
                           <button style={styles.btnAction(colors.accent, true)} onClick={() => handleOpenProductModal(p)}>Editar</button>
@@ -425,14 +431,14 @@ function AdminPage() {
                         <td className="fw-bold" style={{color: colors.primary}}>${Number(p.total).toFixed(2)}</td>
                         <td>
                           {p.tipo_orden === 'domicilio' 
-                            ? <span style={styles.badge(theme === 'dark' ? '#006064' : '#E0F7FA', theme === 'dark' ? '#84FFFF' : '#0097A7', theme === 'dark' ? '#00BCD4' : 'transparent')}>🛵 Domicilio</span> 
-                            : <span style={styles.badge(theme === 'dark' ? '#E65100' : '#FFF3E0', theme === 'dark' ? '#FFCC80' : '#F57C00', theme === 'dark' ? '#FF9800' : 'transparent')}>🏪 Recoger</span>}
+                            ? <span style={styles.badge(theme === 'dark' ? '#006064' : '#E0F7FA', theme === 'dark' ? '#84FFFF' : '#0097A7', theme === 'dark' ? '#00E5FF' : 'transparent')}>🛵 Domicilio</span> 
+                            : <span style={styles.badge(theme === 'dark' ? '#E65100' : '#FFF3E0', theme === 'dark' ? '#FFCC80' : '#F57C00', theme === 'dark' ? '#FF9100' : 'transparent')}>🏪 Recoger</span>}
                         </td>
                         <td>
                            {(() => {
                                let bg = colors.border;
                                let text = colors.textLight;
-                               if(p.estado === 'Pendiente') { bg = '#FFAB00'; text = '#212121'; }
+                               if(p.estado === 'Pendiente') { bg = '#FFC107'; text = '#212121'; }
                                else if(p.estado === 'Completado') { bg = colors.success; text = theme === 'dark' ? '#000' : '#FFF'; }
                                else { bg = colors.accent; text = theme === 'dark' ? '#000' : '#FFF'; }
                                return <span className="badge rounded-pill" style={{backgroundColor: bg, color: text, padding: '6px 12px'}}>{p.estado}</span>;
@@ -444,6 +450,7 @@ function AdminPage() {
                                 
                                 {p.estado !== 'Completado' && (
                                     <>
+                                        {/* Preparar es Amarillo, texto negro */}
                                         <button style={styles.btnControl(colors.btnPrepare, '#212121')} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Preparar</button>
                                         
                                         {p.tipo_orden === 'domicilio' ? (
@@ -506,7 +513,7 @@ function AdminPage() {
             </div>
           )}
 
-          {/* === SECCIÓN: REPORTES (CORREGIDA) === */}
+          {/* === SECCIÓN: REPORTES === */}
           {!loading && !error && activeTab === 'reporteGeneral' && (
             <div>
               {reportData.length > 0 ? (
@@ -524,13 +531,13 @@ function AdminPage() {
                    </div>
                    
                    <h5 className="mb-4 fw-bold" style={{color: colors.textMain}}>Gráfica de Rendimiento</h5>
-                   <div style={{padding: '20px', backgroundColor: theme === 'dark' ? '#2b1f1f' : '#FAFAFA', borderRadius: '20px', border: `1px solid ${colors.border}`}}>
+                   <div style={{padding: '20px', backgroundColor: theme === 'dark' ? '#1E1E1E' : '#FAFAFA', borderRadius: '20px', border: `1px solid ${colors.border}`}}>
                         <SalesReportChart reportData={reportData} theme={theme} /> 
                    </div>
                 </div>
               ) : <p className="text-center py-5 text-muted">Aún no hay suficientes ventas para generar gráficas.</p>}
               
-              <div className="mt-5 p-4 rounded-4" style={{backgroundColor: theme === 'dark' ? '#3E2723' : '#FFEBEE', border: `1px dashed ${colors.danger}`}}>
+              <div className="mt-5 p-4 rounded-4" style={{backgroundColor: theme === 'dark' ? '#2C2C2C' : '#FFEBEE', border: `1px dashed ${colors.danger}`}}>
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
                     <h5 className="fw-bold m-0" style={{color: colors.danger}}>Zona de Mantenimiento</h5>

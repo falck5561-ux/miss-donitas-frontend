@@ -40,7 +40,7 @@ function PosPage() {
   const styles = getThemeStyles(isPicante);
 
   // --- ESTADOS ---
-  const [activeTab, setActiveTab] = useState('pos'); // 'pos', 'pedidos', 'historial'
+  const [activeTab, setActiveTab] = useState('pos');
   const [menuItems, setMenuItems] = useState([]);
   const [ventaActual, setVentaActual] = useState([]);
   const [totalVenta, setTotalVenta] = useState(0);
@@ -208,66 +208,62 @@ function PosPage() {
     }
   };
 
-  // --- LOGICA PEDIDOS EN LINEA ---
-  const handleUpdateStatus = async (pedidoId, nuevoEstado) => { try { await apiClient.put(`/pedidos/${pedidoId}/estado`, { estado: nuevoEstado }); fetchData(); toast.success(`Pedido #${pedidoId} actualizado.`); } catch (err) { toast.error('No se pudo actualizar el estado.'); } };
-  const handleShowDetails = (pedido) => { setSelectedOrderDetails(pedido); setShowDetailsModal(true); };
+  // --- LOGICA VER DETALLES ---
+  // Esta función sirve tanto para pedidos online como para ventas POS
+  const handleShowDetails = (pedidoOVenta) => {
+      // Si es una venta del historial POS, adaptamos los datos para que el modal los entienda
+      let datosParaModal = { ...pedidoOVenta };
+
+      // Si viene del historial de ventas, suele no tener "estado" o "tipo_orden", se los ponemos:
+      if (!datosParaModal.estado) datosParaModal.estado = 'Completado';
+      if (!datosParaModal.tipo_orden) datosParaModal.tipo_orden = 'mostrador';
+      if (!datosParaModal.nombre_cliente) datosParaModal.nombre_cliente = 'Venta de Mostrador';
+      
+      // Aseguramos que los productos estén en una propiedad que el modal lea
+      // (El modal busca: detalles_pedido, productos o detalles)
+      if (!datosParaModal.detalles_pedido && datosParaModal.items) {
+          datosParaModal.detalles_pedido = datosParaModal.items;
+      }
+
+      setSelectedOrderDetails(datosParaModal);
+      setShowDetailsModal(true);
+  };
+
   const handleCloseDetailsModal = () => { setShowDetailsModal(false); setSelectedOrderDetails(null); };
 
-  // --- HELPERS PARA RENDERIZAR BOTONES (CORREGIDO) ---
+  // --- LOGICA PEDIDOS EN LINEA ---
+  const handleUpdateStatus = async (pedidoId, nuevoEstado) => { try { await apiClient.put(`/pedidos/${pedidoId}/estado`, { estado: nuevoEstado }); fetchData(); toast.success(`Pedido #${pedidoId} actualizado.`); } catch (err) { toast.error('No se pudo actualizar el estado.'); } };
+
+  // --- HELPERS RENDER BOTONES ---
   const renderActionButtons = (p) => {
-      // Normalizamos el estado a minúsculas para evitar errores de "LISTO" vs "Listo"
       const status = p.estado ? p.estado.toLowerCase().trim() : '';
-
-      // CASO 1: PENDIENTE
       if (status === 'pendiente') {
-          return (
-            <button className="btn btn-sm text-white fw-bold rounded-pill px-3" style={{backgroundColor: styles.accent, border:'none'}} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>
-                👨‍🍳 Preparar
-            </button>
-          );
+          return <button className="btn btn-sm text-white fw-bold rounded-pill px-3" style={{backgroundColor: styles.accent, border:'none'}} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>👨‍🍳 Preparar</button>;
       }
-      
-      // CASO 2: EN PREPARACIÓN
-      if (status === 'en preparacion' || status === 'preparando') {
-          if (p.tipo_orden === 'domicilio') {
-              return <button className="btn btn-sm btn-info text-white fw-bold rounded-pill px-3" onClick={() => handleUpdateStatus(p.id, 'En Camino')}>🛵 Enviar</button>;
-          } else {
-              return <button className="btn btn-sm btn-success text-white fw-bold rounded-pill px-3" onClick={() => handleUpdateStatus(p.id, 'Listo')}>🥡 Listo</button>;
-          }
+      if (status.includes('preparacion') || status === 'preparando') {
+          if (p.tipo_orden === 'domicilio') return <button className="btn btn-sm btn-info text-white fw-bold rounded-pill px-3" onClick={() => handleUpdateStatus(p.id, 'En Camino')}>🛵 Enviar</button>;
+          else return <button className="btn btn-sm btn-success text-white fw-bold rounded-pill px-3" onClick={() => handleUpdateStatus(p.id, 'Listo')}>🥡 Listo</button>;
       }
-
-      // CASO 3: EN CAMINO / LISTO (Aquí fallaba antes, ahora incluye variaciones)
-      // Si dice "listo", "listo para recoger", "en camino", etc.
       if (status.includes('listo') || status === 'en camino') {
           return <button className="btn btn-sm btn-dark text-white fw-bold rounded-pill px-3" onClick={() => handleUpdateStatus(p.id, 'Completado')}>✅ Finalizar</button>;
       }
-
-      // CASO 4: COMPLETADO
-      if (status === 'completado') {
-          return <span className="text-muted small fw-bold">✓ Archivar</span>;
-      }
-
-      return <span className="text-muted small">---</span>;
+      return <span className="text-muted small fw-bold">✓ Archivar</span>;
   };
 
-  // --- LOGICA RECOMPENSAS POS ---
+  // --- LOGICA RECOMPENSAS ---
   const handleBuscarCliente = async (e) => {
     e.preventDefault();
     setRecompensaAplicadaId(null);
-    if (!emailCliente) return toast.error('Por favor, ingresa un correo.');
+    if (!emailCliente) return toast.error('Ingresa un correo.');
     try {
       const { data } = await apiClient.post('/recompensas/buscar-por-email', { email: emailCliente });
       setClienteEncontrado(data);
-      if (data.recompensas.length > 0) { toast.success(`Cliente encontrado: ${data.recompensas.length} recompensas.`); } else { toast.error('El cliente no tiene recompensas.'); }
-    } catch (err) {
-        setClienteEncontrado(null);
-        toast.error('Cliente no encontrado.');
-    }
+      if (data.recompensas.length > 0) toast.success(`Cliente encontrado.`); else toast.error('Sin recompensas.');
+    } catch (err) { setClienteEncontrado(null); toast.error('Cliente no encontrado.'); }
   };
 
   const handleAplicarRecompensa = (recompensa) => {
     if (recompensaAplicadaId) return toast.error('Solo una recompensa por ticket.');
-
     let itemParaDescontar = null;
     let precioMaximo = -1;
     const nombreRecompensaLower = recompensa.nombre ? recompensa.nombre.toLowerCase() : '';
@@ -303,9 +299,7 @@ function PosPage() {
         });
         setRecompensaAplicadaId(recompensa.id);
         toast.success('¡Recompensa aplicada!');
-    } else {
-        toast.error('No hay producto elegible para esta recompensa.');
-    }
+    } else { toast.error('No hay producto elegible.'); }
   };
 
   const handleProductClick = (item) => setProductoSeleccionadoParaModal(item);
@@ -343,28 +337,13 @@ function PosPage() {
                       {pedidos.map((p) => (
                         <tr key={p.id} style={{borderBottom: `1px solid ${isPicante ? '#222' : '#f0f0f0'}`}}>
                           <td className="ps-3 fw-bold" style={{color: styles.accent}}>#{p.id}</td>
-                          <td>
-                              <div className="fw-bold">{p.nombre_cliente || 'N/A'}</div>
-                              <small style={{color: styles.muted}}>{new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
-                          </td>
+                          <td><div className="fw-bold">{p.nombre_cliente || 'N/A'}</div><small style={{color: styles.muted}}>{new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small></td>
                           <td className="fw-bold">${Number(p.total).toFixed(2)}</td>
-                          <td>
-                              {p.tipo_orden === 'domicilio' 
-                                ? <span className="badge bg-info text-dark rounded-pill">🛵 Moto</span> 
-                                : <span className="badge bg-secondary text-white rounded-pill">👜 Local</span>}
-                          </td>
+                          <td>{p.tipo_orden === 'domicilio' ? <span className="badge bg-info text-dark rounded-pill">🛵 Moto</span> : <span className="badge bg-secondary text-white rounded-pill">👜 Local</span>}</td>
                           <td><StatusBadge status={p.estado} /></td>
                           <td className="text-center">
                             <div className="d-flex justify-content-center gap-2">
-                                <button 
-                                    className="btn btn-sm fw-bold rounded-pill px-3"
-                                    style={{border: `1px solid ${styles.muted}`, color: styles.text}}
-                                    onClick={() => handleShowDetails(p)}
-                                >
-                                    👁️ Ver
-                                </button>
-
-                                {/* AQUI USAMOS LA NUEVA FUNCIÓN CORREGIDA */}
+                                <button className="btn btn-sm fw-bold rounded-pill px-3" style={{border: `1px solid ${styles.muted}`, color: styles.text}} onClick={() => handleShowDetails(p)}>👁️ Ver</button>
                                 {renderActionButtons(p)}
                             </div>
                           </td>
@@ -389,13 +368,9 @@ function PosPage() {
                 <div className="row g-3">
                 {menuItems.map(item => (
                     <div key={item.id} className="col-md-4 col-lg-3">
-                    <motion.div whileHover={{ scale: 1.02 }} 
-                        className="card h-100 text-center border-0 shadow-sm" 
-                        onClick={() => handleProductClick(item)} 
+                    <motion.div whileHover={{ scale: 1.02 }} className="card h-100 text-center border-0 shadow-sm" onClick={() => handleProductClick(item)} 
                         style={{ cursor: 'pointer', backgroundColor: isPicante ? '#222' : '#FFF', border: item.en_oferta ? `1px solid ${styles.accent}` : styles.border }}>
-                        
                         {item.en_oferta && (<span className="badge bg-danger position-absolute top-0 end-0 m-2">OFERTA</span>)}
-                        
                         <div className="card-body d-flex flex-column justify-content-center p-3">
                         <div style={{fontSize: '2rem', marginBottom: '10px'}}>🍩</div>
                         <h6 className="card-title fw-bold mb-1" style={{fontSize: '0.9rem'}}>{item.nombre}</h6>
@@ -412,55 +387,43 @@ function PosPage() {
             <div className="card position-sticky shadow-sm border-0" style={{ top: '20px', backgroundColor: styles.cardBg, border: styles.border }}>
               <div className="card-body p-4">
                 <h4 className="card-title text-center fw-bold mb-3">Ticket de Venta</h4>
-                
                 <form onSubmit={handleBuscarCliente} className="d-flex mb-3 gap-2">
-                  <input type="email" className="form-control shadow-none" placeholder="Email cliente..." value={emailCliente} onChange={(e) => setEmailCliente(e.target.value)} 
-                         style={{backgroundColor: isPicante ? '#222' : '#FFF', color: styles.text, border: styles.border}}/>
+                  <input type="email" className="form-control shadow-none" placeholder="Email cliente..." value={emailCliente} onChange={(e) => setEmailCliente(e.target.value)} style={{backgroundColor: isPicante ? '#222' : '#FFF', color: styles.text, border: styles.border}}/>
                   <button type="submit" className="btn btn-dark">🔍</button>
                 </form>
-
                 {clienteEncontrado && (
                   <div className="p-2 mb-3 rounded border" style={{borderColor: styles.accent, backgroundColor: isPicante ? '#220000' : '#FFF0F5'}}>
                     <p className="mb-1 small"><strong>Cliente:</strong> {clienteEncontrado.cliente.nombre}</p>
                     {clienteEncontrado.recompensas.map(rec => (
-                        <button key={rec.id} className="btn btn-sm btn-success w-100 mt-1" onClick={() => handleAplicarRecompensa(rec)} disabled={recompensaAplicadaId !== null}>
-                            🎁 Usar: {rec.nombre}
-                        </button>
+                        <button key={rec.id} className="btn btn-sm btn-success w-100 mt-1" onClick={() => handleAplicarRecompensa(rec)} disabled={recompensaAplicadaId !== null}>🎁 Usar: {rec.nombre}</button>
                     ))}
                   </div>
                 )}
-
                 <hr style={{borderColor: styles.muted}} />
-
                 <ul className="list-group list-group-flush mb-3" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                   {ventaActual.length === 0 && <div className="text-center text-muted py-4">Ticket vacío</div>}
-                  
                   {ventaActual.map((item) => (
                     <li key={item.idUnicoTicket} className="list-group-item d-flex align-items-center justify-content-between p-2" style={{backgroundColor: 'transparent', color: styles.text, borderBottom: `1px solid ${isPicante ? '#333' : '#eee'}`}}>
                       <div className="me-auto" style={{lineHeight: '1.2'}}>
                         <div className={item.esRecompensa ? 'text-success fw-bold' : 'fw-bold'}>{item.nombre}</div>
                         {item.opcionesSeleccionadas && <small className="text-muted">{item.opcionesSeleccionadas.map(o => o.nombre).join(', ')}</small>}
                       </div>
-                      
                       <div className="d-flex align-items-center gap-2">
                         <button className="btn btn-sm btn-outline-secondary px-2 py-0" onClick={() => decrementarCantidad(item.idUnicoTicket, item.esRecompensa)} disabled={item.esRecompensa}>-</button>
                         <span className="fw-bold">{item.cantidad}</span>
                         <button className="btn btn-sm btn-outline-secondary px-2 py-0" onClick={() => incrementarCantidad(item.idUnicoTicket, item.esRecompensa)} disabled={item.esRecompensa}>+</button>
                       </div>
-                      
                       <div className="text-end ms-3" style={{minWidth: '50px'}}>
                           <div className="fw-bold">${(item.cantidad * Number(item.precioFinal)).toFixed(2)}</div>
-                          <small className="text-danger" style={{cursor:'pointer'}} onClick={() => eliminarProducto(item.idUnicoTicket, item.esRecompensa)}>Eliminar</small>
+                          <small className="text-danger" style={{cursor:'pointer'}} onClick={() => eliminarProducto(item.idUnicoTicket, item.esRecompensa)}>x</small>
                       </div>
                     </li>
                   ))}
                 </ul>
-
                 <div className="d-flex justify-content-between align-items-center mb-3">
                     <span className="h5 m-0">Total:</span>
                     <span className="h3 m-0 fw-bold" style={{color: styles.accent}}>${totalVenta.toFixed(2)}</span>
                 </div>
-
                 <div className="d-grid gap-2">
                   <button className="btn btn-lg text-white fw-bold" style={{backgroundColor: styles.accent}} onClick={handleCobrar} disabled={ventaActual.length === 0}>COBRAR</button>
                   <button className="btn btn-outline-danger" onClick={limpiarVenta}>CANCELAR</button>
@@ -472,7 +435,7 @@ function PosPage() {
       );
     }
 
-    // --- PESTAÑA: HISTORIAL ---
+    // --- PESTAÑA: HISTORIAL (CON CLICK PARA VER DETALLES) ---
     if (activeTab === 'historial') {
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -481,14 +444,27 @@ function PosPage() {
               {ventasDelDia.length === 0 ? <p className="text-muted">No se han registrado ventas hoy.</p> : (
                 <div className="list-group">
                   {ventasDelDia.map(venta => (
-                    <div key={venta.id} className="list-group-item border-0 border-bottom" style={{backgroundColor: 'transparent', color: styles.text, borderColor: isPicante ? '#333' : '#eee'}}>
-                      <div className="d-flex w-100 justify-content-between">
-                        <h5 className="mb-1 fw-bold">Venta #{venta.id}</h5>
-                        <small className="text-muted">{new Date(venta.fecha).toLocaleTimeString()}</small>
+                    <motion.div 
+                        key={venta.id} 
+                        whileHover={{ backgroundColor: isPicante ? '#222' : '#F9F9F9' }}
+                        onClick={() => handleShowDetails(venta)}
+                        className="list-group-item border-0 border-bottom p-3" 
+                        style={{backgroundColor: 'transparent', color: styles.text, borderColor: isPicante ? '#333' : '#eee', cursor: 'pointer'}}
+                    >
+                      <div className="d-flex w-100 justify-content-between align-items-center">
+                        <div>
+                            <h5 className="mb-1 fw-bold text-uppercase">
+                                Venta #{venta.id} 
+                                <span className="ms-2 badge bg-light text-dark border" style={{fontSize: '0.7rem'}}>Ver Detalles</span>
+                            </h5>
+                            <small className="text-muted">{new Date(venta.fecha).toLocaleTimeString()}</small>
+                        </div>
+                        <div className="text-end">
+                            <h5 className="mb-0 fw-bold" style={{color: styles.accent}}>${Number(venta.total).toFixed(2)}</h5>
+                            <small className="text-muted">{venta.metodo_pago}</small>
+                        </div>
                       </div>
-                      <p className="mb-1">Total: <strong style={{color: styles.accent}}>${Number(venta.total).toFixed(2)}</strong></p>
-                      <small className="text-muted">Pago: {venta.metodo_pago}</small>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               )}

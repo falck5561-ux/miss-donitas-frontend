@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react'; // Agregamos useMemo
+import React, { useState, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-// --- CAMBIO: IMPORTAMOS ICONOS MODERNOS ---
-import { Trash2, Package, Eye, Utensils, Truck, CheckCircle, Search } from 'lucide-react';
+import { Trash2, Package, Eye, Search, Clock, DollarSign, CreditCard, Receipt } from 'lucide-react';
 import apiClient from '../services/api';
 import DetallesPedidoModal from '../components/DetallesPedidoModal';
 import ProductDetailModal from '../components/ProductDetailModal';
@@ -113,37 +112,13 @@ function PosPage() {
     setTotalVenta(nuevoTotal);
   }, [ventaActual]);
 
-  // --- LOGICA AGREGADA: CALCULAR RESUMEN DE VENTAS ---
-  // Transforma la lista de tickets en una lista de productos vendidos
-  const resumenVentas = useMemo(() => {
-    const resumen = {};
-    let granTotal = 0;
-
-    ventasDelDia.forEach(venta => {
-        // Intentamos obtener los items de donde sea que vengan (items o detalles_pedido)
-        const items = venta.items || venta.detalles_pedido || [];
-        
-        items.forEach(item => {
-            const nombre = item.nombre || item.producto_nombre || 'Producto Desconocido';
-            const cantidad = Number(item.cantidad);
-            // Si el backend no devuelve el precio unitario en el item, tratamos de inferirlo o usar el total
-            const precioTotalLinea = item.precio ? (Number(item.precio) * cantidad) : 0; 
-
-            if (resumen[nombre]) {
-                resumen[nombre].cantidad += cantidad;
-                resumen[nombre].total += precioTotalLinea;
-            } else {
-                resumen[nombre] = { nombre, cantidad, total: precioTotalLinea };
-            }
-            granTotal += precioTotalLinea;
-        });
-    });
-
-    // Convertimos el objeto en array y ordenamos por cantidad vendida (descendente)
-    return {
-        items: Object.values(resumen).sort((a, b) => b.cantidad - a.cantidad),
-        granTotal
-    };
+  // --- CÁLCULO SIMPLE DEL TOTAL DEL DÍA (Basado en el dinero de los tickets) ---
+  const resumenDia = useMemo(() => {
+      const totalDinero = ventasDelDia.reduce((acc, venta) => acc + Number(venta.total || 0), 0);
+      return {
+          totalDinero,
+          totalTickets: ventasDelDia.length
+      };
   }, [ventasDelDia]);
 
 
@@ -244,13 +219,17 @@ function PosPage() {
 
   const handleShowDetails = (pedidoOVenta) => {
       let datosParaModal = { ...pedidoOVenta };
+      
+      // Ajustes para que el modal funcione con ventas del historial
       if (!datosParaModal.estado) datosParaModal.estado = 'Completado';
       if (!datosParaModal.tipo_orden) datosParaModal.tipo_orden = 'mostrador';
       if (!datosParaModal.nombre_cliente) datosParaModal.nombre_cliente = 'Venta de Mostrador';
       
+      // Aseguramos compatibilidad de items
       if (!datosParaModal.detalles_pedido && datosParaModal.items) {
           datosParaModal.detalles_pedido = datosParaModal.items;
       }
+
       setSelectedOrderDetails(datosParaModal);
       setShowDetailsModal(true);
   };
@@ -271,7 +250,6 @@ function PosPage() {
       if (status.includes('listo') || status === 'en camino') {
           return <button className="btn btn-sm btn-dark text-white fw-bold rounded-pill px-3" onClick={() => handleUpdateStatus(p.id, 'Completado')}>✅ Finalizar</button>;
       }
-      // --- CAMBIO: ELIMINADO EL BOTON DE ARCHIVAR ---
       return null; 
   };
 
@@ -366,7 +344,6 @@ function PosPage() {
                           <td><StatusBadge status={p.estado} /></td>
                           <td className="text-center">
                             <div className="d-flex justify-content-center gap-2">
-                                {/* CAMBIO: Uso de Icono para Ver */}
                                 <button className="btn btn-sm d-flex align-items-center gap-1 fw-bold rounded-pill px-3" style={{border: `1px solid ${styles.muted}`, color: styles.text}} onClick={() => handleShowDetails(p)}>
                                     <Eye size={14}/> Ver
                                 </button>
@@ -398,7 +375,6 @@ function PosPage() {
                         style={{ cursor: 'pointer', backgroundColor: isPicante ? '#222' : '#FFF', border: item.en_oferta ? `1px solid ${styles.accent}` : styles.border }}>
                         {item.en_oferta && (<span className="badge bg-danger position-absolute top-0 end-0 m-2">OFERTA</span>)}
                         <div className="card-body d-flex flex-column justify-content-center p-3">
-                        {/* --- CAMBIO: Reemplazo del Emoji de Dona por Icono Lucide --- */}
                         <div className="d-flex justify-content-center mb-3">
                             <Package size={40} className="text-secondary" strokeWidth={1.5} />
                         </div>
@@ -446,12 +422,7 @@ function PosPage() {
                       </div>
                       <div className="text-end ms-3 d-flex align-items-center gap-3" style={{minWidth: '50px'}}>
                           <div className="fw-bold">${(item.cantidad * Number(item.precioFinal)).toFixed(2)}</div>
-                          {/* --- CAMBIO: "x" reemplazada por Icono de Basura Trash2 --- */}
-                          <button 
-                            onClick={() => eliminarProducto(item.idUnicoTicket, item.esRecompensa)}
-                            className="btn btn-link p-0 text-danger"
-                            title="Eliminar del ticket"
-                          >
+                          <button onClick={() => eliminarProducto(item.idUnicoTicket, item.esRecompensa)} className="btn btn-link p-0 text-danger" title="Eliminar del ticket">
                              <Trash2 size={16} />
                           </button>
                       </div>
@@ -473,21 +444,23 @@ function PosPage() {
       );
     }
 
-    // --- CAMBIO COMPLETO: PESTAÑA HISTORIAL AHORA ES RESUMEN DE INVENTARIO ---
+    // --- PESTAÑA: HISTORIAL (CORREGIDA) ---
+    // Volvemos a mostrar la lista de tickets para que el cajero pueda gestionarlos
     if (activeTab === 'historial') {
-      const { items, granTotal } = resumenVentas;
+      const { totalDinero, totalTickets } = resumenDia;
 
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          {/* Banner de resumen (Opcional, pero se ve bien) */}
           <div className="row mb-4">
               <div className="col-md-12">
                   <div className="p-4 rounded-3 shadow-sm d-flex justify-content-between align-items-center" style={{backgroundColor: styles.accent, color: '#FFF'}}>
                       <div>
-                        <h2 className="fw-bold m-0">${granTotal.toFixed(2)}</h2>
+                        <h2 className="fw-bold m-0">${totalDinero.toFixed(2)}</h2>
                         <span className="opacity-75">Ventas Totales de Hoy</span>
                       </div>
                       <div className="text-end opacity-75">
-                         <h5 className="m-0">{ventasDelDia.length}</h5>
+                         <h5 className="m-0">{totalTickets}</h5>
                          <small>Tickets Generados</small>
                       </div>
                   </div>
@@ -495,35 +468,44 @@ function PosPage() {
           </div>
 
           <div className="p-4 rounded-3 shadow-sm" style={{backgroundColor: styles.cardBg, border: styles.border}}>
-              <h4 className="fw-bold mb-4">Resumen de Productos Vendidos</h4>
-              {items.length === 0 ? <p className="text-muted">No se han registrado ventas hoy.</p> : (
-                <div className="table-responsive">
-                    <table className="table align-middle" style={{color: styles.text}}>
-                        <thead style={{backgroundColor: styles.tableHeaderBg}}>
-                            <tr>
-                                <th className="ps-3 py-3">Producto</th>
-                                <th className="text-center">Cant. Vendida</th>
-                                <th className="text-end pe-3">Ingreso Generado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {items.map((prod, idx) => (
-                                <tr key={idx} style={{borderBottom: `1px solid ${isPicante ? '#222' : '#eee'}`}}>
-                                    <td className="ps-3 fw-bold">
-                                        {prod.nombre}
-                                    </td>
-                                    <td className="text-center">
-                                        <span className="badge bg-secondary text-white rounded-pill px-3">
-                                            {prod.cantidad}
-                                        </span>
-                                    </td>
-                                    <td className="text-end pe-3 fw-bold" style={{color: styles.accent}}>
-                                        ${prod.total.toFixed(2)}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+              <h4 className="fw-bold mb-4">Historial de Tickets de Hoy</h4>
+              {ventasDelDia.length === 0 ? <p className="text-muted">No se han registrado ventas hoy.</p> : (
+                <div className="list-group">
+                  {ventasDelDia.map(venta => (
+                    <motion.div 
+                        key={venta.id} 
+                        whileHover={{ backgroundColor: isPicante ? '#222' : '#F9F9F9' }}
+                        onClick={() => handleShowDetails(venta)}
+                        className="list-group-item border-0 border-bottom p-3 d-flex align-items-center justify-content-between" 
+                        style={{backgroundColor: 'transparent', color: styles.text, borderColor: isPicante ? '#333' : '#eee', cursor: 'pointer'}}
+                    >
+                        {/* Izquierda: Info básica */}
+                        <div className="d-flex align-items-center gap-3">
+                            <div className="rounded-circle d-flex align-items-center justify-content-center" style={{width:'50px', height:'50px', backgroundColor: isPicante ? '#333' : '#f0f0f0'}}>
+                                <Receipt size={24} color={styles.accent} />
+                            </div>
+                            <div>
+                                <h5 className="mb-0 fw-bold">Ticket #{venta.id}</h5>
+                                <div className="d-flex gap-3 text-muted small">
+                                    <span className="d-flex align-items-center gap-1"><Clock size={12}/> {new Date(venta.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                    {venta.cliente && <span>Cliente: {venta.cliente.nombre}</span>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Derecha: Totales y Acciones */}
+                        <div className="text-end">
+                            <h5 className="mb-0 fw-bold" style={{color: styles.accent}}>${Number(venta.total).toFixed(2)}</h5>
+                            <div className="d-flex align-items-center justify-content-end gap-2 mt-1">
+                                <span className="badge bg-secondary rounded-pill text-white" style={{fontSize:'0.65rem'}}>
+                                    {venta.metodo_pago === 'efectivo' ? <DollarSign size={10} /> : <CreditCard size={10} />}
+                                    {' '}{venta.metodo_pago}
+                                </span>
+                                <span className="text-primary fw-bold small">Ver Detalles &rarr;</span>
+                            </div>
+                        </div>
+                    </motion.div>
+                  ))}
                 </div>
               )}
           </div>
@@ -551,7 +533,7 @@ function PosPage() {
             {[
                 {id: 'pos', label: '🖥️ PUNTO DE VENTA'},
                 {id: 'pedidos', label: '🛎️ PEDIDOS ONLINE'},
-                {id: 'historial', label: '📊 VENTAS DE HOY'} // Cambio de icono y etiqueta
+                {id: 'historial', label: '📊 VENTAS DE HOY'}
             ].map(tab => (
                 <button 
                     key={tab.id}

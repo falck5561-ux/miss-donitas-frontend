@@ -9,94 +9,69 @@ import { getProducts, createProduct, updateProduct, deleteProduct } from '../ser
 import apiClient from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
-// --- PALETA "CHOCOLATE & FRESA" (CONTRASTE GARANTIZADO) ---
+// --- NUEVA PALETA DE COLORES (MODERNA Y ALTO CONTRASTE) ---
 const getThemeColors = (mode) => {
   const isDark = mode === 'dark';
 
   return {
-    // === FONDOS ===
-    // Light: Crema suave (Vainilla)
-    // Dark: Chocolate Amargo Profundo (Casi negro, pero cálido)
-    bg: isDark ? '#120b0b' : '#FFFBF0', 
+    // FONDOS: Usamos escala "Slate" (Gris azulado) que es más premium que el negro puro
+    bg: isDark ? '#0F172A' : '#F3F4F6', 
+    cardBg: isDark ? '#1E293B' : '#FFFFFF',
+    elementBg: isDark ? '#334155' : '#F9FAFB',
     
-    // Cards (Contenedores)
-    // Light: Blanco puro
-    // Dark: Café muy oscuro
-    cardBg: isDark ? '#1F1515' : '#FFFFFF',
+    // TEXTOS: Blanco puro en dark mode para máxima legibilidad
+    textMain: isDark ? '#F8FAFC' : '#111827', 
+    textSecondary: isDark ? '#94A3B8' : '#6B7280',
+    textHeader: isDark ? '#F472B6' : '#DB2777', // Rosa moderno
+
+    // BORDES Y SEPARADORES
+    borderColor: isDark ? '#334155' : '#E5E7EB',
     
-    // Elementos (Inputs, Filas)
-    elementBg: isDark ? '#2E2020' : '#F7F2F9',
-
-    // === TEXTOS (LA CLAVE DEL ARREGLO) ===
-    // Light: CAFÉ OSCURO (#3E2723). NUNCA BLANCO.
-    // Dark: CREMA (#ECE0DB).
-    textMain: isDark ? '#ECE0DB' : '#3E2723', 
+    // ACCIONES
+    primary: '#EC4899', // Rosa vibrante
+    primaryHover: '#DB2777',
     
-    // Texto Secundario
-    textSecondary: isDark ? '#BCAAA4' : '#8D6E63',
-
-    // Títulos
-    // Light: Rosa Mexicano
-    // Dark: Naranja/Caramelo
-    textHeader: isDark ? '#FFAB40' : '#E91E63',
-
-    // === BORDES ===
-    borderColor: isDark ? '#3E2723' : '#FCE4EC',
+    // ESTADOS (Pasteles en light, Neón suave en dark)
+    successBg: isDark ? 'rgba(34, 197, 94, 0.2)' : '#DCFCE7',
+    successTxt: isDark ? '#4ADE80' : '#166534',
     
-    // === MARCA PRINCIPAL (BOTONES) ===
-    primary: '#E91E63', // Rosa Donita siempre se ve bien
+    warnBg: isDark ? 'rgba(234, 179, 8, 0.2)' : '#FEF9C3',
+    warnTxt: isDark ? '#FACC15' : '#854D0E',
     
-    // Degradados
-    primaryGradient: 'linear-gradient(135deg, #FF4081 0%, #C2185B 100%)',
-
-    // === TABLAS (CORRECCIÓN DE TU IMAGEN) ===
-    // Light: Fondo rosa muy pálido para el header, NO NEGRO.
-    // Dark: Fondo café oscuro.
-    tableHeaderBg: isDark ? '#2E2020' : '#FFF0F5',
+    dangerBg: isDark ? 'rgba(239, 68, 68, 0.2)' : '#FEE2E2',
+    dangerTxt: isDark ? '#F87171' : '#991B1B',
     
-    // Texto del header de tabla
-    tableHeaderText: isDark ? '#FFAB40' : '#880E4F',
+    infoBg: isDark ? 'rgba(59, 130, 246, 0.2)' : '#DBEAFE',
+    infoTxt: isDark ? '#60A5FA' : '#1E40AF',
 
-    // === DINERO ===
-    // Light: Verde Bosque
-    // Dark: Dorado
-    money: isDark ? '#FFD700' : '#2E7D32', 
-
-    // === SHADOWS ===
-    cardShadow: isDark 
-        ? '0 10px 40px rgba(0,0,0,0.6)' 
-        : '0 10px 40px rgba(233, 30, 99, 0.1)',
-
-    // === BADGES (ESTADOS) ===
-    badgeSuccessBg: isDark ? '#1B5E20' : '#E8F5E9',
-    badgeSuccessTxt: isDark ? '#69F0AE' : '#2E7D32',
-
-    badgeWarnBg: isDark ? '#3E2723' : '#FFF8E1',
-    badgeWarnTxt: isDark ? '#FFAB00' : '#F57F17',
-
-    badgeDangerBg: isDark ? '#3B0B0B' : '#FFEBEE',
-    badgeDangerTxt: isDark ? '#FF5252' : '#C62828',
-    
-    badgeInfoBg: isDark ? '#0D47A1' : '#E3F2FD',
-    badgeInfoTxt: isDark ? '#40C4FF' : '#1565C0',
+    // SOMBRAS (Suaves y difusas)
+    shadow: isDark 
+      ? '0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3)'
+      : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
   };
 };
 
-// --- KPI CARD ---
-const StatCard = ({ title, value, color, icon, styles, colors }) => (
+// --- COMPONENTE KPI MEJORADO ---
+const StatCard = ({ title, value, icon, colors, styles }) => (
   <div style={{
-      ...styles.card, 
-      borderLeft: `5px solid ${color}`,
+      backgroundColor: colors.cardBg,
+      borderRadius: '16px',
+      padding: '24px',
+      boxShadow: colors.shadow,
+      border: `1px solid ${colors.borderColor}`,
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '25px'
+      justifyContent: 'space-between'
   }}>
     <div>
-        <h6 style={{ color: colors.textSecondary, fontWeight: '700', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px' }}>{title}</h6>
-        <h3 style={{ color: colors.textMain, fontWeight: '900', margin: 0, fontSize: '2rem' }}>{value}</h3>
+        <p style={{ color: colors.textSecondary, fontSize: '0.875rem', fontWeight: '600', marginBottom: '4px', textTransform: 'uppercase' }}>{title}</p>
+        <h3 style={{ color: colors.textMain, fontWeight: '800', margin: 0, fontSize: '1.8rem' }}>{value}</h3>
     </div>
-    <div style={{ fontSize: '2.5rem', color: color, opacity: 0.8 }}>
+    <div style={{ 
+        width: '50px', height: '50px', borderRadius: '12px', 
+        backgroundColor: colors.elementBg, display: 'flex', 
+        alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' 
+    }}>
       {icon}
     </div>
   </div>
@@ -111,124 +86,126 @@ function AdminPage() {
     container: {
       backgroundColor: colors.bg,
       minHeight: '100vh',
-      fontFamily: '"Nunito", sans-serif',
-      padding: '40px 20px',
+      fontFamily: '"Inter", "Segoe UI", sans-serif', // Fuente más limpia
+      padding: '20px',
       color: colors.textMain,
-      transition: 'all 0.3s ease'
+      transition: 'background-color 0.3s ease'
+    },
+    // Eliminamos el efecto "Card Gigante", ahora es un contenedor invisible
+    mainWrapper: {
+      maxWidth: '1400px',
+      margin: '0 auto',
     },
     headerTitle: {
-      background: colors.primaryGradient,
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      fontWeight: '900',
-      fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
-      marginBottom: '30px',
-      textAlign: 'center'
-    },
-    navPillsContainer: {
-      display: 'flex',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      gap: '10px',
-      marginBottom: '40px',
-    },
-    navLink: {
-      color: colors.textSecondary,
-      borderRadius: '25px',
-      padding: '10px 25px',
-      fontWeight: '700',
-      border: `2px solid ${colors.borderColor}`,
-      background: colors.cardBg,
-      transition: 'all 0.2s ease',
-    },
-    navLinkActive: {
-      background: colors.primary,
-      borderColor: colors.primary,
-      color: 'white',
-      boxShadow: '0 4px 15px rgba(233, 30, 99, 0.4)'
-    },
-    card: {
-      backgroundColor: colors.cardBg,
       color: colors.textMain,
-      borderRadius: '24px',
-      border: `1px solid ${colors.borderColor}`,
-      boxShadow: colors.cardShadow,
-      padding: '30px',
-      marginBottom: '30px',
+      fontWeight: '800',
+      fontSize: '2rem',
+      letterSpacing: '-0.5px',
+      marginBottom: '0'
     },
-    // --- TABLAS ARREGLADAS ---
+    // Navegación estilo "Pestañas flotantes"
+    navContainer: {
+      display: 'flex',
+      gap: '8px',
+      overflowX: 'auto',
+      paddingBottom: '10px',
+      marginBottom: '25px',
+      borderBottom: `1px solid ${colors.borderColor}`
+    },
+    navLink: (isActive) => ({
+      backgroundColor: isActive ? colors.primary : 'transparent',
+      color: isActive ? '#fff' : colors.textSecondary,
+      padding: '10px 20px',
+      borderRadius: '8px',
+      fontWeight: '600',
+      border: 'none',
+      fontSize: '0.95rem',
+      cursor: 'pointer',
+      transition: 'all 0.2s',
+      whiteSpace: 'nowrap'
+    }),
+    // Contenedor de contenido limpio
+    contentSection: {
+      backgroundColor: colors.cardBg,
+      borderRadius: '20px',
+      border: `1px solid ${colors.borderColor}`,
+      boxShadow: colors.shadow,
+      padding: '30px',
+      marginBottom: '30px'
+    },
+    // TABLAS LIMPIAS
     table: {
-       '--bs-table-bg': 'transparent', 
        width: '100%',
-       borderCollapse: 'separate', 
-       borderSpacing: '0' 
+       borderCollapse: 'separate',
+       borderSpacing: '0 8px' // Espacio entre filas
     },
     tableHeader: {
-      backgroundColor: colors.tableHeaderBg, // ROSA PÁLIDO O DARK
-      color: colors.tableHeaderText,         // ROJO O NARANJA
-      fontWeight: '800',
-      borderBottom: `2px solid ${colors.borderColor}`,
+      color: colors.textSecondary,
+      fontWeight: '700',
       textTransform: 'uppercase',
-      fontSize: '0.8rem',
-      padding: '18px',
-      letterSpacing: '1px'
+      fontSize: '0.75rem',
+      padding: '15px',
+      borderBottom: 'none',
+      letterSpacing: '0.05em'
     },
     tableRow: {
-       backgroundColor: 'transparent', 
-       transition: 'background-color 0.2s',
+       backgroundColor: isDark ? colors.elementBg : '#fff',
+       transition: 'transform 0.1s',
+       boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
     },
     tableCell: {
-       padding: '20px 18px',
+       padding: '16px 15px',
        verticalAlign: 'middle',
-       borderBottom: `1px solid ${colors.borderColor}`, 
-       color: colors.textMain, // AQUÍ ESTABA EL ERROR ANTES
-       fontSize: '0.95rem',
-       fontWeight: '600'
+       color: colors.textMain,
+       borderTop: `1px solid ${colors.borderColor}`,
+       borderBottom: `1px solid ${colors.borderColor}`,
+       fontSize: '0.95rem'
     },
-    btnAdd: {
-      background: colors.primaryGradient,
-      border: 'none',
-      borderRadius: '50px',
+    // Celdas bordes redondeados
+    firstCell: { borderRadius: '12px 0 0 12px', borderLeft: `1px solid ${colors.borderColor}` },
+    lastCell: { borderRadius: '0 12px 12px 0', borderRight: `1px solid ${colors.borderColor}` },
+
+    // BOTONES
+    btnPrimary: {
+      background: colors.primary,
       color: 'white',
-      padding: '12px 30px',
-      fontWeight: '700',
-      boxShadow: '0 5px 15px rgba(233, 30, 99, 0.3)',
-      textTransform: 'uppercase'
+      border: 'none',
+      padding: '10px 24px',
+      borderRadius: '10px',
+      fontWeight: '600',
+      boxShadow: `0 4px 12px ${isDark ? 'rgba(236, 72, 153, 0.4)' : 'rgba(236, 72, 153, 0.2)'}`,
+      transition: 'transform 0.1s'
     },
-    btnControl: (bgColor, textColor) => ({
-        backgroundColor: bgColor,
-        color: textColor,
-        border: 'none',
+    btnAction: (textColor, borderColor) => ({
         padding: '6px 12px',
         borderRadius: '8px',
-        fontWeight: '700',
+        border: `1px solid ${borderColor}`,
+        color: textColor,
+        backgroundColor: 'transparent',
+        fontSize: '0.8rem',
+        fontWeight: '600',
+        marginRight: '8px',
+        cursor: 'pointer'
+    }),
+    badge: (bg, txt) => ({
+        backgroundColor: bg,
+        color: txt,
+        padding: '6px 12px',
+        borderRadius: '20px',
         fontSize: '0.75rem',
-        textTransform: 'uppercase',
-        marginRight: '5px',
+        fontWeight: '700',
+        display: 'inline-block'
     }),
-    btnAction: (color, isOutline = true) => ({
-      backgroundColor: isOutline ? 'transparent' : color,
-      border: `1px solid ${color}`,
-      color: isOutline ? color : 'white',
-      borderRadius: '10px',
-      padding: '6px 14px',
-      fontWeight: '700',
-      fontSize: '0.8rem',
-      marginRight: '8px',
-    }),
-    renderBadge: (text, bg, txt) => (
-        <span style={{
-            backgroundColor: bg,
-            color: txt,
-            padding: '8px 14px',
-            borderRadius: '20px',
-            fontSize: '0.75rem',
-            fontWeight: '800',
-            textTransform: 'uppercase',
-        }}>
-            {text}
-        </span>
-    )
+    // INPUTS (Arreglo para modo oscuro)
+    input: {
+        backgroundColor: colors.elementBg,
+        border: `1px solid ${colors.borderColor}`,
+        color: colors.textMain,
+        padding: '10px',
+        borderRadius: '8px',
+        width: '100%',
+        outline: 'none'
+    }
   };
 
   const [activeTab, setActiveTab] = useState('pedidosEnLinea');
@@ -239,7 +216,7 @@ function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // Modales
+  // Modales states
   const [showProductModal, setShowProductModal] = useState(false);
   const [productoActual, setProductoActual] = useState(null);
   const [showComboModal, setShowComboModal] = useState(false);
@@ -266,88 +243,94 @@ function AdminPage() {
 
   useEffect(() => { fetchData(); }, [activeTab]);
   
+  // Handlers
   const handleOpenProductModal = (p = null) => { setProductoActual(p ? { ...p, imagenes: p.imagen_url ? [p.imagen_url] : [] } : null); setShowProductModal(true); };
-  const handleSaveProducto = async (p) => { try { const d = { ...p, imagen_url: p.imagenes?.[0] || null }; delete d.imagenes; if (d.id) await updateProduct(d.id, d); else await createProduct(d); toast.success('Producto guardado'); fetchData(); setShowProductModal(false); } catch { toast.error('Error al guardar'); } };
-  const handleDeleteProducto = (p) => { setConfirmTitle('Ocultar Producto'); setConfirmMessage(`¿Ocultar "${p.nombre}"?`); setConfirmAction(() => async () => { await deleteProduct(p.id); toast.success('Ocultado'); fetchData(); setShowConfirmModal(false); }); setShowConfirmModal(true); };
+  const handleSaveProducto = async (p) => { try { const d = { ...p, imagen_url: p.imagenes?.[0] || null }; delete d.imagenes; if (d.id) await updateProduct(d.id, d); else await createProduct(d); toast.success('Guardado con éxito'); fetchData(); setShowProductModal(false); } catch { toast.error('Error al guardar'); } };
+  const handleDeleteProducto = (p) => { setConfirmTitle('Ocultar Producto'); setConfirmMessage(`¿Ocultar "${p.nombre}"?`); setConfirmAction(() => async () => { await deleteProduct(p.id); toast.success('Producto ocultado'); fetchData(); setShowConfirmModal(false); }); setShowConfirmModal(true); };
   const handleOpenComboModal = (c = null) => { setComboActual(c); setShowComboModal(true); };
   const handleSaveCombo = async (c) => { try { if(c.id) await apiClient.put(`/combos/${c.id}`, c); else await apiClient.post('/combos', c); toast.success('Combo guardado'); fetchData(); setShowComboModal(false); } catch { toast.error('Error'); } };
   const handleDeleteCombo = (c) => { setConfirmTitle('Ocultar Combo'); setConfirmMessage(`¿Ocultar "${c.nombre}"?`); setConfirmAction(() => async () => { await apiClient.patch(`/combos/${c.id}/desactivar`); toast.success('Ocultado'); fetchData(); setShowConfirmModal(false); }); setShowConfirmModal(true); };
-  const handleUpdateStatus = async (id, est) => { try { await apiClient.put(`/pedidos/${id}/estado`, { estado: est }); toast.success(`#${id}: ${est}`); fetchData(); } catch { toast.error('Error'); } };
+  const handleUpdateStatus = async (id, est) => { try { await apiClient.put(`/pedidos/${id}/estado`, { estado: est }); toast.success(`Pedido #${id}: ${est}`); fetchData(); } catch { toast.error('Error'); } };
   const handlePurge = async () => { if(purgeConfirmText !== 'ELIMINAR') return toast.error('Escribe ELIMINAR'); await apiClient.delete('/pedidos/purgar'); toast.success('Historial borrado'); setShowPurgeModal(false); fetchData(); };
 
   return (
     <div style={styles.container}>
-      <div className="container-fluid px-md-5">
+      <div style={styles.mainWrapper}>
         
-        {/* HEADER */}
-        <div className="text-center mb-4 pt-3">
-          <h1 style={styles.headerTitle}>🍩 Miss Donitas Admin</h1>
-        </div>
-
-        {/* NAV */}
-        <div className="d-flex justify-content-center">
-          <div style={styles.navPillsContainer}>
-            {[
-              { id: 'pedidosEnLinea', label: 'Pedidos' },
-              { id: 'productos', label: 'Donas & Inventario' },
-              { id: 'combos', label: 'Promos' },
-              { id: 'reporteGeneral', label: 'Caja' },
-              { id: 'reporteProductos', label: 'Top Ventas' }
-            ].map(tab => (
-              <button key={tab.id} style={activeTab === tab.id ? {...styles.navLink, ...styles.navLinkActive} : styles.navLink} onClick={() => setActiveTab(tab.id)}>
-                {tab.label}
-              </button>
-            ))}
+        {/* HEADER LIMPIO */}
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1 style={styles.headerTitle}>Miss Donitas <span style={{color: colors.primary}}>.</span></h1>
+            <p style={{color: colors.textSecondary, margin: 0}}>Panel de Administración</p>
+          </div>
+          <div style={{textAlign: 'right'}}>
+             {/* Aquí podrías poner el toggle de tema si no está en el navbar global */}
           </div>
         </div>
 
-        {/* CARD PRINCIPAL */}
-        <div style={styles.card}>
-          
+        {/* NAVEGACIÓN TIPO TABS (Sin cajas) */}
+        <div style={styles.navContainer}>
+            {[
+              { id: 'pedidosEnLinea', label: '🛎️ Pedidos' },
+              { id: 'productos', label: '🍩 Inventario' },
+              { id: 'combos', label: '🎁 Promociones' },
+              { id: 'reporteGeneral', label: '📊 Finanzas' },
+              { id: 'reporteProductos', label: '📈 Métricas' }
+            ].map(tab => (
+              <button 
+                key={tab.id} 
+                style={styles.navLink(activeTab === tab.id)} 
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+        </div>
+
+        {/* CONTENIDO PRINCIPAL */}
+        <div>
           {loading && <div className="text-center py-5"><div className="spinner-border" style={{color: colors.primary}} role="status"></div></div>}
           {error && <div className="alert alert-danger">{error}</div>}
 
-          {/* === INVENTARIO (TABLA QUE SE VEÍA MAL EN LA FOTO) === */}
+          {/* TABLA INVENTARIO */}
           {!loading && !error && activeTab === 'productos' && (
-            <div>
-              <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-                <h3 className="fw-bold m-0" style={{color: colors.textHeader}}>Catálogo de Donas</h3>
-                <button style={styles.btnAdd} onClick={() => handleOpenProductModal()}>+ Nueva Dona</button>
+            <div style={styles.contentSection}>
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h4 className="fw-bold m-0" style={{color: colors.textMain}}>Catálogo de Productos</h4>
+                <button style={styles.btnPrimary} onClick={() => handleOpenProductModal()}>+ Nuevo Producto</button>
               </div>
               <div className="table-responsive">
-                <table className="table" style={styles.table}>
+                <table style={styles.table}>
                   <thead>
                     <tr>
                       <th style={styles.tableHeader}>Producto</th>
                       <th style={styles.tableHeader}>Precio</th>
                       <th style={styles.tableHeader}>Stock</th>
                       <th style={styles.tableHeader}>Estado</th>
-                      <th style={{...styles.tableHeader, textAlign: 'center'}}>Acciones</th>
+                      <th style={{...styles.tableHeader, textAlign: 'right'}}>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {productos.map((p) => (
                       <tr key={p.id} style={styles.tableRow}>
-                        <td style={styles.tableCell}>
-                            <div className="fw-bold" style={{fontSize: '1.05rem', color: colors.textMain}}>{p.nombre}</div>
+                        <td style={{...styles.tableCell, ...styles.firstCell}}>
+                            <div className="fw-bold">{p.nombre}</div>
                             <small style={{color: colors.textSecondary}}>{p.categoria}</small>
                         </td>
-                        <td style={{...styles.tableCell, color: colors.money, fontWeight: '900', fontSize: '1.2rem'}}>
-                            ${Number(p.precio).toFixed(2)}
-                        </td>
+                        <td style={styles.tableCell}>${Number(p.precio).toFixed(2)}</td>
                         <td style={styles.tableCell}>
-                            {p.stock <= 5 
-                             ? styles.renderBadge(`Bajo: ${p.stock}`, colors.badgeDangerBg, colors.badgeDangerTxt)
-                             : <span style={{fontWeight: 'bold', color: colors.textMain}}>{p.stock} pza.</span>}
+                             {p.stock <= 5 
+                                ? <span style={styles.badge(colors.dangerBg, colors.dangerTxt)}>Bajo: {p.stock}</span> 
+                                : <span style={{color: colors.textSecondary}}>{p.stock} u.</span>}
                         </td>
                         <td style={styles.tableCell}>
                             {p.en_oferta 
-                             ? styles.renderBadge(`Oferta -${p.descuento_porcentaje}%`, colors.badgeInfoBg, colors.badgeInfoTxt)
-                             : <span style={{color: colors.textSecondary}}>Normal</span>}
+                                ? <span style={styles.badge(colors.infoBg, colors.infoTxt)}>Oferta -{p.descuento_porcentaje}%</span> 
+                                : <span style={{color: colors.textSecondary, fontSize: '0.85rem'}}>Normal</span>}
                         </td>
-                        <td style={styles.tableCell} className="text-center">
-                          <button style={styles.btnAction(colors.textSecondary, true)} onClick={() => handleOpenProductModal(p)}>Editar</button>
-                          <button style={styles.btnAction(colors.primary, true)} onClick={() => handleDeleteProducto(p)}>Ocultar</button>
+                        <td style={{...styles.tableCell, ...styles.lastCell, textAlign: 'right'}}>
+                          <button style={styles.btnAction(colors.textSecondary, colors.borderColor)} onClick={() => handleOpenProductModal(p)}>Editar</button>
+                          <button style={styles.btnAction(colors.dangerTxt, colors.dangerBg)} onClick={() => handleDeleteProducto(p)}>Ocultar</button>
                         </td>
                       </tr>
                     ))}
@@ -357,69 +340,66 @@ function AdminPage() {
             </div>
           )}
 
-          {/* === PEDIDOS === */}
+          {/* TABLA PEDIDOS */}
           {!loading && !error && activeTab === 'pedidosEnLinea' && (
-             <div>
+             <div style={styles.contentSection}>
              <div className="d-flex justify-content-between align-items-center mb-4">
-               <h3 className="fw-bold m-0" style={{color: colors.textHeader}}>Pedidos Entrantes</h3>
-               {pedidos.filter(p => p.estado === 'Pendiente').length > 0 && (
-                   <span style={{
-                       backgroundColor: colors.primary, color: 'white', padding: '8px 20px', 
-                       borderRadius: '30px', fontWeight: 'bold'
-                   }}>
-                     {pedidos.filter(p => p.estado === 'Pendiente').length} Por Atender
-                   </span>
-               )}
+               <div>
+                  <h4 className="fw-bold m-0" style={{color: colors.textMain}}>Pedidos Activos</h4>
+                  <p style={{color: colors.textSecondary, fontSize: '0.9rem', margin: 0}}>Gestiona las órdenes entrantes</p>
+               </div>
+               <span style={styles.badge(colors.primary, '#fff')}>
+                 {pedidos.filter(p => p.estado === 'Pendiente').length} Pendientes
+               </span>
              </div>
              <div className="table-responsive">
-               <table className="table" style={styles.table}>
+               <table style={styles.table}>
                  <thead>
                    <tr>
-                     <th style={styles.tableHeader}>ID / Cliente</th>
+                     <th style={styles.tableHeader}>Orden</th>
                      <th style={styles.tableHeader}>Total</th>
-                     <th style={styles.tableHeader}>Método</th>
-                     <th style={styles.tableHeader}>Status</th>
-                     <th style={styles.tableHeader}>Acciones</th>
+                     <th style={styles.tableHeader}>Tipo</th>
+                     <th style={styles.tableHeader}>Estado</th>
+                     <th style={{...styles.tableHeader, textAlign: 'right'}}>Control</th>
                    </tr>
                  </thead>
                  <tbody>
                    {pedidos.map((p) => (
                      <tr key={p.id} style={styles.tableRow}>
-                       <td style={styles.tableCell}>
-                          <div className="d-flex align-items-center">
-                            <span className="fw-bold me-3" style={{color: colors.primary}}>#{p.id}</span>
-                            <div>
-                                <div className="fw-bold" style={{color: colors.textMain}}>{p.nombre_cliente}</div>
-                                <small style={{color: colors.textSecondary}}>{new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
-                            </div>
+                       <td style={{...styles.tableCell, ...styles.firstCell}}>
+                          <div className="d-flex align-items-center gap-3">
+                             <div style={{backgroundColor: colors.elementBg, padding: '8px', borderRadius: '8px', fontWeight: 'bold', color: colors.primary}}>#{p.id}</div>
+                             <div>
+                                 <div className="fw-bold">{p.nombre_cliente}</div>
+                                 <small style={{color: colors.textSecondary}}>{new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                             </div>
                           </div>
                        </td>
-                       <td style={{...styles.tableCell, color: colors.money, fontWeight: '900', fontSize: '1.2rem'}}>
-                           ${Number(p.total).toFixed(2)}
-                       </td>
+                       <td style={{...styles.tableCell, fontWeight: '800'}}>${Number(p.total).toFixed(2)}</td>
                        <td style={styles.tableCell}>
                          {p.tipo_orden === 'domicilio' 
-                           ? styles.renderBadge('🛵 Moto', colors.badgeInfoBg, colors.badgeInfoTxt)
-                           : styles.renderBadge('🏪 Recoger', colors.badgeWarnBg, colors.badgeWarnTxt)}
+                           ? <span style={styles.badge(colors.infoBg, colors.infoTxt)}>🛵 Moto</span> 
+                           : <span style={styles.badge(colors.warnBg, colors.warnTxt)}>🏪 Local</span>}
                        </td>
                        <td style={styles.tableCell}>
-                          {p.estado === 'Pendiente' 
-                             ? styles.renderBadge('Pendiente', colors.badgeDangerBg, colors.badgeDangerTxt)
-                             : styles.renderBadge(p.estado, colors.elementBg, colors.textMain)}
+                          <span style={styles.badge(
+                              p.estado === 'Pendiente' ? colors.dangerBg : (p.estado === 'Completado' ? colors.successBg : colors.elementBg),
+                              p.estado === 'Pendiente' ? colors.dangerTxt : (p.estado === 'Completado' ? colors.successTxt : colors.textMain)
+                          )}>
+                              {p.estado}
+                          </span>
                        </td>
-                       <td style={styles.tableCell}>
-                           <div className="d-flex flex-wrap">
-                               <button style={styles.btnControl(colors.elementBg, colors.textMain)} onClick={() => {setSelectedOrderDetails(p); setShowDetailsModal(true);}}>Ver</button>
-                               {p.estado !== 'Completado' && (
-                                   <>
-                                        <button style={styles.btnControl(colors.badgeWarnBg, colors.badgeWarnTxt)} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Cocinar</button>
-                                        {p.tipo_orden === 'domicilio' 
-                                            ? <button style={styles.btnControl(colors.badgeInfoBg, colors.badgeInfoTxt)} onClick={() => handleUpdateStatus(p.id, 'En Camino')}>Moto</button> 
-                                            : <button style={styles.btnControl(colors.badgeSuccessBg, colors.badgeSuccessTxt)} onClick={() => handleUpdateStatus(p.id, 'Listo')}>Listo</button>}
-                                        <button style={styles.btnControl(colors.textMain, colors.bg)} onClick={() => handleUpdateStatus(p.id, 'Completado')}>OK</button>
-                                   </>
-                               )}
-                           </div>
+                       <td style={{...styles.tableCell, ...styles.lastCell, textAlign: 'right'}}>
+                           <button style={styles.btnAction(colors.textMain, colors.borderColor)} onClick={() => {setSelectedOrderDetails(p); setShowDetailsModal(true);}}>Ver</button>
+                           {p.estado !== 'Completado' && (
+                               <>
+                                   <button style={styles.btnAction(colors.warnTxt, colors.warnBg)} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Prep</button>
+                                   {p.tipo_orden === 'domicilio' 
+                                       ? <button style={styles.btnAction(colors.infoTxt, colors.infoBg)} onClick={() => handleUpdateStatus(p.id, 'En Camino')}>Moto</button> 
+                                       : <button style={styles.btnAction(colors.successTxt, colors.successBg)} onClick={() => handleUpdateStatus(p.id, 'Listo')}>Listo</button>}
+                                   <button style={{...styles.btnAction('white', colors.successTxt), backgroundColor: colors.successTxt, border: 'none'}} onClick={() => handleUpdateStatus(p.id, 'Completado')}>✓</button>
+                               </>
+                           )}
                        </td>
                      </tr>
                    ))}
@@ -429,36 +409,35 @@ function AdminPage() {
            </div>
           )}
 
-          {/* === COMBOS === */}
+          {/* COMBOS (GRID) */}
           {!loading && !error && activeTab === 'combos' && (
              <div>
              <div className="d-flex justify-content-between align-items-center mb-4">
-               <h3 className="fw-bold m-0" style={{color: colors.textHeader}}>Promos Activas</h3>
-               <button style={styles.btnAdd} onClick={() => handleOpenComboModal()}>+ Crear Combo</button>
+               <h4 className="fw-bold" style={{color: colors.textMain}}>Combos & Promociones</h4>
+               <button style={styles.btnPrimary} onClick={() => handleOpenComboModal()}>+ Nuevo Combo</button>
              </div>
              <div className="row g-4">
                {combos.map((combo) => (
                  <div className="col-md-6 col-lg-4" key={combo.id}>
                    <div style={{
-                       border: `1px solid ${combo.esta_activo ? colors.borderColor : colors.badgeDangerTxt}`, 
-                       borderRadius: '20px', 
-                       padding: '20px', 
-                       backgroundColor: colors.elementBg, 
-                       color: colors.textMain, 
-                       height: '100%'
-                    }}>
-                     <div className="d-flex justify-content-between align-items-start mb-3">
+                       backgroundColor: colors.cardBg, 
+                       borderRadius: '16px', 
+                       padding: '25px', 
+                       border: `1px solid ${colors.borderColor}`,
+                       boxShadow: colors.shadow,
+                       opacity: combo.esta_activo ? 1 : 0.7
+                   }}>
+                     <div className="d-flex justify-content-between mb-3">
                        <h5 className="fw-bold mb-0" style={{color: colors.textMain}}>{combo.nombre}</h5>
                        {combo.esta_activo 
-                           ? styles.renderBadge('ON', colors.badgeSuccessBg, colors.badgeSuccessTxt)
-                           : styles.renderBadge('OFF', colors.badgeDangerBg, colors.badgeDangerTxt)}
+                           ? <span style={styles.badge(colors.successBg, colors.successTxt)}>ACTIVO</span>
+                           : <span style={styles.badge(colors.elementBg, colors.textSecondary)}>INACTIVO</span>}
                      </div>
-                     <h4 style={{color: colors.money, fontWeight: '900', fontSize: '1.8rem'}}>${Number(combo.precio).toFixed(2)}</h4>
+                     <h3 style={{color: colors.primary, fontWeight: '800'}}>${Number(combo.precio).toFixed(2)}</h3>
                      <p style={{color: colors.textSecondary, fontSize: '0.9rem'}}>{combo.descripcion}</p>
-                     
-                     <div className="mt-3 d-flex gap-2">
-                       <button style={{...styles.btnAction(colors.textSecondary, true), flex:1}} onClick={() => handleOpenComboModal(combo)}>Editar</button>
-                       {combo.esta_activo && <button style={{...styles.btnAction(colors.primary, true), flex:1}} onClick={() => handleDeleteCombo(combo)}>Ocultar</button>}
+                     <div className="mt-4 d-flex gap-2">
+                       <button style={{...styles.btnAction(colors.textMain, colors.borderColor), width: '100%'}} onClick={() => handleOpenComboModal(combo)}>Editar</button>
+                       {combo.esta_activo && <button style={{...styles.btnAction(colors.dangerTxt, colors.dangerBg), width: '100%'}} onClick={() => handleDeleteCombo(combo)}>Ocultar</button>}
                      </div>
                    </div>
                  </div>
@@ -467,39 +446,37 @@ function AdminPage() {
            </div>
           )}
 
-          {/* === REPORTES === */}
+          {/* REPORTES */}
           {!loading && !error && activeTab === 'reporteGeneral' && (
             <div>
-               <div className="row mb-5 g-4">
+               <div className="row mb-4 g-4">
                  <div className="col-md-6">
                    <StatCard 
                      title="Ventas Totales" 
                      value={`$${reportData.reduce((acc, curr) => acc + Number(curr.total_ventas), 0).toFixed(2)}`} 
-                     color={colors.money} 
                      icon="💰" 
-                     styles={styles} 
                      colors={colors} 
+                     styles={styles} 
                    />
                  </div>
                  <div className="col-md-6">
                    <StatCard 
                      title="Promedio por Ticket" 
                      value="$150.00" 
-                     color={colors.primary} 
                      icon="📈" 
-                     styles={styles} 
                      colors={colors} 
+                     styles={styles} 
                    />
                  </div>
                </div>
                
-               <h5 className="mb-4 fw-bold" style={{color: colors.textHeader}}>Gráfica de Ventas</h5>
-               <div style={{padding: '20px', backgroundColor: colors.elementBg, borderRadius: '20px', border: `1px solid ${colors.borderColor}`}}>
+               <div style={styles.contentSection}>
+                    <h5 className="mb-4 fw-bold" style={{color: colors.textMain}}>Rendimiento de Ventas</h5>
                     <SalesReportChart reportData={reportData} theme={theme} /> 
                </div>
                
-               <div className="mt-5 text-end">
-                   <button className="btn btn-outline-danger btn-sm rounded-pill" onClick={() => setShowPurgeModal(true)}>Purgar Datos</button>
+               <div className="mt-4 text-end">
+                   <button className="btn btn-outline-danger rounded-pill btn-sm" onClick={() => setShowPurgeModal(true)}>Opciones Avanzadas (Purgar)</button>
                </div>
             </div>
           )}
@@ -508,30 +485,34 @@ function AdminPage() {
         </div>
       </div>
 
-      {/* MODALES */}
+      {/* MODALES PASADOS */}
       <ProductModal show={showProductModal} handleClose={() => setShowProductModal(false)} handleSave={handleSaveProducto} productoActual={productoActual} />
       <ComboModal show={showComboModal} handleClose={() => setShowComboModal(false)} handleSave={handleSaveCombo} comboActual={comboActual} />
       {showDetailsModal && (<DetallesPedidoModal pedido={selectedOrderDetails} onClose={() => setShowDetailsModal(false)} />)}
       <ConfirmationModal show={showConfirmModal} onClose={() => setShowConfirmModal(false)} onConfirm={confirmAction} title={confirmTitle} message={confirmMessage} colors={colors} />
 
-      {/* MODAL PURGAR */}
+      {/* MODAL PURGAR (ESTILO CORREGIDO) */}
       {showPurgeModal && (
-        <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1060 }}>
+        <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content border-0 rounded-4 overflow-hidden" style={{backgroundColor: colors.cardBg, color: colors.textMain, border: `1px solid ${colors.badgeDangerTxt}`}}>
-              <div className="modal-header border-0" style={{backgroundColor: colors.badgeDangerTxt}}><h5 className="modal-title fw-bold text-white">⚠️ Zona de Peligro</h5><button type="button" className="btn-close btn-close-white" onClick={() => setShowPurgeModal(false)}></button></div>
+            <div className="modal-content border-0 overflow-hidden" style={{backgroundColor: colors.cardBg, color: colors.textMain, borderRadius: '24px'}}>
+              <div className="modal-header border-0 p-4 pb-0">
+                  <h5 className="modal-title fw-bold text-danger">⚠️ Zona de Peligro</h5>
+                  <button type="button" className="btn-close" style={{filter: isDark ? 'invert(1)' : 'none'}} onClick={() => setShowPurgeModal(false)}></button>
+              </div>
               <div className="modal-body p-4">
-                <p>Escribe <strong>ELIMINAR</strong> para confirmar:</p>
+                <p style={{color: colors.textSecondary}}>Esta acción eliminará <strong>todos</strong> los pedidos del historial. No se puede deshacer.</p>
+                <label className="mb-2 fw-bold" style={{fontSize: '0.8rem', textTransform: 'uppercase'}}>Escribe "ELIMINAR" para confirmar:</label>
                 <input 
                     type="text" 
-                    className='form-control'
-                    style={{backgroundColor: colors.elementBg, color: colors.textMain, border: `1px solid ${colors.borderColor}`}}
+                    style={styles.input}
                     value={purgeConfirmText} 
                     onChange={(e) => setPurgeConfirmText(e.target.value)} 
+                    placeholder="ELIMINAR"
                 />
               </div>
-              <div className="modal-footer border-0">
-                <button className="btn btn-danger w-100 rounded-pill" onClick={handlePurge} disabled={purgeConfirmText !== 'ELIMINAR'}>Borrar Todo</button>
+              <div className="modal-footer border-0 p-4 pt-0">
+                <button className="btn btn-danger w-100 py-3 rounded-pill fw-bold" onClick={handlePurge} disabled={purgeConfirmText !== 'ELIMINAR'}>Confirmar Borrado</button>
               </div>
             </div>
           </div>
@@ -540,5 +521,26 @@ function AdminPage() {
     </div>
   );
 }
+
+// Pequeño componente helper para el Modal de Confirmación si no lo tienes externo
+const ConfirmationModal = ({ show, onClose, onConfirm, title, message, colors }) => {
+    if (!show) return null;
+    return (
+      <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1055 }}>
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content" style={{ borderRadius: '20px', backgroundColor: colors.cardBg, color: colors.textMain, border: `1px solid ${colors.borderColor}` }}>
+            <div className="modal-body p-4 text-center">
+              <h5 className="fw-bold mb-3">{title}</h5>
+              <p style={{color: colors.textSecondary}}>{message}</p>
+              <div className="d-flex justify-content-center gap-2 mt-4">
+                <button className="btn px-4 rounded-pill fw-bold" style={{backgroundColor: colors.elementBg, color: colors.textMain}} onClick={onClose}>Cancelar</button>
+                <button className="btn btn-primary px-4 rounded-pill fw-bold" onClick={onConfirm}>Confirmar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+};
 
 export default AdminPage;

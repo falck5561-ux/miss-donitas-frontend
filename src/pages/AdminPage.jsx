@@ -9,44 +9,49 @@ import { getProducts, createProduct, updateProduct, deleteProduct } from '../ser
 import apiClient from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
-// --- GESTIÓN DE COLORES (DUAL THEME) ---
+// --- GESTIÓN DE COLORES (DUAL THEME MEJORADO) ---
 const getThemeColors = (mode) => {
   const isDark = mode === 'dark';
   
   return {
     // Fondos
-    bg: isDark ? '#1a1212' : '#FFFDF5',          // Chocolate oscuro vs Crema Vainilla
-    cardBg: isDark ? '#2b1f1f' : '#FFFFFF',      // Café oscuro vs Blanco
+    bg: isDark ? '#1a1212' : '#FFFDF5',
+    cardBg: isDark ? '#2b1f1f' : '#FFFFFF',
     
     // Textos
-    textMain: isDark ? '#fff1e6' : '#5D4037',    // Crema casi blanco vs Café fuerte
-    textLight: isDark ? '#d7ccc8' : '#8D6E63',   // Café claro vs Café leche
+    textMain: isDark ? '#fff1e6' : '#5D4037',
+    textLight: isDark ? '#d7ccc8' : '#8D6E63',
     
-    // Botones y Acentos
-    primary: isDark ? '#ff1744' : '#FF80AB',     // Rojo Neón vs Rosa Fresa
+    // Botones Principales
+    primary: isDark ? '#ff1744' : '#FF80AB',
     primaryGradient: isDark 
-      ? 'linear-gradient(135deg, #d50000 0%, #ff1744 100%)' // Fuego
-      : 'linear-gradient(135deg, #FF80AB 0%, #F50057 100%)', // Dulce
+      ? 'linear-gradient(135deg, #d50000 0%, #ff1744 100%)' 
+      : 'linear-gradient(135deg, #FF80AB 0%, #F50057 100%)',
       
-    // Estados y Acciones
-    accent: isDark ? '#00e5ff' : '#26C6DA',      // Cian Brillante vs Turquesa
-    danger: isDark ? '#ff5252' : '#EF5350',      // Rojo Alerta
-    success: isDark ? '#00e676' : '#66BB6A',     // Verde Neón vs Verde Suave
+    // Botones de Estado (ESTILO EMPLEADO)
+    btnPrepare: isDark ? '#FFAB00' : '#FFC107', // Amarillo/Naranja (Preparar)
+    btnWay: isDark ? '#F50057' : '#FF80AB',     // Rosa (En Camino)
+    btnReady: isDark ? '#9E9E9E' : '#E0E0E0',   // Gris (Listo)
+    btnDone: isDark ? '#00E676' : '#4CAF50',    // Verde (Entregado)
+    btnView: isDark ? '#00B0FF' : '#29B6F6',    // Azul (Ver)
+
+    // Estados y Acciones Generales
+    accent: isDark ? '#00e5ff' : '#26C6DA',
+    danger: isDark ? '#ff5252' : '#EF5350',
+    success: isDark ? '#00e676' : '#66BB6A',
     
-    // Detalles UI
+    // UI
     border: isDark ? '#4e342e' : '#FFF3E0',
     shadow: isDark 
-      ? '0 10px 30px rgba(0,0,0,0.5)'            // Sombra fuerte nocturna
-      : '0 10px 30px rgba(255, 128, 171, 0.15)', // Sombra suave rosada
+      ? '0 10px 30px rgba(0,0,0,0.5)' 
+      : '0 10px 30px rgba(255, 128, 171, 0.15)',
       
-    // Tablas
     tableHeaderBg: isDark ? '#3e2723' : '#FFF0F5',
     tableHeaderText: isDark ? '#ffccbc' : '#880E4F',
-    badgeText: isDark ? '#ffffff' : '#5D4037'
   };
 };
 
-// --- COMPONENTE TARJETA DE ESTADÍSTICA ---
+// --- COMPONENTE TARJETA ESTADÍSTICA ---
 const StatCard = ({ title, value, color, icon, styles }) => (
   <div style={{...styles.card, textAlign: 'center', borderBottom: `4px solid ${color}`, height: '100%'}}>
     <div style={{fontSize: '2.5rem', marginBottom: '10px'}}>{icon}</div>
@@ -55,7 +60,7 @@ const StatCard = ({ title, value, color, icon, styles }) => (
   </div>
 );
 
-// --- MODAL DE CONFIRMACIÓN ---
+// --- MODAL CONFIRMACIÓN ---
 const ConfirmationModal = ({ show, onClose, onConfirm, title, message, themeColors }) => {
   if (!show) return null;
   return (
@@ -81,7 +86,7 @@ const ConfirmationModal = ({ show, onClose, onConfirm, title, message, themeColo
 
 function AdminPage() {
   const { theme } = useTheme(); 
-  const colors = getThemeColors(theme); // Obtenemos la paleta actual
+  const colors = getThemeColors(theme);
 
   // --- ESTILOS DINÁMICOS ---
   const styles = {
@@ -155,6 +160,20 @@ function AdminPage() {
       fontWeight: '700',
       boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
     },
+    // Estilo especial para los botones de gestión de pedidos (Compactos)
+    btnControl: (bgColor, textColor = 'white') => ({
+        backgroundColor: bgColor,
+        color: textColor,
+        border: 'none',
+        padding: '5px 10px',
+        borderRadius: '8px',
+        fontWeight: '700',
+        fontSize: '0.75rem',
+        textTransform: 'uppercase',
+        boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+        transition: 'transform 0.1s',
+        whiteSpace: 'nowrap'
+    }),
     btnAction: (color, isOutline = true) => ({
       backgroundColor: isOutline ? 'transparent' : color,
       border: isOutline ? `1px solid ${color}` : 'none',
@@ -278,7 +297,7 @@ function AdminPage() {
   };
 
   const handleUpdateStatus = async (pedidoId, nuevoEstado) => {
-    try { await apiClient.put(`/pedidos/${pedidoId}/estado`, { estado: nuevoEstado }); toast.success(`Pedido #${pedidoId} actualizado.`); fetchData(); } 
+    try { await apiClient.put(`/pedidos/${pedidoId}/estado`, { estado: nuevoEstado }); toast.success(`Pedido #${pedidoId}: ${nuevoEstado}`); fetchData(); } 
     catch (err) { toast.error('Error actualizando estado.'); }
   };
   const handleShowDetails = (pedido) => { setSelectedOrderDetails(pedido); setShowDetailsModal(true); };
@@ -291,7 +310,7 @@ function AdminPage() {
 
   return (
     <div style={styles.container}>
-      <div className="container">
+      <div className="container-fluid px-4"> {/* Ancho completo para que quepan los botones */}
         
         {/* HEADER */}
         <div className="text-center mb-5">
@@ -375,7 +394,7 @@ function AdminPage() {
             </div>
           )}
 
-          {/* === SECCIÓN: PEDIDOS === */}
+          {/* === SECCIÓN: PEDIDOS (AHORA CON TODOS LOS BOTONES) === */}
           {!loading && !error && activeTab === 'pedidosEnLinea' && (
             <div>
               <div className="d-flex justify-content-between align-items-center mb-4">
@@ -393,7 +412,7 @@ function AdminPage() {
                       <th style={styles.tableHeader}>Total</th>
                       <th style={styles.tableHeader}>Tipo</th>
                       <th style={styles.tableHeader}>Estado</th>
-                      <th style={{...styles.tableHeader, borderTopRightRadius: '15px', textAlign: 'center'}}>Gestión</th>
+                      <th style={{...styles.tableHeader, borderTopRightRadius: '15px', width: '35%'}}>Control de Mando</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -411,7 +430,6 @@ function AdminPage() {
                             : <span style={styles.badge(theme === 'dark' ? '#E65100' : '#FFF3E0', theme === 'dark' ? '#FFCC80' : '#F57C00', theme === 'dark' ? '#FF9800' : 'transparent')}>🏪 Recoger</span>}
                         </td>
                         <td>
-                            {/* Lógica de colores para estados */}
                            {(() => {
                                let bg = colors.border;
                                let text = colors.textLight;
@@ -421,11 +439,25 @@ function AdminPage() {
                                return <span className="badge rounded-pill" style={{backgroundColor: bg, color: text, padding: '6px 12px'}}>{p.estado}</span>;
                            })()}
                         </td>
-                        <td className="text-center">
-                          <button className="btn btn-sm btn-light rounded-pill border me-2 fw-bold" onClick={() => handleShowDetails(p)}>Ver Detalle</button>
-                          {p.estado !== 'Completado' && (
-                             <button className="btn btn-sm rounded-pill border-0 fw-bold shadow-sm text-white" style={{background: colors.primaryGradient}} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Cocinar</button>
-                          )}
+                        {/* AQUI ESTAN LOS BOTONES QUE PEDISTE (ESTILO JEFE SUPREMO) */}
+                        <td>
+                            <div className="d-flex flex-wrap gap-2">
+                                <button style={styles.btnControl(colors.btnView)} onClick={() => handleShowDetails(p)}>Ver</button>
+                                
+                                {p.estado !== 'Completado' && (
+                                    <>
+                                        <button style={styles.btnControl(colors.btnPrepare, '#212121')} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Preparar</button>
+                                        
+                                        {p.tipo_orden === 'domicilio' ? (
+                                            <button style={styles.btnControl(colors.btnWay)} onClick={() => handleUpdateStatus(p.id, 'En Camino')}>En Camino</button>
+                                        ) : (
+                                            <button style={styles.btnControl(colors.btnReady, '#212121')} onClick={() => handleUpdateStatus(p.id, 'Listo')}>Listo</button>
+                                        )}
+                                        
+                                        <button style={styles.btnControl(colors.btnDone)} onClick={() => handleUpdateStatus(p.id, 'Completado')}>Entregado</button>
+                                    </>
+                                )}
+                            </div>
                         </td>
                       </tr>
                     ))}

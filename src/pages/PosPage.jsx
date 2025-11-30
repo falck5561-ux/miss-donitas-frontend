@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Trash2, Package, Eye, Search, Clock, DollarSign, CreditCard, Receipt } from 'lucide-react';
+// Importamos todos los iconos necesarios
+import { Trash2, Package, Eye, Search, Clock, DollarSign, CreditCard, Receipt, ShoppingBag } from 'lucide-react';
 import apiClient from '../services/api';
 import DetallesPedidoModal from '../components/DetallesPedidoModal';
 import ProductDetailModal from '../components/ProductDetailModal';
@@ -19,6 +20,7 @@ const getThemeStyles = (isPicante) => ({
   tableHeaderBg: isPicante ? '#1E1E1E' : '#FBE9E7'
 });
 
+// Badge de estado
 const StatusBadge = ({ status }) => {
   const st = status ? status.toLowerCase() : '';
   let style = { fontSize: '0.75rem', padding: '6px 12px', fontWeight: '800', borderRadius: '50px', textTransform: 'uppercase' };
@@ -60,6 +62,7 @@ function PosPage() {
   const [clienteEncontrado, setClienteEncontrado] = useState(null);
   const [recompensaAplicadaId, setRecompensaAplicadaId] = useState(null);
 
+  // --- CARGA DE DATOS ---
   const fetchData = async () => {
     setLoading(true);
     setError('');
@@ -112,7 +115,7 @@ function PosPage() {
     setTotalVenta(nuevoTotal);
   }, [ventaActual]);
 
-  // --- CÁLCULO SIMPLE DEL TOTAL DEL DÍA (Basado en el dinero de los tickets) ---
+  // --- CÁLCULO DEL TOTAL DEL DÍA (Basado en el dinero de los tickets) ---
   const resumenDia = useMemo(() => {
       const totalDinero = ventasDelDia.reduce((acc, venta) => acc + Number(venta.total || 0), 0);
       return {
@@ -210,6 +213,7 @@ function PosPage() {
       toast.success('¡Venta registrada con éxito!');
       limpiarVenta();
       setIsPaymentModalOpen(false);
+      // Si estamos en la pestaña historial, recargamos
       if (activeTab === 'historial') fetchData();
     } catch (err) {
         console.error(err);
@@ -217,21 +221,42 @@ function PosPage() {
     }
   };
 
-  const handleShowDetails = (pedidoOVenta) => {
-      let datosParaModal = { ...pedidoOVenta };
+  // --- FUNCIÓN CORREGIDA PARA VER DETALLES ---
+  const handleShowDetails = async (venta) => {
+      // 1. Datos iniciales para que el modal abra rápido
+      let datosIniciales = { 
+          ...venta,
+          estado: venta.estado || 'Completado',
+          tipo_orden: venta.tipo_orden || 'mostrador',
+          nombre_cliente: venta.nombre_cliente || 'Venta de Mostrador'
+      };
       
-      // Ajustes para que el modal funcione con ventas del historial
-      if (!datosParaModal.estado) datosParaModal.estado = 'Completado';
-      if (!datosParaModal.tipo_orden) datosParaModal.tipo_orden = 'mostrador';
-      if (!datosParaModal.nombre_cliente) datosParaModal.nombre_cliente = 'Venta de Mostrador';
-      
-      // Aseguramos compatibilidad de items
-      if (!datosParaModal.detalles_pedido && datosParaModal.items) {
-          datosParaModal.detalles_pedido = datosParaModal.items;
-      }
-
-      setSelectedOrderDetails(datosParaModal);
+      // Abrimos modal con lo que tenemos
+      setSelectedOrderDetails(datosIniciales);
       setShowDetailsModal(true);
+
+      // 2. Verificamos si tiene productos
+      const tieneProductos = (datosIniciales.items && datosIniciales.items.length > 0) || 
+                             (datosIniciales.venta_detalles && datosIniciales.venta_detalles.length > 0);
+
+      // 3. Si no tiene productos, los pedimos al servidor
+      if (!tieneProductos) {
+          try {
+              // Hacemos petición al backend para obtener la venta completa
+              const res = await apiClient.get(`/ventas/${venta.id}`);
+              if (res.data) {
+                  const datosCompletos = { 
+                      ...datosIniciales, 
+                      ...res.data,
+                      // Unificamos donde vienen los productos
+                      items: res.data.items || res.data.venta_detalles || res.data.detalles || []
+                  };
+                  setSelectedOrderDetails(datosCompletos);
+              }
+          } catch (error) {
+              console.error("Error cargando detalles extra:", error);
+          }
+      }
   };
 
   const handleCloseDetailsModal = () => { setShowDetailsModal(false); setSelectedOrderDetails(null); };
@@ -445,13 +470,12 @@ function PosPage() {
     }
 
     // --- PESTAÑA: HISTORIAL (CORREGIDA) ---
-    // Volvemos a mostrar la lista de tickets para que el cajero pueda gestionarlos
     if (activeTab === 'historial') {
       const { totalDinero, totalTickets } = resumenDia;
 
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          {/* Banner de resumen (Opcional, pero se ve bien) */}
+          {/* Banner de resumen */}
           <div className="row mb-4">
               <div className="col-md-12">
                   <div className="p-4 rounded-3 shadow-sm d-flex justify-content-between align-items-center" style={{backgroundColor: styles.accent, color: '#FFF'}}>

@@ -9,7 +9,7 @@ import { getProducts, createProduct, updateProduct, deleteProduct } from '../ser
 import apiClient from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
-// --- PALETA DE COLORES (DONUT SHOP VS MODO PICANTE) ---
+// --- PALETA DE COLORES REFINADA (DONUT SHOP VS MODO PICANTE) ---
 const getThemeStyles = (isPicante) => ({
   // FONDO: Negro absoluto (Picante) vs Crema Vainilla (Dona)
   bg: isPicante ? '#000000' : '#FFF8E1', 

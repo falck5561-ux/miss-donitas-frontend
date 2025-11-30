@@ -2,24 +2,27 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../services/api';
 import toast from 'react-hot-toast';
 
-// --- ESTILOS MODAL (MODO DONA VS PICANTE) ---
+// --- ESTILOS VISUALES (MODAL) ---
 const getStyles = (isPicante) => ({
+  // Fondo Modal: Negro vs Blanco
   modalBg: isPicante ? '#1E1E1E' : '#FFFFFF',
-  text: isPicante ? '#FFFFFF' : '#3E2723', // Café oscuro en modo dona
   
-  // Inputs: Fondo gris oscuro (Picante) vs Crema muy claro (Dona)
+  // Texto: Blanco vs Café Oscuro
+  text: isPicante ? '#FFFFFF' : '#3E2723',
+  
+  // Inputs: Gris oscuro vs Crema suave
   inputBg: isPicante ? '#2C2C2C' : '#FFF8E1', 
   inputBorder: isPicante ? '#444' : '#D7CCC8',
   
-  // Tarjetas internas
+  // Tarjetas internas (Toppings): Gris vs Blanco hueso
   cardBg: isPicante ? '#252525' : '#FFFCF5', 
   cardBorder: isPicante ? '#333' : '#EFEBE9',
   
   muted: isPicante ? '#AAA' : '#8D6E63',
-  accent: isPicante ? '#FF1744' : '#FF4081' // Rosa
+  accent: isPicante ? '#FF1744' : '#FF4081' // Rojo Neón vs Rosa Fresa
 });
 
-// --- TARJETA DE TOPPINGS (SIN ANIMACIÓN) ---
+// --- SUB-COMPONENTE: TARJETA DE GRUPO (TOPPINGS) ---
 function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDeleted, styles }) {
   const [nombreOpcion, setNombreOpcion] = useState('');
   const [precioOpcion, setPrecioOpcion] = useState(0);
@@ -31,7 +34,7 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
       const res = await apiClient.post(`/productos/grupos/${grupo.id}/opciones`, optionData);
       onOptionAdded(grupo.id, res.data);
       setNombreOpcion(''); setPrecioOpcion(0);
-      toast.success('Opción agregada');
+      toast.success('Agregado');
     } catch { toast.error('Error'); }
   };
 
@@ -51,39 +54,42 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
   };
 
   return (
-    // ESTILOS PARA EVITAR ANIMACIÓN (transform: none)
-    <div className="card mb-3" style={{ 
+    // "className" vacío para evitar conflictos con clases .card globales que tengan animaciones
+    <div className="mb-3 rounded-3" style={{ 
         backgroundColor: styles.cardBg, 
         border: `1px solid ${styles.cardBorder}`, 
         color: styles.text,
-        transform: 'none !important',    // Mata la animación de escala
-        transition: 'none !important',   // Mata la transición
-        boxShadow: 'none'
+        // ESTOS ESTILOS BLOQUEAN LA ANIMACIÓN:
+        transform: 'none',    
+        transition: 'none',
+        boxShadow: 'none',
+        position: 'relative',
+        padding: '1px' // Hack para bordes limpios
     }}>
-      <div className="card-header d-flex justify-content-between align-items-center py-2 border-0 bg-transparent">
+      <div className="d-flex justify-content-between align-items-center p-2 px-3 border-bottom" style={{borderColor: styles.cardBorder}}>
         <small className="fw-bold text-uppercase" style={{fontSize: '0.75rem', letterSpacing: '0.5px', color: styles.accent}}>
             {grupo.nombre} 
             <span className="badge ms-2" style={{backgroundColor: styles.inputBorder, color: styles.text}}>
                 {grupo.tipo_seleccion === 'unico' ? 'ÚNICO' : 'MÚLTIPLE'}
             </span>
         </small>
-        <button type="button" className="btn btn-sm text-danger p-0 fw-bold" style={{fontSize: '0.75rem'}} onClick={handleDeleteGroup}>ELIMINAR GRUPO</button>
+        <button type="button" className="btn btn-sm text-danger p-0 fw-bold" style={{fontSize: '0.75rem'}} onClick={handleDeleteGroup}>ELIMINAR</button>
       </div>
       
-      <div className="card-body p-3 pt-0">
+      <div className="p-3">
         {/* Lista Opciones */}
         <div className="d-flex flex-wrap gap-2 mb-3">
             {grupo.opciones && grupo.opciones.map(op => (
               <span key={op.id} className="badge d-flex align-items-center gap-2 fw-normal p-2" 
                     style={{ backgroundColor: styles.inputBg, color: styles.text, border: `1px solid ${styles.inputBorder}` }}>
                 {op.nombre} <b style={{color: styles.accent}}>+${op.precio_adicional}</b>
-                <span style={{cursor: 'pointer', fontWeight:'bold', marginLeft:'5px'}} onClick={() => handleDeleteOption(op.id)}>×</span>
+                <span style={{cursor: 'pointer', fontWeight:'bold', marginLeft:'5px', opacity: 0.6}} onClick={() => handleDeleteOption(op.id)}>×</span>
               </span>
             ))}
             {(!grupo.opciones || grupo.opciones.length === 0) && <small className="text-muted fst-italic">Sin opciones agregadas</small>}
         </div>
 
-        {/* Inputs para agregar */}
+        {/* Inputs Agregar */}
         <div className="d-flex gap-2">
             <input type="text" className="form-control form-control-sm shadow-none" placeholder="Nueva opción (Ej. Nutella)" 
                    value={nombreOpcion} onChange={(e) => setNombreOpcion(e.target.value)}
@@ -157,7 +163,7 @@ function ProductModal({ show, handleClose, handleSave, productoActual, isPicante
   };
 
   const handleAddGroup = async () => {
-    if (!productoActual?.id) return toast.error('Guarda el producto antes de agregar toppings.');
+    if (!productoActual?.id) return toast.error('Guarda primero.');
     if (!nombreGrupo.trim()) return toast.error('Nombre vacío');
     try {
       const res = await apiClient.post(`/productos/${productoActual.id}/grupos`, { nombre: nombreGrupo, tipo_seleccion: tipoSeleccion });
@@ -178,14 +184,13 @@ function ProductModal({ show, handleClose, handleSave, productoActual, isPicante
   };
 
   return (
-    <div className="modal show fade" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(3px)' }}>
+    <div className="modal show fade" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
       <div className="modal-dialog modal-xl modal-dialog-centered">
-        <div className="modal-content border-0 shadow-lg" style={{ backgroundColor: styles.modalBg, color: styles.text, borderRadius: '20px', overflow: 'hidden' }}>
+        <div className="modal-content border-0 shadow-lg" style={{ backgroundColor: styles.modalBg, color: styles.text, borderRadius: '24px', overflow: 'hidden' }}>
           
-          {/* HEADER */}
           <div className="modal-header border-0 pb-0 pt-4 px-4">
-            <h4 className="modal-title fw-bold" style={{color: styles.accent}}>
-                {formData.id ? '✏️ Editar Producto' : '✨ Crear Nuevo Producto'}
+            <h4 className="modal-title fw-bold" style={{color: styles.accent, letterSpacing: '-0.5px'}}>
+                {formData.id ? '✏️ Editar Producto' : '✨ Nuevo Producto'}
             </h4>
             <button type="button" className="btn-close" onClick={handleClose} style={{ filter: isPicante ? 'invert(1)' : 'none' }}></button>
           </div>
@@ -194,9 +199,9 @@ function ProductModal({ show, handleClose, handleSave, productoActual, isPicante
             <div className="modal-body p-4">
                 <div className="row g-5">
                     
-                    {/* IZQUIERDA: DATOS */}
+                    {/* COLUMNA IZQUIERDA: DATOS BÁSICOS */}
                     <div className="col-lg-5">
-                        <p className="text-uppercase small fw-bold mb-3" style={{color: styles.muted}}>Información Básica</p>
+                        <p className="text-uppercase small fw-bold mb-3" style={{color: styles.muted, fontSize: '0.75rem'}}>Detalles Generales</p>
                         
                         <div className="mb-3">
                             <label className="form-label small fw-bold">Nombre</label>
@@ -232,24 +237,24 @@ function ProductModal({ show, handleClose, handleSave, productoActual, isPicante
                         
                         <div className="d-flex align-items-center gap-2 mt-4 p-3 rounded" style={{backgroundColor: styles.inputBg, border: `1px solid ${styles.inputBorder}`}}>
                             <input className="form-check-input shadow-none" type="checkbox" name="en_oferta" checked={formData.en_oferta} onChange={handleChange} />
-                            <label className="form-check-label fw-bold small">¿Está en Oferta?</label>
+                            <label className="form-check-label fw-bold small">¿Oferta?</label>
                             {formData.en_oferta && (
-                                <input type="number" className="form-control form-control-sm ms-auto shadow-none" placeholder="% Desc" style={{maxWidth: '80px'}} 
+                                <input type="number" className="form-control form-control-sm ms-auto shadow-none" placeholder="% Desc" style={{maxWidth: '80px', border:'none'}} 
                                        name="descuento_porcentaje" value={formData.descuento_porcentaje} onChange={handleChange} />
                             )}
                         </div>
                     </div>
 
-                    {/* DERECHA: FOTOS Y TOPPINGS */}
+                    {/* COLUMNA DERECHA: FOTOS Y TOPPINGS */}
                     <div className="col-lg-7" style={{borderLeft: `1px solid ${styles.inputBorder}`}}>
                         
-                        {/* IMAGENES */}
+                        {/* SECCION FOTOS */}
                         <div className="mb-4">
-                            <p className="text-uppercase small fw-bold mb-3" style={{color: styles.muted}}>Fotografías</p>
+                            <p className="text-uppercase small fw-bold mb-3" style={{color: styles.muted, fontSize: '0.75rem'}}>Multimedia</p>
                             {(formData.imagenes || ['']).map((url, index) => (
                                 <div key={index} className="d-flex gap-2 mb-2">
-                                    <input type="text" className="form-control shadow-none" placeholder="URL de la imagen" value={url} onChange={(e) => handleImageChange(index, e.target.value)} style={inputStyle} />
-                                    {formData.imagenes.length > 1 && <button type="button" className="btn btn-light border text-danger" onClick={() => handleRemoveImageField(index)}>×</button>}
+                                    <input type="text" className="form-control shadow-none" placeholder="URL de imagen" value={url} onChange={(e) => handleImageChange(index, e.target.value)} style={inputStyle} />
+                                    {formData.imagenes.length > 1 && <button type="button" className="btn btn-light border-0 text-danger" onClick={() => handleRemoveImageField(index)}>×</button>}
                                 </div>
                             ))}
                             <button type="button" className="btn btn-link btn-sm p-0 text-decoration-none fw-bold" style={{color: styles.accent}} onClick={handleAddImageField}>+ Agregar otra foto</button>
@@ -257,9 +262,9 @@ function ProductModal({ show, handleClose, handleSave, productoActual, isPicante
 
                         <hr style={{borderColor: styles.inputBorder}} />
 
-                        {/* TOPPINGS */}
+                        {/* SECCION TOPPINGS */}
                         <div className="d-flex justify-content-between align-items-center mb-3">
-                             <p className="text-uppercase small fw-bold m-0" style={{color: styles.muted}}>Personalización (Toppings)</p>
+                             <p className="text-uppercase small fw-bold m-0" style={{color: styles.muted, fontSize: '0.75rem'}}>Personalización (Toppings)</p>
                              <div className="form-check form-switch">
                                 <input className="form-check-input shadow-none" type="checkbox" checked={gestionarOpciones} onChange={(e) => setGestionarOpciones(e.target.checked)} disabled={!formData.id} />
                              </div>
@@ -267,27 +272,27 @@ function ProductModal({ show, handleClose, handleSave, productoActual, isPicante
 
                         {gestionarOpciones && formData.id && (
                             <div>
-                                {/* Crear Grupo */}
+                                {/* Crear Grupo Nuevo */}
                                 <div className="d-flex gap-2 mb-4 p-3 rounded" style={{backgroundColor: styles.inputBg, border: `1px solid ${styles.inputBorder}`}}>
                                     <input type="text" className="form-control shadow-none bg-transparent border-0" placeholder="Nuevo Grupo (Ej. Salsas)" value={nombreGrupo} onChange={(e) => setNombreGrupo(e.target.value)} style={{color: styles.text}} />
-                                    <select className="form-select shadow-none bg-transparent border-0" style={{maxWidth: '150px', color: styles.text}} value={tipoSeleccion} onChange={(e) => setTipoSeleccion(e.target.value)}>
+                                    <select className="form-select shadow-none bg-transparent border-0" style={{maxWidth: '140px', color: styles.text}} value={tipoSeleccion} onChange={(e) => setTipoSeleccion(e.target.value)}>
                                         <option value="unico">Solo uno</option>
                                         <option value="multiple">Varios</option>
                                     </select>
                                     <button type="button" onClick={handleAddGroup} className="btn btn-sm text-white fw-bold px-3 rounded-pill" style={{backgroundColor: styles.accent}}>CREAR</button>
                                 </div>
 
-                                {/* Listado */}
+                                {/* Listado de Grupos */}
                                 <div style={{maxHeight: '350px', overflowY: 'auto', paddingRight: '5px'}}>
                                      {loadingGrupos ? <span className="small text-muted">Cargando...</span> : 
                                       grupos.length > 0 ? grupos.map(g => (
                                          <GrupoOpcionesCard key={g.id} grupo={g} onOptionAdded={handleOptionAdded} onOptionDeleted={handleOptionDeleted} onGroupDeleted={handleGroupDeleted} styles={styles} />
-                                      )) : <div className="text-center text-muted small py-3">No hay toppings configurados.</div>
+                                      )) : <div className="text-center text-muted small py-3">No hay grupos configurados.</div>
                                      }
                                 </div>
                             </div>
                         )}
-                        {!formData.id && <div className="alert alert-warning small border-0 text-center">Guarda el producto primero para agregar toppings.</div>}
+                        {!formData.id && <div className="alert alert-light border-0 small text-center" style={{backgroundColor: styles.inputBg, color: styles.muted}}>Guarda el producto primero para agregar opciones.</div>}
                     </div>
                 </div>
             </div>

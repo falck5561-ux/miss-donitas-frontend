@@ -1,23 +1,36 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 
-// --- COLORES DINÁMICOS (Premium & Picante) ---
+// --- COLORES EXACTOS (Iguales a tu AdminPage) ---
 const getModalColors = (mode) => {
-  const isDark = mode === 'dark';
+  const isPicante = mode === 'picante'; // Detectamos el modo exacto
+  
   return {
-    overlay: 'rgba(0, 0, 0, 0.75)',
-    bg: isDark ? '#2b1f1f' : '#FFFDF5',          
-    textMain: isDark ? '#fff1e6' : '#5D4037',    
-    textLight: isDark ? '#bcaaa4' : '#8D6E63',   
-    border: isDark ? '#4e342e' : '#efebe9',
+    overlay: 'rgba(0, 0, 0, 0.85)', // Fondo oscuro detrás del modal
     
-    primary: isDark ? '#ff1744' : '#FF80AB',     
-    mapBtnBg: '#29B6F6',                         
+    // FONDO DEL MODAL
+    bg: isPicante ? '#1E1E1E' : '#FFF8E1', 
+    
+    // TEXTOS
+    textMain: isPicante ? '#FFFFFF' : '#3E2723', // Blanco vs Café Oscuro
+    textLight: isPicante ? '#B0B0B0' : '#8D6E63', // Gris vs Café Claro
+    
+    // BORDES Y LÍNEAS
+    border: isPicante ? '#333333' : '#D7CCC8',
+    
+    // TARJETAS INTERNAS
+    cardBg: isPicante ? '#2C2C2C' : '#FFFFFF',
+    
+    // ACENTOS
+    accent: isPicante ? '#FF1744' : '#FF4081', // Rojo Neón vs Rosa Fresa
+    
+    // BOTONES MAPA
+    mapBtnBg: '#1976D2', // Azul estándar de Google Maps
     mapBtnText: '#FFFFFF',
     
-    cardSection: isDark ? '#3e2723' : '#FFFFFF', 
-    totalText: isDark ? '#69F0AE' : '#2E7D32',   
-    closeBtn: isDark ? '#ff5252' : '#EF5350'     
+    // BOTÓN CERRAR
+    closeBtnBg: isPicante ? '#FF1744' : '#FF4081',
+    closeBtnText: '#FFFFFF'
   };
 };
 
@@ -27,90 +40,103 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
 
   if (!pedido) return null;
 
-  // 1. Detectar lista de productos
-  const listaProductos = pedido.productos || pedido.detalles || [];
+  // 1. Detectar lista de productos (Soporte para diferentes estructuras de datos)
+  const listaProductos = pedido.detalles_pedido || pedido.productos || pedido.detalles || [];
 
-  // 2. Generar URL de Google Maps
+  // 2. Generar URL de Google Maps (Corregido)
   let mapUrl = '';
   if (pedido.latitude && pedido.longitude) {
+    // Si hay coordenadas GPS exactas
     mapUrl = `https://www.google.com/maps/search/?api=1&query=${pedido.latitude},${pedido.longitude}`;
   } else if (pedido.direccion_entrega || pedido.direccion) {
+    // Si es por dirección escrita
     const dir = pedido.direccion_entrega || pedido.direccion;
     mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dir + ", Campeche, Mexico")}`;
   }
 
-  // --- ESTILOS EN LÍNEA ---
+  // --- ESTILOS (Sin animaciones raras, todo sólido) ---
   const styles = {
     overlay: {
       position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
       backgroundColor: colors.overlay,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 9999, backdropFilter: 'blur(4px)'
+      zIndex: 1050, backdropFilter: 'blur(3px)'
     },
     modal: {
       backgroundColor: colors.bg,
       width: '95%', maxWidth: '600px',
-      borderRadius: '24px',
-      boxShadow: '0 25px 50px rgba(0,0,0,0.5)',
+      borderRadius: '20px',
+      border: `1px solid ${colors.border}`,
+      boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
       overflow: 'hidden', display: 'flex', flexDirection: 'column',
-      maxHeight: '90vh', animation: 'fadeIn 0.3s ease-out'
+      maxHeight: '90vh'
     },
     header: {
-      padding: '20px 25px', backgroundColor: colors.cardSection,
-      borderBottom: `1px solid ${colors.border}`,
+      padding: '20px 25px', 
+      backgroundColor: colors.bg, // El mismo fondo para continuidad
+      borderBottom: `2px solid ${colors.border}`,
       display: 'flex', justifyContent: 'space-between', alignItems: 'center'
     },
-    title: { margin: 0, fontSize: '1.4rem', fontWeight: '800', color: colors.textMain },
-    closeX: { background: 'none', border: 'none', fontSize: '1.8rem', color: colors.textLight, cursor: 'pointer', lineHeight: 1 },
+    title: { margin: 0, fontSize: '1.5rem', fontWeight: '800', color: colors.accent },
+    closeX: { 
+        background: 'none', border: 'none', fontSize: '2rem', 
+        color: colors.textMain, cursor: 'pointer', lineHeight: 0.8 
+    },
     
     body: { padding: '25px', overflowY: 'auto' },
     
-    row: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.95rem', color: colors.textMain },
-    label: { fontWeight: 'bold', color: colors.textLight },
+    // Filas de información
+    row: { display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '1rem', color: colors.textMain },
+    label: { fontWeight: 'bold', color: colors.textLight, textTransform: 'uppercase', fontSize: '0.8rem' },
+    value: { fontWeight: 'bold', fontSize: '1.1rem' },
     
+    // Badge de estado
     badge: {
-      padding: '5px 12px', borderRadius: '50px', fontWeight: 'bold', fontSize: '0.8rem',
-      backgroundColor: pedido.estado === 'Pendiente' ? '#FFF8E1' : '#E8F5E9',
-      color: pedido.estado === 'Pendiente' ? '#F57C00' : '#2E7D32',
-      border: `1px solid ${pedido.estado === 'Pendiente' ? '#FFE0B2' : '#C8E6C9'}`
+      padding: '6px 14px', borderRadius: '50px', fontWeight: 'bold', fontSize: '0.85rem',
+      backgroundColor: pedido.estado === 'Pendiente' ? '#D32F2F' : (pedido.estado === 'Completado' ? '#388E3C' : '#FBC02D'),
+      color: '#FFFFFF'
     },
 
+    // Sección Productos
     sectionHeader: { 
-      marginTop: '25px', marginBottom: '15px', paddingBottom: '5px',
-      borderBottom: `2px solid ${colors.border}`, 
-      fontWeight: 'bold', color: colors.textMain 
+      marginTop: '30px', marginBottom: '15px', paddingBottom: '8px',
+      borderBottom: `1px solid ${colors.border}`, 
+      fontWeight: 'bold', color: colors.accent, textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '1px'
     },
     productCard: {
-      display: 'flex', alignItems: 'center', gap: '15px',
-      backgroundColor: colors.cardSection, padding: '15px', // Más padding ya que no hay imagen
-      borderRadius: '16px', marginBottom: '10px',
-      border: `1px solid ${colors.border}`
+      backgroundColor: colors.cardBg, 
+      padding: '15px', 
+      borderRadius: '12px', marginBottom: '10px',
+      border: `1px solid ${colors.border}`,
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center'
     },
     
+    // Sección Entrega
     deliveryBox: {
-      backgroundColor: colors.cardSection, padding: '20px',
-      borderRadius: '16px', marginTop: '10px',
-      border: `1px dashed ${colors.primary}`
+      backgroundColor: colors.cardBg, padding: '20px',
+      borderRadius: '12px', marginTop: '10px',
+      border: `1px solid ${colors.border}`
     },
     mapBtn: {
       display: 'block', width: '100%', textAlign: 'center',
       backgroundColor: colors.mapBtnBg, color: colors.mapBtnText,
-      padding: '12px', borderRadius: '12px', textDecoration: 'none',
+      padding: '12px', borderRadius: '50px', textDecoration: 'none',
       fontWeight: 'bold', marginTop: '15px',
-      boxShadow: '0 4px 10px rgba(41, 182, 246, 0.3)',
-      transition: 'transform 0.2s'
+      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
     },
 
+    // Footer
     footer: {
-      padding: '20px 25px', borderTop: `1px solid ${colors.border}`,
-      backgroundColor: colors.cardSection,
+      padding: '20px 25px', borderTop: `2px solid ${colors.border}`,
+      backgroundColor: colors.bg,
       display: 'flex', justifyContent: 'space-between', alignItems: 'center'
     },
-    totalPrice: { fontSize: '1.8rem', fontWeight: '900', color: colors.totalText },
+    totalLabel: { display:'block', fontSize:'0.9rem', color: colors.textLight, fontWeight: 'bold', textTransform: 'uppercase' },
+    totalPrice: { fontSize: '2rem', fontWeight: '900', color: colors.textMain },
     closeBtn: {
-      backgroundColor: colors.closeBtn, color: 'white', border: 'none',
-      padding: '10px 30px', borderRadius: '50px', fontWeight: 'bold',
-      boxShadow: '0 4px 12px rgba(239, 83, 80, 0.4)', cursor: 'pointer'
+      backgroundColor: colors.closeBtnBg, color: colors.closeBtnText, border: 'none',
+      padding: '12px 35px', borderRadius: '50px', fontWeight: 'bold', fontSize: '1rem',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.2)', cursor: 'pointer'
     }
   };
 
@@ -126,80 +152,96 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
 
         {/* CONTENIDO */}
         <div style={styles.body}>
-          {/* Info Cliente */}
+          
+          {/* Info Principal */}
           <div style={styles.row}>
-            <span style={styles.label}>Cliente:</span>
-            <span style={{fontWeight:'bold'}}>{pedido.nombre_cliente}</span>
-          </div>
-          <div style={styles.row}>
-            <span style={styles.label}>Fecha:</span>
-            <span>{new Date(pedido.fecha).toLocaleString()}</span>
-          </div>
-          <div style={styles.row}>
-            <span style={styles.label}>Estado:</span>
-            <span style={styles.badge}>{pedido.estado}</span>
+            <div>
+                <span style={styles.label}>Cliente</span><br/>
+                <span style={styles.value}>{pedido.nombre_cliente}</span>
+            </div>
+            <div style={{textAlign: 'right'}}>
+                <span style={styles.label}>Hora</span><br/>
+                <span style={styles.value}>{new Date(pedido.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            </div>
           </div>
 
-          {/* Lista de Productos (SIN IMAGENES) */}
-          <div style={styles.sectionHeader}>📦 Productos</div>
+          <div style={{marginTop: '10px', textAlign: 'center'}}>
+             <span style={styles.badge}>{pedido.estado.toUpperCase()}</span>
+          </div>
+
+          {/* Lista de Productos */}
+          <div style={styles.sectionHeader}>📦 Productos Ordenados</div>
+          
           {listaProductos.map((prod, idx) => {
-             const opciones = prod.opciones || prod.selectedOptions || [];
+              // Ajuste para leer opciones/toppings
+              const opciones = prod.opciones || prod.selectedOptions || [];
+              const precioUnitario = Number(prod.precio || prod.precio_unitario || 0);
+              const subtotal = precioUnitario * prod.cantidad;
 
-             return (
-               <div key={idx} style={styles.productCard}>
-                 {/* Solo Texto */}
-                 <div style={{flex: 1}}>
-                   <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', fontSize: '1.05rem', color: colors.textMain}}>
-                     {/* Nombre del producto destacado */}
-                     <span style={{fontWeight: '800'}}>
-                       {prod.cantidad}x {prod.nombre || prod.nombre_producto}
-                     </span>
-                     <span style={{fontWeight:'bold'}}>
-                        ${(Number(prod.precio || prod.precio_unitario) * prod.cantidad).toFixed(2)}
-                     </span>
-                   </div>
-                   
-                   {/* Ingredientes / Opciones */}
-                   {opciones.length > 0 && (
-                     <div style={{fontSize: '0.85rem', color: colors.textLight, marginTop:'6px', fontStyle:'italic'}}>
-                       {opciones.map((op, i) => (
-                         <span key={i}>• {op.nombre} {i < opciones.length -1 ? ', ' : ''}</span>
-                       ))}
-                     </div>
-                   )}
-                 </div>
-               </div>
-             );
+              return (
+                <div key={idx} style={styles.productCard}>
+                  <div style={{flex: 1}}>
+                    <div style={{fontSize: '1.1rem', fontWeight: 'bold', color: colors.textMain}}>
+                      {prod.cantidad}x {prod.nombre || prod.nombre_producto}
+                    </div>
+                    
+                    {/* Toppings / Opciones */}
+                    {opciones.length > 0 && (
+                      <div style={{fontSize: '0.85rem', color: colors.textLight, marginTop:'4px', fontStyle:'italic'}}>
+                        {opciones.map((op, i) => (
+                          <span key={i}>+ {op.nombre}{i < opciones.length -1 ? ', ' : ''}</span>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Notas del producto si las hay */}
+                    {prod.descripcion && (
+                        <div style={{fontSize: '0.8rem', color: colors.accent, marginTop:'4px'}}>
+                            Nota: {prod.descripcion}
+                        </div>
+                    )}
+                  </div>
+                  
+                  <div style={{fontWeight: '900', fontSize: '1.1rem', color: colors.textMain}}>
+                     ${subtotal.toFixed(2)}
+                  </div>
+                </div>
+              );
           })}
 
           {/* Sección de Envío */}
-          <div style={styles.sectionHeader}>🛵 Detalles de Entrega</div>
+          <div style={styles.sectionHeader}>🛵 Datos de Entrega</div>
           {pedido.tipo_orden === 'domicilio' ? (
             <div style={styles.deliveryBox}>
-              <div style={{marginBottom: '10px'}}>
-                <span style={{display:'block', fontSize:'0.85rem', color: colors.textLight}}>Dirección:</span>
-                <span style={{fontWeight:'bold', fontSize:'1.05rem', color: colors.textMain}}>
+              <div style={{marginBottom: '15px'}}>
+                <span style={styles.label}>Dirección:</span>
+                <div style={{fontSize:'1.1rem', color: colors.textMain, marginTop: '5px', lineHeight: '1.4'}}>
                   {pedido.direccion_entrega || pedido.direccion || "Sin dirección registrada"}
-                </span>
+                </div>
               </div>
               
               {(pedido.referencia) && (
-                 <div style={{marginBottom: '10px'}}>
-                   <span style={{display:'block', fontSize:'0.85rem', color: colors.textLight}}>Referencia:</span>
-                   <span style={{fontStyle:'italic', color: colors.textMain}}>"{pedido.referencia}"</span>
+                 <div style={{marginBottom: '15px'}}>
+                   <span style={styles.label}>Referencia:</span>
+                   <div style={{fontStyle:'italic', color: colors.textMain}}>"{pedido.referencia}"</div>
                  </div>
               )}
+              
+              <div style={{marginBottom: '5px'}}>
+                 <span style={styles.label}>Teléfono:</span> <span style={{color: colors.textMain}}>{pedido.telefono || '---'}</span>
+              </div>
 
               {mapUrl && (
                 <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={styles.mapBtn}>
-                  📍 Ver Ubicación en Google Maps
+                  📍 ABRIR EN GOOGLE MAPS
                 </a>
               )}
             </div>
           ) : (
-            <div style={{textAlign:'center', padding:'20px', backgroundColor: colors.cardSection, borderRadius:'16px', border:`1px solid ${colors.border}`}}>
-               <span style={{fontSize:'1.2rem', fontWeight:'bold', color: colors.primary}}>🛍️ Recoger en Tienda</span>
-               <p style={{margin:'5px 0 0 0', color: colors.textLight, fontSize:'0.9rem'}}>El cliente pasará por su pedido.</p>
+            <div style={{textAlign:'center', padding:'25px', backgroundColor: colors.cardBg, borderRadius:'12px', border:`1px solid ${colors.border}`}}>
+               <div style={{fontSize:'2rem', marginBottom:'10px'}}>👜</div>
+               <span style={{fontSize:'1.2rem', fontWeight:'bold', color: colors.textMain}}>Recoger en Tienda</span>
+               <p style={{margin:'5px 0 0 0', color: colors.textLight}}>El cliente pasará por su pedido.</p>
             </div>
           )}
         </div>
@@ -207,10 +249,10 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
         {/* FOOTER */}
         <div style={styles.footer}>
           <div>
-            <span style={{display:'block', fontSize:'0.85rem', color: colors.textLight}}>Total a Pagar:</span>
+            <span style={styles.totalLabel}>Total a Pagar</span>
             <span style={styles.totalPrice}>${Number(pedido.total).toFixed(2)}</span>
           </div>
-          <button style={styles.closeBtn} onClick={onClose}>Cerrar</button>
+          <button style={styles.closeBtn} onClick={onClose}>CERRAR</button>
         </div>
 
       </div>

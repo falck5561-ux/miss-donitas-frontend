@@ -171,7 +171,19 @@ const DetallesPedidoModal = ({ pedido, onClose, isPicante }) => {
              </div>
           ) : (
             listaProductos.map((prod, idx) => {
-                const opciones = prod.opciones || prod.selectedOptions || [];
+                // --- SOLUCIÓN PANTALLA BLANCA ---
+                // Detectamos si 'opciones' es un array (frontend) o string (backend)
+                let textoOpciones = "";
+                const rawOpciones = prod.opciones || prod.selectedOptions;
+
+                if (Array.isArray(rawOpciones)) {
+                    // Si es Array (ej: antes de guardar), lo unimos con comas
+                    textoOpciones = rawOpciones.map(op => (typeof op === 'string' ? op : op.nombre)).join(', ');
+                } else if (typeof rawOpciones === 'string') {
+                    // Si es String (ej: desde la BD), lo usamos directo
+                    textoOpciones = rawOpciones;
+                }
+
                 const precioUnitario = Number(prod.precio || prod.precio_unitario || 0);
                 const subtotal = precioUnitario * prod.cantidad;
 
@@ -182,9 +194,10 @@ const DetallesPedidoModal = ({ pedido, onClose, isPicante }) => {
                         {prod.cantidad} x {prod.nombre || prod.nombre_producto}
                       </div>
                       
-                      {opciones.length > 0 && (
+                      {/* Renderizamos el texto de opciones de forma segura */}
+                      {textoOpciones && (
                         <div style={{fontSize: '0.8rem', color: colors.textLight, marginTop:'2px'}}>
-                           {opciones.map((op, i) => (typeof op === 'string' ? op : op.nombre)).join(', ')}
+                           {textoOpciones}
                         </div>
                       )}
                     </div>
@@ -197,7 +210,7 @@ const DetallesPedidoModal = ({ pedido, onClose, isPicante }) => {
             })
           )}
 
-          {/* --- AQUÍ ESTÁ EL CAMBIO IMPORTANTE: OCULTAMOS SI ES MOSTRADOR --- */}
+          {/* --- OCULTAMOS SI ES MOSTRADOR --- */}
           {!esVentaMostrador && (
             <>
               <div style={styles.sectionHeader}>

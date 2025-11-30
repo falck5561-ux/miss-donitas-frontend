@@ -2,14 +2,25 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../services/api';
 import toast from 'react-hot-toast';
 
+// --- ESTILOS "MISS DONITAS" ---
+const themeColors = {
+  bg: '#FFF8E7',      // Crema suave
+  text: '#5D4037',    // Café oscuro
+  border: '#E0C097',  // Café claro (bordes)
+  cardBg: '#FFFFFF',  // Blanco para tarjetas internas
+};
+
 // --- Componente Interno para la Tarjeta de Grupo de Opciones ---
-function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDeleted, theme }) {
+function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDeleted }) {
   const [nombreOpcion, setNombreOpcion] = useState('');
   const [precioOpcion, setPrecioOpcion] = useState(0);
 
-  const cardClass = theme === 'dark' ? 'card text-bg-dark border-secondary' : 'card';
-  const inputClass = theme === 'dark' ? 'form-control form-control-dark bg-dark text-white' : 'form-control';
-  const listGroupClass = theme === 'dark' ? 'list-group-item bg-dark text-white border-secondary' : 'list-group-item';
+  // Estilo de tarjeta limpia (Blanco sobre Crema)
+  const cardStyle = {
+    backgroundColor: themeColors.cardBg,
+    color: themeColors.text,
+    border: `1px solid ${themeColors.border}`
+  };
 
   const handleAddOption = async () => {
     if (!nombreOpcion.trim()) return toast.error('El nombre de la opción no puede estar vacío.');
@@ -51,8 +62,8 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
   };
 
   return (
-    <div className={`${cardClass} mb-4`}>
-      <div className="card-header d-flex justify-content-between align-items-center">
+    <div className="card mb-4" style={cardStyle}>
+      <div className="card-header d-flex justify-content-between align-items-center" style={{ backgroundColor: 'rgba(0,0,0,0.03)', borderBottomColor: themeColors.border }}>
         <span>Grupo: <strong>{grupo.nombre}</strong> (Selección: {grupo.tipo_seleccion})</span>
         <button type="button" className="btn btn-sm btn-outline-danger" onClick={handleDeleteGroup}>
           Eliminar Grupo
@@ -63,7 +74,7 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
         {grupo.opciones && grupo.opciones.length > 0 ? (
           <ul className="list-group list-group-flush mb-3">
             {grupo.opciones.map(op => (
-              <li key={op.id} className={`${listGroupClass} d-flex justify-content-between align-items-center`}>
+              <li key={op.id} className="list-group-item d-flex justify-content-between align-items-center" style={{ borderColor: '#eee' }}>
                 <span>{op.nombre} (+${Number(op.precio_adicional).toFixed(2)})</span>
                 <button type="button" className="btn btn-sm btn-link text-danger" onClick={() => handleDeleteOption(op.id)}>
                   &times;
@@ -74,14 +85,14 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
         ) : (
           <p className="text-muted small">No hay opciones en este grupo.</p>
         )}
-        <hr />
+        <hr style={{ borderColor: themeColors.border }} />
         <h6 className="card-title">Añadir nueva opción:</h6>
         
         <div className="row g-2">
           <div className="col-md-6">
             <input
               type="text"
-              className={inputClass}
+              className="form-control"
               placeholder="Ej: Nutella"
               value={nombreOpcion}
               onChange={(e) => setNombreOpcion(e.target.value)}
@@ -91,7 +102,7 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
             <input
               type="number"
               step="0.01"
-              className={inputClass}
+              className="form-control"
               placeholder="Ej: 15"
               value={precioOpcion}
               onChange={(e) => setPrecioOpcion(e.target.value)}
@@ -108,7 +119,7 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
 // --- Fin del Componente Interno ---
 
 
-// --- Modal Principal de Producto (CORREGIDO) ---
+// --- Modal Principal de Producto ---
 function ProductModal({ show, handleClose, handleSave, productoActual }) {
   
   const [formData, setFormData] = useState({
@@ -128,21 +139,17 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
   const [nombreGrupo, setNombreGrupo] = useState('');
   const [tipoSeleccion, setTipoSeleccion] = useState('unico');
 
-  // 🚨 AQUÍ ESTÁ LA CORRECCIÓN PRINCIPAL 🚨
   useEffect(() => {
     if (show) {
       if (productoActual) {
-        // 1. Cargamos la data básica inmediata para que el usuario vea algo
         setFormData(productoActual);
-        
-        // 2. Solicitamos al Backend los detalles COMPLETOS (Grupos y Opciones)
         setLoadingGrupos(true);
         apiClient.get(`/productos/${productoActual.id}`)
           .then(res => {
             const productoCompleto = res.data;
             if (productoCompleto.grupos_opciones && productoCompleto.grupos_opciones.length > 0) {
               setGrupos(productoCompleto.grupos_opciones);
-              setGestionarOpciones(true); // Activamos el switch si hay grupos
+              setGestionarOpciones(true); 
             } else {
               setGrupos([]);
               setGestionarOpciones(false);
@@ -158,7 +165,6 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
           });
 
       } else {
-        // Modo Crear Nuevo
         setFormData({
           nombre: '',
           descripcion: '',
@@ -222,8 +228,6 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
     handleSave(datosParaEnviar);
   };
 
-  // --- Manejadores para Grupos y Opciones ---
-
   const handleAddGroup = async () => {
     if (!productoActual?.id) {
       return toast.error('Guarda el producto antes de añadir grupos.');
@@ -259,19 +263,16 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
   const handleGroupDeleted = (grupoId) => {
     setGrupos(gruposActuales => gruposActuales.filter(g => g.id !== grupoId));
   };
-  // --- Fin Manejadores Grupos y Opciones ---
-
-  const theme = 'dark'; 
-  const modalContentClass = "modal-content bg-dark text-white"; 
 
   return (
     <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
       <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div className={modalContentClass}> 
+        {/* 🎨 APLICANDO EL TEMA CREMA AQUI */}
+        <div className="modal-content" style={{ backgroundColor: themeColors.bg, color: themeColors.text }}> 
           
-          <div className="modal-header border-secondary">
+          <div className="modal-header" style={{ borderBottomColor: themeColors.border }}>
             <h5 className="modal-title">{formData.id ? 'Editar Producto' : 'Añadir Nuevo Producto'}</h5>
-            <button type="button" className="btn-close btn-close-white" onClick={handleClose}></button>
+            <button type="button" className="btn-close" onClick={handleClose}></button>
           </div>
           
           <form onSubmit={onSave} className="d-flex flex-column flex-grow-1" style={{ minHeight: "0" }}>
@@ -301,8 +302,9 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
                   <input type="text" className="form-control" name="categoria" value={formData.categoria || 'General'} onChange={handleChange} />
                 </div>
               </div>
-              <hr />
-              <div className="p-3 mb-3 border border-secondary rounded">
+              <hr style={{ borderColor: themeColors.border }} />
+              
+              <div className="p-3 mb-3 border rounded" style={{ borderColor: themeColors.border, backgroundColor: themeColors.cardBg }}>
                 <h6 className="mb-3">Imágenes del Producto</h6>
                 {(formData.imagenes || ['']).map((url, index) => (
                   <div key={index} className="d-flex align-items-center mb-2">
@@ -312,7 +314,8 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
                 ))}
                 <button type="button" className="btn btn-outline-primary btn-sm mt-2" onClick={handleAddImageField}>Añadir URL de Imagen</button>
               </div>
-              <div className="p-3 mb-3 border border-secondary rounded">
+
+              <div className="p-3 mb-3 border rounded" style={{ borderColor: themeColors.border, backgroundColor: themeColors.cardBg }}>
                 <h6 className="mb-3">Configuración de Oferta</h6>
                 <div className="row">
                   <div className="col-md-6">
@@ -331,7 +334,7 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
 
 
               {/* --- SECCIÓN DE OPCIONES (TOPPINGS) --- */}
-              <div className="card text-bg-dark border-secondary">
+              <div className="card" style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border, color: themeColors.text }}>
                 <div className="card-body">
                   <div className="form-check form-switch fs-5">
                     <input 
@@ -346,24 +349,24 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
                     <label className="form-check-label" htmlFor="gestionarOpcionesSwitch">Gestionar Opciones (Toppings)</label>
                   </div>
                   {!formData.id && (
-                    <div className="form-text text-white-50">Guarda el producto primero para poder añadirle opciones.</div>
+                    <div className="form-text text-muted">Guarda el producto primero para poder añadirle opciones.</div>
                   )}
 
                   
                   {gestionarOpciones && formData.id && (
                     <div className="mt-4">
                       {/* Formulario para CREAR NUEVO GRUPO */}
-                      <div className="p-3 mb-4 border rounded text-bg-dark border-secondary"> 
+                      <div className="p-3 mb-4 border rounded" style={{ backgroundColor: 'rgba(255,248,231, 0.5)', borderColor: themeColors.border }}> 
                         <h5 className="mb-3">Crear Nuevo Grupo</h5>
                         
                         <div className="row g-3">
                           <div className="col-md-5">
                             <label className="form-label">Nombre del Grupo</label>
-                            <input type="text" className="form-control form-control-dark bg-dark text-white" placeholder="Ej: Elige tu Jarabe" value={nombreGrupo} onChange={(e) => setNombreGrupo(e.target.value)} />
+                            <input type="text" className="form-control" placeholder="Ej: Elige tu Jarabe" value={nombreGrupo} onChange={(e) => setNombreGrupo(e.target.value)} />
                           </div>
                           <div className="col-md-4">
                             <label className="form-label">Tipo de Selección</label>
-                            <select className="form-select form-control-dark bg-dark text-white" value={tipoSeleccion} onChange={(e) => setTipoSeleccion(e.target.value)}>
+                            <select className="form-select" value={tipoSeleccion} onChange={(e) => setTipoSeleccion(e.target.value)}>
                               <option value="unico">Única (Radio Button)</option>
                               <option value="multiple">Múltiple (Checkbox)</option>
                             </select>
@@ -374,11 +377,11 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
                         </div>
                       </div>
 
-                      <hr className="border-secondary" />
+                      <hr style={{ borderColor: themeColors.border }} />
 
                       {/* Lista de Grupos Existentes */}
                       {loadingGrupos ? (
-                        <div className="text-center my-3"><div className="spinner-border text-light" role="status"></div><p className="mt-2">Cargando opciones...</p></div>
+                        <div className="text-center my-3"><div className="spinner-border text-primary" role="status"></div><p className="mt-2">Cargando opciones...</p></div>
                       ) : (
                         grupos.length > 0 ? (
                           grupos.map(grupo => (
@@ -388,7 +391,6 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
                               onOptionAdded={handleOptionAdded} 
                               onOptionDeleted={handleOptionDeleted} 
                               onGroupDeleted={handleGroupDeleted} 
-                              theme={theme} 
                             />
                           ))
                         ) : (
@@ -402,7 +404,7 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
 
             </div> {/* Fin .modal-body */}
             
-            <div className="modal-footer border-secondary">
+            <div className="modal-footer" style={{ borderTopColor: themeColors.border }}>
               <button type="button" className="btn btn-secondary" onClick={handleClose}>Cancelar</button>
               <button type="submit" className="btn btn-primary">Guardar Cambios</button>
             </div>

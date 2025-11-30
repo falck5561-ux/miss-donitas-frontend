@@ -9,113 +9,91 @@ import { getProducts, createProduct, updateProduct, deleteProduct } from '../ser
 import apiClient from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
-// --- PALETA DE COLORES "PREMIUM SLATE" (Mejorada visualmente) ---
+// --- PALETA DE COLORES DE ALTO CONTRASTE ---
 const getThemeColors = (mode) => {
   const isDark = mode === 'dark';
 
   return {
-    // FONDOS: Usamos tonos 'Slate' (Gris azulado) para que se vea moderno, no negro puro aburrido.
-    bg: isDark ? '#0F172A' : '#F3F4F6',        // Slate 900 vs Gray 100
-    cardBg: isDark ? '#1E293B' : '#FFFFFF',    // Slate 800 vs Blanco
-    elementBg: isDark ? '#334155' : '#F9FAFB', // Slate 700 vs Gray 50
+    // FONDOS
+    bg: isDark ? '#000000' : '#F3F4F6',          // Fondo de pantalla (Negro puro en dark)
+    containerBg: isDark ? '#111111' : '#FFFFFF', // Fondo del contenedor principal (Gris muy oscuro vs Blanco)
+    itemBg: isDark ? '#1F1F1F' : '#F9FAFB',      // Fondo de las tarjetitas (Combos/Items)
     
-    // TEXTOS: Blanco brillante en dark mode
-    textMain: isDark ? '#F1F5F9' : '#111827',  // Slate 100 vs Gray 900
-    textSecondary: isDark ? '#94A3B8' : '#6B7280', // Slate 400 vs Gray 500
+    // TEXTOS
+    textMain: isDark ? '#FFFFFF' : '#000000',    // Blanco puro vs Negro puro
+    textSecondary: isDark ? '#BBBBBB' : '#555555',
     
+    // PRECIOS (Siempre visibles)
+    money: isDark ? '#00FF00' : '#DC2626',       // Verde Neón en oscuro, Rojo en claro (para contraste)
+
     // BORDES
-    borderColor: isDark ? '#334155' : '#E5E7EB', // Slate 700 vs Gray 200
+    borderColor: isDark ? '#333333' : '#E5E7EB',
 
-    // MARCA
+    // ACCIONES
     primary: '#EC4899', 
-    primaryGradient: isDark 
-      ? 'linear-gradient(135deg, #F472B6 0%, #DB2777 100%)'  // Rosa más brillante en oscuro
-      : 'linear-gradient(135deg, #EC4899 0%, #BE185D 100%)', // Rosa estándar en claro
-
+    primaryGradient: 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)',
+    
     // TABLAS
-    tableHeaderBg: isDark ? '#0F172A' : '#E5E7EB', 
-    tableHeaderText: isDark ? '#F472B6' : '#374151', // Rosa neón en dark para los headers
+    tableHeaderBg: isDark ? '#1F1F1F' : '#E5E7EB', 
+    tableHeaderText: isDark ? '#EC4899' : '#374151',
 
-    // ESTADOS Y DINERO
-    accent: '#06B6D4',      // Cyan
-    danger: '#EF4444',      // Rojo
-    success: '#10B981',     // Verde Esmeralda (Para dinero)
-    warning: '#F59E0B',     // Ámbar
+    // BADGES
+    accent: '#06B6D4',      
+    danger: '#EF4444',      
+    success: '#10B981',    
+    warning: '#F59E0B',
     
     // BOTONES
-    btnTextDark: '#111827', 
-    btnTextLight: '#FFFFFF',
-    
-    money: isDark ? '#34D399' : '#059669', // Verde brillante en dark, verde oscuro en light
+    btnText: '#FFFFFF', // Texto siempre blanco en botones de acción
   };
 };
 
-// --- STATCARD CORREGIDA (Números grandes visibles) ---
+// --- STATCARD ---
 const StatCard = ({ title, value, color, icon, styles, colors }) => (
   <div style={{
-      ...styles.card, 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center',
+      ...styles.cardItem, // Usamos estilo propio, NO className="card"
       borderBottom: `4px solid ${color}`,
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       height: '100%'
   }}>
     <div style={{
-      fontSize: '2.5rem', 
-      marginBottom: '1rem', 
-      color: color,
-      background: colors.elementBg,
-      width: '80px', height: '80px',
-      borderRadius: '50%',
+      fontSize: '2.5rem', marginBottom: '1rem', color: color,
+      background: colors.bg, borderRadius: '50%', width: '70px', height: '70px',
       display: 'flex', alignItems: 'center', justifyContent: 'center'
-    }}>
-      {icon}
-    </div>
-    
-    <h6 style={{ color: colors.textSecondary, fontWeight: '700', textTransform: 'uppercase', fontSize: '0.85rem' }}>{title}</h6>
-    
-    {/* FORZAMOS el color del texto principal aquí */}
-    <h3 style={{ color: colors.textMain, fontWeight: '800', margin: 0, fontSize: '2.2rem' }}>{value}</h3>
+    }}>{icon}</div>
+    <h6 style={{ color: colors.textSecondary, fontWeight: '700', textTransform: 'uppercase', fontSize: '0.8rem' }}>{title}</h6>
+    <h3 style={{ color: colors.textMain, fontWeight: '800', margin: 0, fontSize: '2rem' }}>{value}</h3>
   </div>
 );
-
-// --- MODAL CONFIRMACIÓN ---
-const ConfirmationModal = ({ show, onClose, onConfirm, title, message, colors }) => {
-    if (!show) return null;
-    return (
-      <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(3px)', zIndex: 1050 }}>
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content" style={{ borderRadius: '16px', border: `1px solid ${colors.borderColor}`, backgroundColor: colors.cardBg, boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
-            <div className="modal-header border-0 pb-0 pt-4 px-4">
-              <h5 className="modal-title fw-bold" style={{ color: colors.textMain }}>{title}</h5>
-              <button type="button" className="btn-close" style={{filter: colors.bg === '#0F172A' ? 'invert(1)' : 'none'}} onClick={onClose}></button>
-            </div>
-            <div className="modal-body px-4 pt-3 pb-4">
-              <p style={{color: colors.textSecondary, fontSize: '1rem'}}>{message}</p>
-            </div>
-            <div className="modal-footer border-0 px-4 pb-4">
-              <button className="btn rounded-pill px-4 fw-bold" style={{backgroundColor: colors.elementBg, color: colors.textMain}} onClick={onClose}>Cancelar</button>
-              <button className="btn rounded-pill px-4 fw-bold text-white" style={{backgroundColor: colors.danger}} onClick={onConfirm}>Confirmar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-};
 
 function AdminPage() {
   const { theme } = useTheme(); 
   const colors = getThemeColors(theme);
 
   const styles = {
-    container: {
+    wrapper: {
       backgroundColor: colors.bg,
       minHeight: '100vh',
-      fontFamily: '"Nunito", sans-serif',
       padding: '30px 15px',
-      color: colors.textMain,
+      fontFamily: '"Nunito", sans-serif',
       transition: 'all 0.3s ease'
+    },
+    // CONTENEDOR PRINCIPAL (El cuadro blanco grande de tu foto)
+    mainContainer: {
+      backgroundColor: colors.containerBg, // Ahora se vuelve OSCURO en dark mode
+      color: colors.textMain,
+      borderRadius: '24px',
+      padding: '30px',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+      border: `1px solid ${colors.borderColor}`
+    },
+    // Estilo para tarjetas pequeñas (Combos)
+    cardItem: {
+      backgroundColor: colors.itemBg, // Gris oscuro en dark mode
+      borderRadius: '16px',
+      padding: '20px',
+      border: `1px solid ${colors.borderColor}`,
+      boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
     },
     headerTitle: {
       background: colors.primaryGradient,
@@ -125,114 +103,64 @@ function AdminPage() {
       fontSize: 'clamp(2rem, 5vw, 3rem)',
       marginBottom: '10px',
     },
-    navPillsContainer: {
-      backgroundColor: colors.cardBg,
-      borderRadius: '20px',
-      padding: '8px',
-      display: 'inline-flex',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      gap: '8px',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      marginBottom: '35px',
-      border: `1px solid ${colors.borderColor}`
-    },
     navLink: {
       color: colors.textSecondary,
-      borderRadius: '12px',
+      borderRadius: '20px',
       padding: '8px 20px',
-      fontWeight: '600',
+      fontWeight: '700',
       border: 'none',
       background: 'transparent',
       transition: 'all 0.2s',
+      cursor: 'pointer'
     },
     navLinkActive: {
       background: colors.primaryGradient,
       color: 'white',
-      fontWeight: '700',
       boxShadow: '0 4px 12px rgba(236, 72, 153, 0.4)',
     },
-    card: {
-      backgroundColor: colors.cardBg,
-      color: colors.textMain,
-      borderRadius: '24px',
-      border: `1px solid ${colors.borderColor}`,
-      boxShadow: theme === 'dark' ? '0 10px 30px rgba(0,0,0,0.5)' : '0 5px 20px rgba(0,0,0,0.05)',
-      padding: '30px',
-    },
-    // Corrección para tablas
     table: {
-       '--bs-table-bg': 'transparent',
-       '--bs-table-color': colors.textMain,
-       '--bs-table-border-color': colors.borderColor,
        width: '100%',
-       marginBottom: 0
+       borderCollapse: 'separate', 
+       borderSpacing: '0 10px' // Separación entre filas
     },
     tableHeader: {
       backgroundColor: colors.tableHeaderBg,
       color: colors.tableHeaderText,
-      fontWeight: '700',
-      borderBottom: 'none',
+      fontWeight: '800',
       textTransform: 'uppercase',
       fontSize: '0.8rem',
-      letterSpacing: '0.05em',
-      padding: '16px'
+      padding: '15px',
+      border: 'none'
     },
     tableCell: {
-       padding: '16px',
+       backgroundColor: colors.itemBg, // Fondo de cada fila
+       padding: '15px',
        verticalAlign: 'middle',
-       color: colors.textMain, // Importante para que el texto general se vea
-       borderBottom: `1px solid ${colors.borderColor}`
+       color: colors.textMain, 
+       borderTop: `1px solid ${colors.borderColor}`,
+       borderBottom: `1px solid ${colors.borderColor}`,
+       fontWeight: '600'
     },
-    btnAdd: {
-      background: colors.primaryGradient,
-      border: 'none',
-      borderRadius: '50px',
-      color: 'white',
-      padding: '12px 25px',
-      fontWeight: '700',
-      boxShadow: '0 4px 15px rgba(236, 72, 153, 0.3)',
-    },
-    btnControl: (bgColor, textColor) => ({
-        backgroundColor: bgColor,
-        color: textColor,
-        border: 'none',
-        padding: '6px 12px',
-        borderRadius: '8px',
-        fontWeight: '700',
-        fontSize: '0.75rem',
+    // Botón verde/rojo de los combos
+    badgeBtn: (isActive) => ({
+        backgroundColor: isActive ? colors.success : colors.danger,
+        color: 'white',
+        padding: '5px 12px',
+        borderRadius: '10px',
+        fontSize: '0.7rem',
+        fontWeight: 'bold',
         textTransform: 'uppercase',
-        marginRight: '5px',
-        marginBottom: '5px'
+        border: 'none'
     }),
-    btnAction: (color, isOutline = true) => ({
-      backgroundColor: isOutline ? 'transparent' : color,
-      border: isOutline ? `1px solid ${color}` : 'none',
-      color: isOutline ? color : 'white',
-      borderRadius: '10px',
-      padding: '6px 14px',
-      fontWeight: '600',
-      fontSize: '0.8rem',
-      marginRight: '8px'
-    }),
-    badge: (bgColor, textColor) => ({
-      backgroundColor: bgColor,
-      color: textColor,
-      padding: '6px 12px',
-      borderRadius: '20px',
-      fontSize: '0.75rem',
-      fontWeight: '800',
-      letterSpacing: '0.5px',
-      textTransform: 'uppercase'
-    }),
-    input: {
-        backgroundColor: colors.elementBg,
-        color: colors.textMain,
+    actionBtn: {
         border: `1px solid ${colors.borderColor}`,
-        padding: '10px',
+        backgroundColor: 'transparent',
+        color: colors.textMain,
+        padding: '5px 15px',
         borderRadius: '8px',
-        width: '100%',
-        outline: 'none'
+        fontSize: '0.85rem',
+        fontWeight: 'bold',
+        width: '100%'
     }
   };
 
@@ -242,9 +170,8 @@ function AdminPage() {
   const [reportData, setReportData] = useState([]);
   const [combos, setCombos] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   
-  // Modales states
+  // Estados de Modales
   const [showProductModal, setShowProductModal] = useState(false);
   const [productoActual, setProductoActual] = useState(null);
   const [showComboModal, setShowComboModal] = useState(false);
@@ -253,46 +180,41 @@ function AdminPage() {
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
   const [showPurgeModal, setShowPurgeModal] = useState(false);
   const [purgeConfirmText, setPurgeConfirmText] = useState('');
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [confirmAction, setConfirmAction] = useState(null);
-  const [confirmTitle, setConfirmTitle] = useState('');
-  const [confirmMessage, setConfirmMessage] = useState('');
 
   const fetchData = async () => {
-    setLoading(true); setError('');
+    setLoading(true);
     try {
       if (activeTab === 'productos') { const res = await getProducts(); setProductos(res); } 
       else if (activeTab === 'reporteGeneral') { const res = await apiClient.get('/ventas/reporte'); setReportData(res.data); } 
       else if (activeTab === 'pedidosEnLinea') { const res = await apiClient.get('/pedidos'); setPedidos(res.data); } 
       else if (activeTab === 'combos') { const res = await apiClient.get('/combos/admin/todos'); setCombos(res.data); }
-    } catch (err) { setError(`Error de conexión.`); console.error(err); } 
+    } catch (err) { console.error(err); } 
     finally { setLoading(false); }
   };
 
   useEffect(() => { fetchData(); }, [activeTab]);
   
-  // Handlers
+  // Handlers Simplificados
   const handleOpenProductModal = (p = null) => { setProductoActual(p ? { ...p, imagenes: p.imagen_url ? [p.imagen_url] : [] } : null); setShowProductModal(true); };
-  const handleSaveProducto = async (p) => { try { const d = { ...p, imagen_url: p.imagenes?.[0] || null }; delete d.imagenes; if (d.id) await updateProduct(d.id, d); else await createProduct(d); toast.success('Producto guardado'); fetchData(); setShowProductModal(false); } catch { toast.error('Error al guardar'); } };
-  const handleDeleteProducto = (p) => { setConfirmTitle('Ocultar Producto'); setConfirmMessage(`¿Ocultar "${p.nombre}"?`); setConfirmAction(() => async () => { await deleteProduct(p.id); toast.success('Ocultado'); fetchData(); setShowConfirmModal(false); }); setShowConfirmModal(true); };
+  const handleSaveProducto = async (p) => { try { const d = { ...p, imagen_url: p.imagenes?.[0] || null }; delete d.imagenes; if (d.id) await updateProduct(d.id, d); else await createProduct(d); toast.success('Guardado'); fetchData(); setShowProductModal(false); } catch { toast.error('Error'); } };
+  const handleDeleteProducto = async (p) => { if(window.confirm(`¿Ocultar ${p.nombre}?`)) { await deleteProduct(p.id); fetchData(); } };
   const handleOpenComboModal = (c = null) => { setComboActual(c); setShowComboModal(true); };
   const handleSaveCombo = async (c) => { try { if(c.id) await apiClient.put(`/combos/${c.id}`, c); else await apiClient.post('/combos', c); toast.success('Combo guardado'); fetchData(); setShowComboModal(false); } catch { toast.error('Error'); } };
-  const handleDeleteCombo = (c) => { setConfirmTitle('Ocultar Combo'); setConfirmMessage(`¿Ocultar "${c.nombre}"?`); setConfirmAction(() => async () => { await apiClient.patch(`/combos/${c.id}/desactivar`); toast.success('Ocultado'); fetchData(); setShowConfirmModal(false); }); setShowConfirmModal(true); };
-  const handleUpdateStatus = async (id, est) => { try { await apiClient.put(`/pedidos/${id}/estado`, { estado: est }); toast.success(`#${id}: ${est}`); fetchData(); } catch { toast.error('Error'); } };
-  const handlePurge = async () => { if(purgeConfirmText !== 'ELIMINAR') return toast.error('Escribe ELIMINAR'); await apiClient.delete('/pedidos/purgar'); toast.success('Historial borrado'); setShowPurgeModal(false); fetchData(); };
+  const handleDeleteCombo = async (c) => { if(window.confirm(`¿Ocultar ${c.nombre}?`)) { await apiClient.patch(`/combos/${c.id}/desactivar`); fetchData(); } };
+  const handleUpdateStatus = async (id, est) => { try { await apiClient.put(`/pedidos/${id}/estado`, { estado: est }); toast.success('Estado actualizado'); fetchData(); } catch { toast.error('Error'); } };
+  const handlePurge = async () => { if(purgeConfirmText !== 'ELIMINAR') return toast.error('Escribe ELIMINAR'); await apiClient.delete('/pedidos/purgar'); setShowPurgeModal(false); fetchData(); };
 
   return (
-    <div style={styles.container}>
+    <div style={styles.wrapper}>
       <div className="container-fluid px-md-5">
         
-        {/* HEADER */}
-        <div className="text-center mb-4 pt-2">
+        <div className="text-center mb-4">
           <h1 style={styles.headerTitle}>🍩 Administración Miss Donitas</h1>
         </div>
 
-        {/* NAV */}
-        <div className="d-flex justify-content-center">
-          <div style={styles.navPillsContainer}>
+        {/* MENU NAVEGACION */}
+        <div className="d-flex justify-content-center mb-4">
+          <div style={{ backgroundColor: colors.containerBg, padding: '5px', borderRadius: '30px', border: `1px solid ${colors.borderColor}`, display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'center' }}>
             {[
               { id: 'pedidosEnLinea', label: '🛎️ Pedidos' },
               { id: 'productos', label: '🍩 Productos' },
@@ -307,52 +229,74 @@ function AdminPage() {
           </div>
         </div>
 
-        {/* CARD PRINCIPAL */}
-        <div style={styles.card}>
+        {/* CONTENEDOR PRINCIPAL - Aquí estaba el error, quitamos clases de bootstrap */}
+        <div style={styles.mainContainer}>
           
-          {loading && <div className="text-center py-5"><div className="spinner-border" style={{color: colors.primary}} role="status"></div></div>}
-          {error && <div className="alert alert-danger">{error}</div>}
+          {loading && <div className="text-center py-5"><div className="spinner-border text-primary" role="status"></div></div>}
 
-          {/* === INVENTARIO === */}
-          {!loading && !error && activeTab === 'productos' && (
+          {/* === COMBOS (Tu problema principal en la foto) === */}
+          {!loading && activeTab === 'combos' && (
+             <div>
+               <div className="d-flex justify-content-between align-items-center mb-4">
+                 <h3 className="fw-bold m-0" style={{color: colors.textMain}}>Combos & Promociones</h3>
+                 <button className="btn text-white rounded-pill fw-bold" style={{background: colors.primaryGradient}} onClick={() => handleOpenComboModal()}>+ Nuevo Combo</button>
+               </div>
+               <div className="row g-4">
+                 {combos.map((combo) => (
+                   <div className="col-md-6 col-lg-4" key={combo.id}>
+                     {/* TARJETA INDIVIDUAL DE COMBO */}
+                     <div style={styles.cardItem}>
+                       <div className="d-flex justify-content-between align-items-center mb-3">
+                         <h5 className="fw-bold m-0" style={{color: colors.textMain}}>{combo.nombre}</h5>
+                         <span style={styles.badgeBtn(combo.esta_activo)}>
+                             {combo.esta_activo ? 'ACTIVO' : 'OCULTO'}
+                         </span>
+                       </div>
+                       {/* PRECIO EN VERDE NEÓN PARA VERSE EN NEGRO */}
+                       <h4 style={{color: colors.money, fontWeight: '900', fontSize: '1.8rem'}}>${Number(combo.precio).toFixed(2)}</h4>
+                       
+                       <div className="mt-4 d-flex gap-2">
+                         <button style={{...styles.actionBtn, borderColor: colors.accent, color: colors.accent}} onClick={() => handleOpenComboModal(combo)}>Editar</button>
+                         {combo.esta_activo && <button style={{...styles.actionBtn, borderColor: colors.danger, color: colors.danger}} onClick={() => handleDeleteCombo(combo)}>Ocultar</button>}
+                       </div>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </div>
+          )}
+
+          {/* === PRODUCTOS === */}
+          {!loading && activeTab === 'productos' && (
             <div>
-              <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+              <div className="d-flex justify-content-between align-items-center mb-4">
                 <h3 className="fw-bold m-0" style={{color: colors.textMain}}>Inventario</h3>
-                <button className="shadow-sm btn" style={styles.btnAdd} onClick={() => handleOpenProductModal()}>+ Nuevo Producto</button>
+                <button className="btn text-white rounded-pill fw-bold" style={{background: colors.primaryGradient}} onClick={() => handleOpenProductModal()}>+ Nuevo</button>
               </div>
               <div className="table-responsive">
-                <table className="table align-middle" style={styles.table}>
+                <table style={styles.table}>
                   <thead>
                     <tr>
-                      <th style={{...styles.tableHeader, borderRadius: '12px 0 0 12px'}}>Producto</th>
+                      <th style={{...styles.tableHeader, borderRadius: '10px 0 0 10px'}}>Producto</th>
                       <th style={styles.tableHeader}>Precio</th>
                       <th style={styles.tableHeader}>Stock</th>
-                      <th style={styles.tableHeader}>Estado</th>
-                      <th style={{...styles.tableHeader, borderRadius: '0 12px 12px 0', textAlign: 'center'}}>Acciones</th>
+                      <th style={{...styles.tableHeader, borderRadius: '0 10px 10px 0', textAlign: 'center'}}>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {productos.map((p) => (
                       <tr key={p.id}>
-                        <td style={styles.tableCell}>
-                            <div className="fw-bold" style={{color: colors.textMain}}>{p.nombre}</div>
+                        <td style={{...styles.tableCell, borderRadius: '10px 0 0 10px'}}>
+                            <div style={{color: colors.textMain}}>{p.nombre}</div>
                             <small style={{color: colors.textSecondary}}>{p.categoria}</small>
                         </td>
-                        {/* PRECIO CON COLOR FORZADO */}
-                        <td style={{...styles.tableCell, color: colors.money, fontWeight: '800', fontSize: '1.1rem'}}>${Number(p.precio).toFixed(2)}</td>
+                        <td style={{...styles.tableCell, color: colors.money, fontSize: '1.1rem'}}>${Number(p.precio).toFixed(2)}</td>
                         <td style={styles.tableCell}>
-                            {p.stock <= 5 
-                             ? <span style={styles.badge(theme === 'dark' ? 'rgba(239, 68, 68, 0.2)' : '#FEF2F2', colors.danger)}>Bajo: {p.stock}</span> 
-                             : <span style={{color: colors.textSecondary, fontWeight: '600'}}>{p.stock} u.</span>}
+                             <span style={{color: p.stock < 5 ? colors.danger : colors.textMain, fontWeight: 'bold'}}>{p.stock} u.</span>
                         </td>
-                        <td style={styles.tableCell}>
-                            {p.en_oferta 
-                             ? <span style={styles.badge(theme === 'dark' ? 'rgba(6, 182, 212, 0.2)' : '#ECFEFF', colors.accent)}>Oferta -{p.descuento_porcentaje}%</span> 
-                             : <span style={styles.badge(colors.elementBg, colors.textSecondary)}>Normal</span>}
-                        </td>
-                        <td style={styles.tableCell} className="text-center">
-                          <button style={styles.btnAction(colors.accent, true)} onClick={() => handleOpenProductModal(p)}>Editar</button>
-                          <button style={styles.btnAction(colors.danger, true)} onClick={() => handleDeleteProducto(p)}>Ocultar</button>
+                        <td style={{...styles.tableCell, borderRadius: '0 10px 10px 0', textAlign: 'center'}}>
+                          <button className="btn btn-sm btn-outline-info me-2" onClick={() => handleOpenProductModal(p)}>✏️</button>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteProducto(p)}>👁️</button>
                         </td>
                       </tr>
                     ))}
@@ -363,143 +307,62 @@ function AdminPage() {
           )}
 
           {/* === PEDIDOS === */}
-          {!loading && !error && activeTab === 'pedidosEnLinea' && (
+          {!loading && activeTab === 'pedidosEnLinea' && (
              <div>
-             <div className="d-flex justify-content-between align-items-center mb-4">
-               <h3 className="fw-bold m-0" style={{color: colors.textMain}}>Pedidos Entrantes</h3>
-               <span className="badge rounded-pill px-3 py-2 shadow-sm" style={{backgroundColor: colors.danger, color: 'white'}}>
-                 {pedidos.filter(p => p.estado === 'Pendiente').length} Por Atender
-               </span>
-             </div>
-             <div className="table-responsive">
-               <table className="table align-middle" style={styles.table}>
-                 <thead>
-                   <tr>
-                     <th style={{...styles.tableHeader, borderRadius: '12px 0 0 12px'}}>ID / Cliente</th>
-                     <th style={styles.tableHeader}>Total</th>
-                     <th style={styles.tableHeader}>Tipo</th>
-                     <th style={styles.tableHeader}>Estado</th>
-                     <th style={{...styles.tableHeader, borderRadius: '0 12px 12px 0'}}>Control</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   {pedidos.map((p) => (
-                     <tr key={p.id}>
-                       <td style={styles.tableCell}>
-                          <div className="d-flex align-items-center">
-                            <span className="fw-bold me-3 px-2 py-1 rounded" style={{color: colors.primary, backgroundColor: colors.elementBg}}>#{p.id}</span>
-                            <div>
-                                <div className="fw-bold" style={{color: colors.textMain}}>{p.nombre_cliente}</div>
-                                <small style={{color: colors.textSecondary}}>{new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
-                            </div>
-                          </div>
-                       </td>
-                       {/* TOTAL EN VERDE O ROSA PARA QUE RESALTE */}
-                       <td style={{...styles.tableCell, color: colors.money, fontWeight: '900', fontSize: '1.2rem'}}>${Number(p.total).toFixed(2)}</td>
-                       <td style={styles.tableCell}>
-                         {p.tipo_orden === 'domicilio' 
-                           ? <span style={styles.badge(theme === 'dark' ? 'rgba(6, 182, 212, 0.2)' : '#ECFEFF', colors.accent)}>🛵 Domicilio</span> 
-                           : <span style={styles.badge(theme === 'dark' ? 'rgba(245, 158, 11, 0.2)' : '#FFFBEB', colors.warning)}>🏪 Recoger</span>}
-                       </td>
-                       <td style={styles.tableCell}>
-                          <span style={styles.badge(
-                              p.estado === 'Pendiente' ? colors.btnPrepare : (p.estado === 'Completado' ? colors.success : colors.elementBg),
-                              p.estado === 'Pendiente' ? colors.btnTextDark : (p.estado === 'Completado' ? 'white' : colors.textMain)
-                          )}>
-                              {p.estado}
-                          </span>
-                       </td>
-                       <td style={styles.tableCell}>
-                           <div className="d-flex flex-wrap">
-                               <button style={styles.btnControl(colors.btnView, 'white')} onClick={() => {setSelectedOrderDetails(p); setShowDetailsModal(true);}}>Ver</button>
-                               {p.estado !== 'Completado' && (
-                                   <>
-                                       <button style={styles.btnControl(colors.btnPrepare, colors.btnTextDark)} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Prep</button>
-                                       {p.tipo_orden === 'domicilio' 
-                                            ? <button style={styles.btnControl(colors.btnWay, 'white')} onClick={() => handleUpdateStatus(p.id, 'En Camino')}>Moto</button> 
-                                            : <button style={styles.btnControl(colors.btnReady, colors.btnTextDark)} onClick={() => handleUpdateStatus(p.id, 'Listo')}>Listo</button>}
-                                       <button style={styles.btnControl(colors.btnDone, 'white')} onClick={() => handleUpdateStatus(p.id, 'Completado')}>OK</button>
-                                   </>
-                               )}
-                           </div>
-                       </td>
+               <div className="d-flex justify-content-between align-items-center mb-4">
+                 <h3 className="fw-bold m-0" style={{color: colors.textMain}}>Pedidos</h3>
+                 <span className="badge bg-danger rounded-pill px-3 py-2">{pedidos.filter(p => p.estado === 'Pendiente').length} Pendientes</span>
+               </div>
+               <div className="table-responsive">
+                 <table style={styles.table}>
+                   <thead>
+                     <tr>
+                       <th style={{...styles.tableHeader, borderRadius: '10px 0 0 10px'}}>ID / Cliente</th>
+                       <th style={styles.tableHeader}>Total</th>
+                       <th style={styles.tableHeader}>Estado</th>
+                       <th style={{...styles.tableHeader, borderRadius: '0 10px 10px 0'}}>Control</th>
                      </tr>
-                   ))}
-                 </tbody>
-               </table>
+                   </thead>
+                   <tbody>
+                     {pedidos.map((p) => (
+                       <tr key={p.id}>
+                         <td style={{...styles.tableCell, borderRadius: '10px 0 0 10px'}}>
+                            <span style={{color: colors.primary, fontWeight: 'bold'}}>#{p.id}</span>
+                            <div style={{color: colors.textMain}}>{p.nombre_cliente}</div>
+                         </td>
+                         <td style={{...styles.tableCell, color: colors.money, fontWeight: '900', fontSize: '1.2rem'}}>${Number(p.total).toFixed(2)}</td>
+                         <td style={styles.tableCell}>
+                            <span className="badge" style={{backgroundColor: p.estado === 'Pendiente' ? '#FFC107' : (p.estado === 'Completado' ? '#198754' : '#0DCAF0'), color: 'black'}}>{p.estado}</span>
+                         </td>
+                         <td style={{...styles.tableCell, borderRadius: '0 10px 10px 0'}}>
+                             <button className="btn btn-sm btn-primary rounded-pill px-3" onClick={() => {setSelectedOrderDetails(p); setShowDetailsModal(true);}}>Ver Detalles</button>
+                             {p.estado === 'Pendiente' && <button className="btn btn-sm btn-success rounded-pill ms-2" onClick={() => handleUpdateStatus(p.id, 'Completado')}>✅</button>}
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
              </div>
-           </div>
-          )}
-
-          {/* === COMBOS === */}
-          {!loading && !error && activeTab === 'combos' && (
-             <div>
-             <div className="d-flex justify-content-between align-items-center mb-4">
-               <h3 className="fw-bold m-0" style={{color: colors.textMain}}>Combos & Promociones</h3>
-               <button className="shadow-sm btn" style={styles.btnAdd} onClick={() => handleOpenComboModal()}>+ Nuevo Combo</button>
-             </div>
-             <div className="row g-4">
-               {combos.map((combo) => (
-                 <div className="col-md-6 col-lg-4" key={combo.id}>
-                   <div style={{
-                       border: `1px solid ${combo.esta_activo ? colors.success : colors.danger}`, 
-                       borderRadius: '24px', 
-                       padding: '25px', 
-                       backgroundColor: colors.elementBg, 
-                       color: colors.textMain, 
-                       boxShadow: '0 10px 20px rgba(0,0,0,0.05)'
-                    }}>
-                     <div className="d-flex justify-content-between align-items-start mb-3">
-                       <h5 className="fw-bold mb-0" style={{color: colors.textMain}}>{combo.nombre}</h5>
-                       <span style={styles.badge(combo.esta_activo ? colors.success : colors.danger, 'white')}>
-                           {combo.esta_activo ? 'ACTIVO' : 'OCULTO'}
-                       </span>
-                     </div>
-                     <h4 style={{color: colors.primary, fontWeight: '800', fontSize: '1.8rem'}}>${Number(combo.precio).toFixed(2)}</h4>
-                     <div className="mt-4 d-flex gap-2">
-                       <button style={{...styles.btnAction(colors.accent, true), flex:1}} onClick={() => handleOpenComboModal(combo)}>Editar</button>
-                       {combo.esta_activo && <button style={{...styles.btnAction(colors.danger, true), flex:1}} onClick={() => handleDeleteCombo(combo)}>Ocultar</button>}
-                     </div>
-                   </div>
-                 </div>
-               ))}
-             </div>
-           </div>
           )}
 
           {/* === REPORTES === */}
-          {!loading && !error && activeTab === 'reporteGeneral' && (
+          {!loading && activeTab === 'reporteGeneral' && (
             <div>
                <div className="row mb-5 g-4">
                  <div className="col-md-6">
-                   <StatCard 
-                     title="Ventas Totales" 
-                     value={`$${reportData.reduce((acc, curr) => acc + Number(curr.total_ventas), 0).toFixed(2)}`} 
-                     color={colors.success} 
-                     icon="💰" 
-                     styles={styles} 
-                     colors={colors} 
-                   />
+                   <StatCard title="Ventas Totales" value={`$${reportData.reduce((acc, curr) => acc + Number(curr.total_ventas), 0).toFixed(2)}`} color={colors.success} icon="💰" styles={styles} colors={colors} />
                  </div>
                  <div className="col-md-6">
-                   <StatCard 
-                     title="Promedio Venta" 
-                     value="$150.00" 
-                     color={colors.primary} 
-                     icon="📈" 
-                     styles={styles} 
-                     colors={colors} 
-                   />
+                   <StatCard title="Promedio Venta" value="$150.00" color={colors.accent} icon="📈" styles={styles} colors={colors} />
                  </div>
                </div>
-               
-               <h5 className="mb-4 fw-bold" style={{color: colors.textMain}}>Gráfica de Rendimiento</h5>
-               <div style={{padding: '20px', backgroundColor: colors.elementBg, borderRadius: '20px', border: `1px solid ${colors.borderColor}`}}>
+               <div style={{...styles.cardItem, padding: '20px'}}>
+                    <h5 style={{color: colors.textMain, marginBottom: '20px'}}>Rendimiento</h5>
                     <SalesReportChart reportData={reportData} theme={theme} /> 
                </div>
-               
-               <div className="mt-5 text-end">
-                   <button className="btn btn-outline-danger btn-sm rounded-pill" onClick={() => setShowPurgeModal(true)}>Zona de Peligro (Purgar)</button>
+               <div className="mt-4 text-end">
+                   <button className="btn btn-outline-danger btn-sm rounded-pill" onClick={() => setShowPurgeModal(true)}>⚠️ Purgar Datos</button>
                </div>
             </div>
           )}
@@ -512,26 +375,19 @@ function AdminPage() {
       <ProductModal show={showProductModal} handleClose={() => setShowProductModal(false)} handleSave={handleSaveProducto} productoActual={productoActual} />
       <ComboModal show={showComboModal} handleClose={() => setShowComboModal(false)} handleSave={handleSaveCombo} comboActual={comboActual} />
       {showDetailsModal && (<DetallesPedidoModal pedido={selectedOrderDetails} onClose={() => setShowDetailsModal(false)} />)}
-      <ConfirmationModal show={showConfirmModal} onClose={() => setShowConfirmModal(false)} onConfirm={confirmAction} title={confirmTitle} message={confirmMessage} colors={colors} />
 
-      {/* MODAL PURGAR */}
+      {/* MODAL PURGAR (Arreglado para dark mode) */}
       {showPurgeModal && (
-        <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1060 }}>
+        <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.8)' }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content border-0 rounded-4 overflow-hidden" style={{backgroundColor: colors.cardBg, color: colors.textMain, border: `1px solid ${colors.borderColor}`}}>
-              <div className="modal-header text-white border-0" style={{backgroundColor: colors.danger}}><h5 className="modal-title fw-bold">⚠️ Borrar Todo</h5><button type="button" className="btn-close btn-close-white" onClick={() => setShowPurgeModal(false)}></button></div>
-              <div className="modal-body p-4">
-                <p>Escribe <strong>ELIMINAR</strong> para confirmar:</p>
-                <input 
-                    type="text" 
-                    style={styles.input}
-                    value={purgeConfirmText} 
-                    onChange={(e) => setPurgeConfirmText(e.target.value)} 
-                    placeholder="ELIMINAR"
-                />
+            <div className="modal-content" style={{ backgroundColor: colors.containerBg, color: colors.textMain, border: `1px solid ${colors.borderColor}` }}>
+              <div className="modal-header border-0"><h5 className="fw-bold">⚠️ Borrar Todo</h5><button type="button" className="btn-close" style={{filter: isDark ? 'invert(1)' : 'none'}} onClick={() => setShowPurgeModal(false)}></button></div>
+              <div className="modal-body">
+                <p>Escribe <strong>ELIMINAR</strong>:</p>
+                <input type="text" className="form-control" style={{backgroundColor: colors.itemBg, color: colors.textMain, border: `1px solid ${colors.borderColor}`}} value={purgeConfirmText} onChange={(e) => setPurgeConfirmText(e.target.value)} />
               </div>
               <div className="modal-footer border-0">
-                <button className="btn btn-danger w-100 rounded-pill" onClick={handlePurge} disabled={purgeConfirmText !== 'ELIMINAR'}>Confirmar Borrado</button>
+                <button className="btn btn-danger w-100" onClick={handlePurge}>Confirmar</button>
               </div>
             </div>
           </div>

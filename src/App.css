@@ -796,3 +796,126 @@ footer .text-body-secondary a:hover {
     color: #00E676 !important;
     text-shadow: 0 0 10px rgba(0, 230, 118, 0.4);
 }
+
+/* ========================================================= */
+/* === 1. ARREGLO MAESTRO DE MODALES Y FORMULARIOS === */
+/* ========================================================= */
+
+/* --- GENERAL (Transiciones suaves) --- */
+.modal-content, .form-control, .form-select, .btn {
+  transition: all 0.3s ease-in-out;
+}
+
+/* --- MODO PICANTE (DARK) --- */
+[data-bs-theme="picante"] .modal-content {
+  background-color: #1A1A1A !important; /* Fondo gris muy oscuro */
+  border: 1px solid #333 !important;
+  box-shadow: 0 0 30px rgba(255, 23, 68, 0.15); /* Resplandor rojo sutil */
+}
+
+[data-bs-theme="picante"] .modal-header {
+  border-bottom: 1px solid #333;
+}
+
+[data-bs-theme="picante"] .modal-footer {
+  border-top: 1px solid #333;
+}
+
+[data-bs-theme="picante"] .modal-title {
+  color: #FFFFFF;
+  font-weight: 800;
+}
+
+/* INPUTS EN MODO PICANTE (Lo que se veía feo antes) */
+[data-bs-theme="picante"] .form-control,
+[data-bs-theme="picante"] .form-select {
+  background-color: #252525 !important; /* Fondo input oscuro */
+  border: 1px solid #404040 !important;
+  color: #FFFFFF !important; /* Texto blanco */
+  border-radius: 12px;
+}
+
+/* Cuando haces click en un input en modo Picante */
+[data-bs-theme="picante"] .form-control:focus,
+[data-bs-theme="picante"] .form-select:focus {
+  background-color: #2A2A2A !important;
+  border-color: #FF1744 !important; /* Borde ROJO NEÓN */
+  box-shadow: 0 0 0 4px rgba(255, 23, 68, 0.25) !important; /* Glow rojo */
+  color: #FFFFFF !important;
+}
+
+/* Etiquetas (Labels) en modo Picante */
+[data-bs-theme="picante"] label {
+  color: #B0B0B0 !important;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+/* Botón de cerrar (X) en modo Picante - Invertir color */
+[data-bs-theme="picante"] .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* --- MODO DONA (LIGHT) - MEJORA --- */
+[data-bs-theme="light"] .modal-content {
+  background-color: #FFF8E1 !important; /* Crema */
+  border: 2px solid #EC407A !important; /* Borde rosa */
+}
+
+[data-bs-theme="light"] .form-control,
+[data-bs-theme="light"] .form-select {
+  background-color: #FFFFFF !important;
+  border: 1px solid #FFC0CB !important;
+  color: #5D4037 !important;
+  border-radius: 12px;
+}
+
+[data-bs-theme="light"] .form-control:focus {
+  border-color: #EC407A !important;
+  box-shadow: 0 0 0 4px rgba(236, 64, 122, 0.2) !important;
+}
+
+/* ========================================================= */
+/* === 2. BOTONES DE ACCIÓN MEJORADOS (EDITAR/OCULTAR) === */
+/* ========================================================= */
+.btn-action-edit {
+  background-color: transparent;
+  border: 1px solid #00E676; /* Verde borde */
+  color: #00E676;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+.btn-action-edit:hover {
+  background-color: #00E676;
+  color: black;
+}
+
+.btn-action-delete {
+  background-color: transparent;
+  border: 1px solid #FF1744; /* Rojo borde */
+  color: #FF1744;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+.btn-action-delete:hover {
+  background-color: #FF1744;
+  color: white;
+}
+
+/* Ajuste para modo Dona */
+[data-bs-theme="light"] .btn-action-edit {
+  border-color: #28a745; color: #28a745;
+}
+[data-bs-theme="light"] .btn-action-edit:hover {
+  background-color: #28a745; color: white;
+}
+[data-bs-theme="light"] .btn-action-delete {
+  border-color: #dc3545; color: #dc3545;
+}
+[data-bs-theme="light"] .btn-action-delete:hover {
+  background-color: #dc3545; color: white;
+}

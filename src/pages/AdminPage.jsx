@@ -9,32 +9,31 @@ import { getProducts, createProduct, updateProduct, deleteProduct } from '../ser
 import apiClient from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
-// --- PALETA DE COLORES CORREGIDA (SOLUCIÓN DE CONTRASTE) ---
+// --- PALETA DE COLORES DEFINITIVA (ALTO CONTRASTE) ---
 const getThemeColors = (mode) => {
   const isDark = mode === 'dark';
   
   return {
-    // FONDOS
-    bg: isDark ? '#121212' : '#F8F9FA',           // Fondo principal (Negro suave material)
-    cardBg: isDark ? '#1E1E1E' : '#FFFFFF',       // Tarjetas (Gris muy oscuro para elevar)
-    elementBg: isDark ? '#2C2C2C' : '#F1F3F5',    // Inputs y elementos secundarios
+    // FONDOS - Negro absoluto vs Blanco
+    bg: isDark ? '#000000' : '#F8F9FA',          
+    cardBg: isDark ? '#1A1A1A' : '#FFFFFF',      // Tarjeta: Gris casi negro vs Blanco puro
+    elementBg: isDark ? '#2D2D2D' : '#F1F3F5',   // Inputs/Items: Gris oscuro vs Gris claro
     
-    // TEXTOS - Contrastes máximos
-    textMain: isDark ? '#FFFFFF' : '#212529',     // Blanco Puro vs Negro Intenso
-    textSecondary: isDark ? '#E0E0E0' : '#495057', // Texto secundario muy claro en dark
-    textLight: isDark ? '#B0B0B0' : '#6C757D',    // Texto terciario
+    // TEXTOS - Blanco puro vs Negro casi puro
+    textMain: isDark ? '#FFFFFF' : '#212529',     
+    textLight: isDark ? '#ADB5BD' : '#6C757D',   
     
     // BORDES
-    borderColor: isDark ? '#404040' : '#DEE2E6',
+    borderColor: isDark ? '#424242' : '#DEE2E6',
 
-    // ACENTOS
+    // ACENTOS DE MARCA
     primary: '#FF4081',
     primaryGradient: isDark 
-      ? 'linear-gradient(135deg, #EC407A 0%, #D81B60 100%)' // Más brillante en dark para resaltar
+      ? 'linear-gradient(135deg, #D81B60 0%, #FF4081 100%)' 
       : 'linear-gradient(135deg, #FF80AB 0%, #F50057 100%)',
       
     // TABLAS
-    tableHeaderBg: isDark ? '#2D2D2D' : '#E9ECEF',
+    tableHeaderBg: isDark ? '#333333' : '#E9ECEF',
     tableHeaderText: isDark ? '#FF80AB' : '#495057',
 
     // ESTADOS
@@ -42,21 +41,23 @@ const getThemeColors = (mode) => {
     danger: isDark ? '#FF5252' : '#DC3545',      
     success: isDark ? '#69F0AE' : '#28A745',     
     
-    // BOTONES
+    // BOTONES DE FLUJO
     btnPrepare: '#FFC107', 
     btnWay: '#FF4081', 
-    btnReady: isDark ? '#E0E0E0' : '#ADB5BD', 
+    btnReady: isDark ? '#6C757D' : '#ADB5BD', 
     btnDone: '#28A745',    
     btnView: '#17A2B8',    
   };
 };
 
-// --- COMPONENTE TARJETA ESTADÍSTICA (Asegurando herencia de color) ---
+// --- COMPONENTES AUXILIARES CON ESTILOS FORZADOS ---
+
+// Corregido: Ahora recibe 'colors' y fuerza el fondo y color de texto
 const StatCard = ({ title, value, color, icon, styles, colors }) => (
   <div style={{
       ...styles.card, 
-      backgroundColor: colors.cardBg, 
-      color: colors.textMain, 
+      backgroundColor: colors.cardBg, // FORZADO
+      color: colors.textMain,         // FORZADO
       textAlign: 'center', 
       borderBottom: `4px solid ${color}`, 
       height: '100%', 
@@ -66,7 +67,6 @@ const StatCard = ({ title, value, color, icon, styles, colors }) => (
   }}>
     <div style={{fontSize: '2.5rem', marginBottom: '10px'}}>{icon}</div>
     <h6 style={{color: colors.textLight, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold'}}>{title}</h6>
-    {/* Forzamos el color del valor para que se vea siempre */}
     <h3 style={{color: color, fontWeight: '800', margin: 0, fontSize: '2rem'}}>{value}</h3>
   </div>
 );
@@ -79,10 +79,10 @@ const ConfirmationModal = ({ show, onClose, onConfirm, title, message, themeColo
         <div className="modal-content" style={{ borderRadius: '24px', border: `1px solid ${themeColors.borderColor}`, backgroundColor: themeColors.cardBg, color: themeColors.textMain, boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
           <div className="modal-header border-0 pb-0 pt-4 px-4">
             <h5 className="modal-title fw-bold" style={{ color: themeColors.textMain }}>{title}</h5>
-            <button type="button" className="btn-close" style={{filter: themeColors.bg === '#121212' ? 'invert(1)' : 'none'}} onClick={onClose}></button>
+            <button type="button" className="btn-close" style={{filter: themeColors.bg === '#000000' ? 'invert(1)' : 'none'}} onClick={onClose}></button>
           </div>
           <div className="modal-body px-4 pt-3 pb-4">
-            <p style={{color: themeColors.textSecondary, fontSize: '1.05rem'}}>{message}</p>
+            <p style={{color: themeColors.textLight, fontSize: '1.05rem'}}>{message}</p>
           </div>
           <div className="modal-footer border-0 px-4 pb-4">
             <button className="btn btn-light rounded-pill px-4 fw-bold" onClick={onClose}>Cancelar</button>
@@ -98,7 +98,7 @@ function AdminPage() {
   const { theme } = useTheme(); 
   const colors = getThemeColors(theme);
 
-  // --- ESTILOS DEFINITIVOS ---
+  // --- ESTILOS ---
   const styles = {
     container: {
       backgroundColor: colors.bg,
@@ -106,7 +106,7 @@ function AdminPage() {
       fontFamily: '"Nunito", "Segoe UI", sans-serif',
       padding: '40px 20px',
       color: colors.textMain,
-      transition: 'background-color 0.3s ease, color 0.3s ease'
+      transition: 'all 0.3s ease'
     },
     headerTitle: {
       background: colors.primaryGradient,
@@ -130,7 +130,7 @@ function AdminPage() {
       border: `1px solid ${colors.borderColor}`
     },
     navLink: {
-      color: colors.textSecondary, // Color visible en dark mode
+      color: colors.textLight,
       borderRadius: '30px',
       padding: '10px 20px',
       fontWeight: '700',
@@ -143,25 +143,26 @@ function AdminPage() {
       color: 'white',
       boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
     },
+    // TARJETA PRINCIPAL: Estilos críticos
     card: {
-      backgroundColor: colors.cardBg,
-      color: colors.textMain,
+      backgroundColor: colors.cardBg, // Se asegura que sea OSCURO en modo dark
+      color: colors.textMain,         // Se asegura que el texto sea BLANCO en modo dark
       borderRadius: '24px',
       border: `1px solid ${colors.borderColor}`,
       boxShadow: theme === 'dark' ? '0 10px 40px rgba(0,0,0,0.5)' : '0 10px 30px rgba(0,0,0,0.05)',
       padding: '35px',
     },
-    // CORRECCIÓN DE TABLAS: Forzamos el color en el CSS base de la tabla
+    // TABLAS: Hack para anular Bootstrap
     table: {
-       color: colors.textMain, // CRUCIAL
-       borderColor: colors.borderColor,
-       '--bs-table-color': colors.textMain, // Override Bootstrap Variable
-       '--bs-table-bg': 'transparent',
-       '--bs-table-border-color': colors.borderColor
+        color: colors.textMain,
+        borderColor: colors.borderColor,
+        backgroundColor: 'transparent', 
+        '--bs-table-bg': 'transparent', 
+        '--bs-table-color': colors.textMain
     },
     tableHeader: {
       backgroundColor: colors.tableHeaderBg,
-      color: colors.tableHeaderText, // Color específico para headers
+      color: colors.tableHeaderText,
       fontWeight: '800',
       borderBottom: 'none',
       textTransform: 'uppercase',
@@ -169,11 +170,10 @@ function AdminPage() {
       letterSpacing: '1px',
       padding: '15px'
     },
-    // CORRECCIÓN CELDAS: Estilo base para TDs
-    tableCell: {
-        padding: '15px',
-        color: colors.textMain, // Forzamos blanco en modo oscuro
-        borderBottom: `1px solid ${colors.borderColor}`
+    tableRow: {
+      borderBottom: `1px solid ${colors.borderColor}`,
+      verticalAlign: 'middle',
+      backgroundColor: 'transparent' // Importante
     },
     btnAdd: {
       background: colors.primaryGradient,
@@ -277,7 +277,7 @@ function AdminPage() {
         
         {/* HEADER */}
         <div className="text-center mb-4 pt-3">
-          <h1 style={styles.headerTitle}>🍩 Administración Miss Donitas</h1>
+          <h1 style={styles.headerTitle}>Administración Miss Donitas</h1>
         </div>
 
         {/* NAV */}
@@ -297,7 +297,7 @@ function AdminPage() {
           </div>
         </div>
 
-        {/* CARD PRINCIPAL */}
+        {/* CARD PRINCIPAL - ESTILOS APLICADOS EXPLÍCITAMENTE */}
         <div style={styles.card}>
           
           {loading && <div className="text-center py-5"><div className="spinner-border" style={{color: colors.primary}} role="status"></div></div>}
@@ -307,6 +307,7 @@ function AdminPage() {
           {!loading && !error && activeTab === 'productos' && (
             <div>
               <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                {/* Título con color forzado */}
                 <h3 className="fw-bold m-0" style={{color: colors.textMain}}>Inventario</h3>
                 <button className="shadow-sm btn" style={styles.btnAdd} onClick={() => handleOpenProductModal()}>+ Nuevo Producto</button>
               </div>
@@ -323,24 +324,23 @@ function AdminPage() {
                   </thead>
                   <tbody>
                     {productos.map((p) => (
-                      <tr key={p.id}>
-                        {/* APLICANDO styles.tableCell EN CADA TD PARA FORZAR EL COLOR */}
-                        <td style={styles.tableCell}>
+                      <tr key={p.id} style={styles.tableRow}>
+                        <td style={{padding: '15px'}}>
                           <div className="fw-bold" style={{fontSize: '1rem', color: colors.textMain}}>{p.nombre}</div>
-                          <small style={{color: colors.textSecondary}}>{p.categoria}</small>
+                          <small style={{color: colors.textLight}}>{p.categoria}</small>
                         </td>
-                        <td style={{...styles.tableCell, color: colors.primary, fontWeight: '800'}}>${Number(p.precio).toFixed(2)}</td>
-                        <td style={styles.tableCell}>
+                        <td style={{color: colors.primary, fontWeight: '800'}}>${Number(p.precio).toFixed(2)}</td>
+                        <td>
                           {p.stock <= 5 
                             ? <span style={styles.badge(theme === 'dark' ? '#3E2723' : '#FFEBEE', theme === 'dark' ? '#FF5252' : '#D32F2F', theme === 'dark' ? '#FF5252' : 'transparent')}>Bajo: {p.stock}</span> 
-                            : <span style={{color: colors.textSecondary, fontWeight:'bold'}}>{p.stock} u.</span>}
+                            : <span style={{color: colors.textLight, fontWeight:'bold'}}>{p.stock} u.</span>}
                         </td>
-                        <td style={styles.tableCell}>
+                        <td>
                           {p.en_oferta 
                             ? <span style={styles.badge(theme === 'dark' ? '#0D47A1' : '#E3F2FD', theme === 'dark' ? '#80D8FF' : '#1976D2', theme === 'dark' ? '#448AFF' : 'transparent')}>Oferta -{p.descuento_porcentaje}%</span> 
                             : <span style={styles.badge(theme === 'dark' ? '#424242' : '#F5F5F5', theme === 'dark' ? '#BDBDBD' : '#757575', theme === 'dark' ? '#757575' : 'transparent')}>Normal</span>}
                         </td>
-                        <td style={styles.tableCell} className="text-center">
+                        <td className="text-center">
                           <button style={styles.btnAction(colors.accent, true)} onClick={() => handleOpenProductModal(p)}>Editar</button>
                           <button style={styles.btnAction(colors.danger, true)} onClick={() => handleDeleteProducto(p)}>Ocultar</button>
                         </td>
@@ -356,6 +356,7 @@ function AdminPage() {
           {!loading && !error && activeTab === 'pedidosEnLinea' && (
             <div>
               <div className="d-flex justify-content-between align-items-center mb-4">
+                {/* Título con color forzado */}
                 <h3 className="fw-bold m-0" style={{color: colors.textMain}}>Pedidos Entrantes</h3>
                 <span className="badge rounded-pill px-3 py-2 shadow-sm" style={{backgroundColor: colors.danger, color: 'white'}}>
                   {pedidos.filter(p => p.estado === 'Pendiente').length} Por Atender
@@ -374,31 +375,30 @@ function AdminPage() {
                   </thead>
                   <tbody>
                     {pedidos.map((p) => (
-                      <tr key={p.id}>
-                        {/* APLICANDO styles.tableCell PARA FORZAR EL COLOR BLANCO */}
-                        <td style={styles.tableCell}>
+                      <tr key={p.id} style={styles.tableRow}>
+                        <td style={{padding: '15px'}}>
                            <div className="d-flex align-items-center">
                              <span className="fw-bold me-3" style={{color: colors.primary}}>#{p.id}</span>
                              <div>
                                <div className="fw-bold" style={{color: colors.textMain}}>{p.nombre_cliente}</div>
-                               <small style={{color: colors.textSecondary}}>{new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                               <small style={{color: colors.textLight}}>{new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
                              </div>
                            </div>
                         </td>
-                        <td style={{...styles.tableCell, fontWeight: 'bold', color: colors.textMain}}>${Number(p.total).toFixed(2)}</td>
-                        <td style={styles.tableCell}>
+                        <td className="fw-bold" style={{color: colors.textMain}}>${Number(p.total).toFixed(2)}</td>
+                        <td>
                           {p.tipo_orden === 'domicilio' 
                             ? <span style={styles.badge(theme === 'dark' ? '#004D40' : '#E0F7FA', theme === 'dark' ? '#64FFDA' : '#0097A7', theme === 'dark' ? '#00BCD4' : 'transparent')}>🛵 Domicilio</span> 
                             : <span style={styles.badge(theme === 'dark' ? '#BF360C' : '#FFF3E0', theme === 'dark' ? '#FFAB40' : '#F57C00', theme === 'dark' ? '#FF9800' : 'transparent')}>🏪 Recoger</span>}
                         </td>
-                        <td style={styles.tableCell}>
+                        <td>
                            <span className="badge rounded-pill" style={{
                              backgroundColor: p.estado === 'Pendiente' ? colors.btnPrepare : (p.estado === 'Completado' ? colors.success : colors.accent), 
                              color: p.estado === 'Pendiente' ? '#212121' : (theme === 'dark' ? '#000' : '#FFF'), 
                              padding: '6px 12px'
                            }}>{p.estado}</span>
                         </td>
-                        <td style={styles.tableCell}>
+                        <td>
                             <div className="d-flex flex-wrap">
                                 <button style={styles.btnControl(colors.btnView)} onClick={() => {setSelectedOrderDetails(p); setShowDetailsModal(true);}}>Ver</button>
                                 {p.estado !== 'Completado' && (
@@ -422,22 +422,24 @@ function AdminPage() {
             </div>
           )}
 
-          {/* === COMBOS === */}
+          {/* === COMBOS (Corregido: Tarjetas con fondo explícito) === */}
           {!loading && !error && activeTab === 'combos' && (
             <div>
               <div className="d-flex justify-content-between align-items-center mb-4">
+                {/* Título forzado */}
                 <h3 className="fw-bold m-0" style={{color: colors.textMain}}>Combos & Promociones</h3>
                 <button className="shadow-sm btn" style={styles.btnAdd} onClick={() => handleOpenComboModal()}>+ Nuevo Combo</button>
               </div>
               <div className="row g-4">
                 {combos.map((combo) => (
                   <div className="col-md-6 col-lg-4" key={combo.id}>
+                    {/* Tarjeta individual con colores forzados */}
                     <div style={{
                       border: `1px solid ${combo.esta_activo ? colors.success : colors.danger}`, 
                       borderRadius: '20px', 
                       padding: '25px', 
-                      backgroundColor: colors.elementBg, 
-                      color: colors.textMain, // Forzado
+                      backgroundColor: colors.elementBg, // FORZADO: Gris oscuro en modo noche
+                      color: colors.textMain,          // FORZADO: Texto blanco
                       opacity: combo.esta_activo ? 1 : 0.75,
                       transition: 'all 0.2s',
                       boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
@@ -464,14 +466,15 @@ function AdminPage() {
             </div>
           )}
 
-          {/* === REPORTES === */}
+          {/* === REPORTES (Corregido: StatCards con colores pasados explícitamente) === */}
           {!loading && !error && activeTab === 'reporteGeneral' && (
             <div>
                <div className="row mb-5 g-4">
+                  {/* Se pasa 'colors' a StatCard */}
                   <div className="col-md-6"><StatCard title="Ventas Totales" value={`$${reportData.reduce((acc, curr) => acc + Number(curr.total_ventas), 0).toFixed(2)}`} color={colors.success} icon="💰" styles={styles} colors={colors} /></div>
                   <div className="col-md-6"><StatCard title="Promedio Venta" value="$150.00" color={colors.primary} icon="📈" styles={styles} colors={colors} /></div>
                </div>
-               
+               {/* Título forzado */}
                <h5 className="mb-4 fw-bold" style={{color: colors.textMain}}>Gráfica de Rendimiento</h5>
                <div style={{padding: '20px', backgroundColor: colors.elementBg, borderRadius: '20px', border: `1px solid ${colors.borderColor}`}}>
                     <SalesReportChart reportData={reportData} theme={theme} /> 
@@ -494,7 +497,7 @@ function AdminPage() {
       
       <ConfirmationModal show={showConfirmModal} onClose={() => setShowConfirmModal(false)} onConfirm={confirmAction} title={confirmTitle} message={confirmMessage} themeColors={colors} />
 
-      {/* MODAL PURGAR (Corrección de inputs oscuros) */}
+      {/* MODAL PURGAR */}
       {showPurgeModal && (
         <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered">
@@ -502,7 +505,6 @@ function AdminPage() {
               <div className="modal-header text-white border-0" style={{backgroundColor: colors.danger}}><h5 className="modal-title fw-bold">⚠️ Borrar Todo</h5><button type="button" className="btn-close btn-close-white" onClick={() => setShowPurgeModal(false)}></button></div>
               <div className="modal-body p-4">
                 <p>Escribe <strong>ELIMINAR</strong> para confirmar:</p>
-                {/* Input con fondo oscuro y letra clara */}
                 <input type="text" className="form-control" style={{backgroundColor: colors.elementBg, color: colors.textMain, border: `1px solid ${colors.borderColor}`}} value={purgeConfirmText} onChange={(e) => setPurgeConfirmText(e.target.value)} />
               </div>
               <div className="modal-footer border-0">

@@ -602,5 +602,5 @@ function PosPage() {
     </div>
   );
 }
-
+}
 export default PosPage;

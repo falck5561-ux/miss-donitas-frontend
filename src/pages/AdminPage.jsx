@@ -15,15 +15,15 @@ const getThemeColors = (mode) => {
   
   return {
     // FONDOS
-    bg: isDark ? '#121212' : '#FFFDF5',          // Fondo de pantalla: Negro vs Crema
-    cardBg: isDark ? '#1E1E1E' : '#FFFFFF',      // Tarjeta: Gris Oscuro vs Blanco (ESTO FALLABA ANTES)
+    bg: isDark ? '#121212' : '#FFFDF5',          // Fondo de pantalla
+    cardBg: isDark ? '#1E1E1E' : '#FFFFFF',      // Tarjeta: Gris Oscuro vs Blanco (CORREGIDO)
     
     // TEXTOS
     textMain: isDark ? '#FFFFFF' : '#5D4037',    // Títulos: Blanco vs Café
     textLight: isDark ? '#E0E0E0' : '#8D6E63',   // Subtítulos: Gris claro vs Café claro
     
     // BOTONES Y ACENTOS
-    primary: '#FF4081',                          // Rosa intenso (funciona en ambos)
+    primary: '#FF4081',                          // Rosa intenso
     primaryGradient: isDark 
       ? 'linear-gradient(135deg, #C2185B 0%, #FF4081 100%)' 
       : 'linear-gradient(135deg, #FF80AB 0%, #F50057 100%)',
@@ -126,9 +126,9 @@ function AdminPage() {
       color: 'white',
       boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
     },
-    // TARJETA PRINCIPAL (Aquí estaba el error visual)
+    // TARJETA PRINCIPAL (CORREGIDA)
     card: {
-      backgroundColor: colors.cardBg, // Ahora esto cambiará a GRIS OSCURO en modo dark
+      backgroundColor: colors.cardBg, // Se adapta: Gris Oscuro en Dark Mode
       borderRadius: '24px',
       border: `1px solid ${colors.tableBorder}`,
       boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
@@ -147,7 +147,7 @@ function AdminPage() {
     tableRow: {
       borderBottom: `1px solid ${colors.tableBorder}`,
       color: colors.textMain,
-      backgroundColor: 'transparent' // Importante para que tome el color de la tarjeta
+      backgroundColor: 'transparent'
     },
     textLight: {
       color: colors.textLight
@@ -354,7 +354,8 @@ function AdminPage() {
                 </button>
               </div>
               <div className="table-responsive">
-                <table className="table align-middle">
+                {/* Agregado style={{color...}} para asegurar herencia en Bootstrap */}
+                <table className="table align-middle" style={{ color: colors.textMain, backgroundColor: 'transparent' }}>
                   <thead>
                     <tr>
                       <th style={{...styles.tableHeader, borderTopLeftRadius: '15px', paddingLeft: '20px'}}>Nombre</th>
@@ -404,7 +405,8 @@ function AdminPage() {
                 </span>
               </div>
               <div className="table-responsive">
-                <table className="table align-middle">
+                {/* Agregado style={{color...}} para asegurar herencia en Bootstrap */}
+                <table className="table align-middle" style={{ color: colors.textMain, backgroundColor: 'transparent' }}>
                   <thead>
                     <tr>
                       <th style={{...styles.tableHeader, borderTopLeftRadius: '15px', paddingLeft: '20px'}}>ID</th>
@@ -445,15 +447,15 @@ function AdminPage() {
                                 
                                 {p.estado !== 'Completado' && (
                                     <>
-                                        <button style={styles.btnControl(colors.btnPrepare, '#212121')} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Preparar</button>
-                                        
-                                        {p.tipo_orden === 'domicilio' ? (
-                                            <button style={styles.btnControl(colors.btnWay)} onClick={() => handleUpdateStatus(p.id, 'En Camino')}>En Camino</button>
-                                        ) : (
-                                            <button style={styles.btnControl(colors.btnReady, '#212121')} onClick={() => handleUpdateStatus(p.id, 'Listo')}>Listo</button>
-                                        )}
-                                        
-                                        <button style={styles.btnControl(colors.btnDone)} onClick={() => handleUpdateStatus(p.id, 'Completado')}>Entregado</button>
+                                            <button style={styles.btnControl(colors.btnPrepare, '#212121')} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Preparar</button>
+                                            
+                                            {p.tipo_orden === 'domicilio' ? (
+                                                <button style={styles.btnControl(colors.btnWay)} onClick={() => handleUpdateStatus(p.id, 'En Camino')}>En Camino</button>
+                                            ) : (
+                                                <button style={styles.btnControl(colors.btnReady, '#212121')} onClick={() => handleUpdateStatus(p.id, 'Listo')}>Listo</button>
+                                            )}
+                                            
+                                            <button style={styles.btnControl(colors.btnDone)} onClick={() => handleUpdateStatus(p.id, 'Completado')}>Entregado</button>
                                     </>
                                 )}
                             </div>

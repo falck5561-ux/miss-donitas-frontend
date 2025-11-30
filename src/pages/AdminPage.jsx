@@ -9,76 +9,75 @@ import { getProducts, createProduct, updateProduct, deleteProduct } from '../ser
 import apiClient from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
-// --- PALETA TEMÁTICA CORREGIDA ---
+// --- PALETA "CHOCOLATE & FRESA" (CONTRASTE GARANTIZADO) ---
 const getThemeColors = (mode) => {
   const isDark = mode === 'dark';
 
   return {
     // === FONDOS ===
-    // Dark: Negro Puro (#000000)
-    // Light: Crema Vainilla suave (#FFF8E1) - Nada de azul
-    bg: isDark ? '#000000' : '#FFF5F8', 
+    // Light: Crema suave (Vainilla)
+    // Dark: Chocolate Amargo Profundo (Casi negro, pero cálido)
+    bg: isDark ? '#120b0b' : '#FFFBF0', 
     
-    // Cards / Contenedores
-    // Dark: Gris Carbón (#121212) - Para que la tabla NO se vea blanca
-    // Light: Blanco Nube
-    cardBg: isDark ? '#121212' : '#FFFFFF',
+    // Cards (Contenedores)
+    // Light: Blanco puro
+    // Dark: Café muy oscuro
+    cardBg: isDark ? '#1F1515' : '#FFFFFF',
     
-    // Elementos (Filas de tabla, inputs)
-    // Dark: Gris un poco más claro (#252525) para diferenciar filas
-    elementBg: isDark ? '#252525' : '#FFFFFF',
+    // Elementos (Inputs, Filas)
+    elementBg: isDark ? '#2E2020' : '#F7F2F9',
 
-    // === TEXTOS (REGLA: NO BLANCO PURO EN DARK, NO AZUL EN LIGHT) ===
-    // Dark: Gris Plata (#C0C0C0) -> Muy legible, no lastima, no es blanco.
-    // Light: Café Chocolate (#4E342E) -> Temática Donas.
-    textMain: isDark ? '#C0C0C0' : '#4E342E', 
+    // === TEXTOS (LA CLAVE DEL ARREGLO) ===
+    // Light: CAFÉ OSCURO (#3E2723). NUNCA BLANCO.
+    // Dark: CREMA (#ECE0DB).
+    textMain: isDark ? '#ECE0DB' : '#3E2723', 
     
-    // Subtítulos
-    textSecondary: isDark ? '#808080' : '#8D6E63',
+    // Texto Secundario
+    textSecondary: isDark ? '#BCAAA4' : '#8D6E63',
 
-    // Encabezados (Títulos grandes)
-    // Dark: Rojo Intenso
-    // Light: Rosa Fresa Fuerte
-    textHeader: isDark ? '#FF3D00' : '#D81B60',
+    // Títulos
+    // Light: Rosa Mexicano
+    // Dark: Naranja/Caramelo
+    textHeader: isDark ? '#FFAB40' : '#E91E63',
 
     // === BORDES ===
-    borderColor: isDark ? '#333333' : '#F8BBD0', // Gris oscuro o Rosa pastel
+    borderColor: isDark ? '#3E2723' : '#FCE4EC',
     
-    // === MARCA PRINCIPAL ===
-    primary: isDark ? '#FF3D00' : '#FF4081', 
+    // === MARCA PRINCIPAL (BOTONES) ===
+    primary: '#E91E63', // Rosa Donita siempre se ve bien
     
     // Degradados
-    primaryGradient: isDark 
-      ? 'linear-gradient(135deg, #BF360C 0%, #FF3D00 100%)' // Lava
-      : 'linear-gradient(135deg, #FF80AB 0%, #F50057 100%)', // Glaseado Fresa
+    primaryGradient: 'linear-gradient(135deg, #FF4081 0%, #C2185B 100%)',
 
-    // === DINERO / NÚMEROS ===
-    // Dark: ORO (#FFD700) -> Resalta brutal sobre negro.
-    // Light: VERDE DINERO (#2E7D32)
+    // === TABLAS (CORRECCIÓN DE TU IMAGEN) ===
+    // Light: Fondo rosa muy pálido para el header, NO NEGRO.
+    // Dark: Fondo café oscuro.
+    tableHeaderBg: isDark ? '#2E2020' : '#FFF0F5',
+    
+    // Texto del header de tabla
+    tableHeaderText: isDark ? '#FFAB40' : '#880E4F',
+
+    // === DINERO ===
+    // Light: Verde Bosque
+    // Dark: Dorado
     money: isDark ? '#FFD700' : '#2E7D32', 
-
-    // === TABLAS ===
-    tableHeaderBg: 'transparent',
-    // Encabezados de tabla
-    tableHeaderText: isDark ? '#FFAB91' : '#AD1457', 
 
     // === SHADOWS ===
     cardShadow: isDark 
-        ? '0 4px 20px rgba(0,0,0,0.8)' // Sombra negra profunda
-        : '0 8px 25px rgba(255, 64, 129, 0.15)', // Sombra rosada suave
+        ? '0 10px 40px rgba(0,0,0,0.6)' 
+        : '0 10px 40px rgba(233, 30, 99, 0.1)',
 
     // === BADGES (ESTADOS) ===
-    // Ajustados para que no usen blanco en dark mode
-    badgeSuccessBg: isDark ? '#003300' : '#E8F5E9',
-    badgeSuccessTxt: isDark ? '#00E676' : '#2E7D32',
+    badgeSuccessBg: isDark ? '#1B5E20' : '#E8F5E9',
+    badgeSuccessTxt: isDark ? '#69F0AE' : '#2E7D32',
 
-    badgeWarnBg: isDark ? '#332200' : '#FFF8E1',
+    badgeWarnBg: isDark ? '#3E2723' : '#FFF8E1',
     badgeWarnTxt: isDark ? '#FFAB00' : '#F57F17',
 
-    badgeDangerBg: isDark ? '#330000' : '#FFEBEE',
+    badgeDangerBg: isDark ? '#3B0B0B' : '#FFEBEE',
     badgeDangerTxt: isDark ? '#FF5252' : '#C62828',
     
-    badgeInfoBg: isDark ? '#001a33' : '#E3F2FD',
+    badgeInfoBg: isDark ? '#0D47A1' : '#E3F2FD',
     badgeInfoTxt: isDark ? '#40C4FF' : '#1565C0',
   };
 };
@@ -87,47 +86,21 @@ const getThemeColors = (mode) => {
 const StatCard = ({ title, value, color, icon, styles, colors }) => (
   <div style={{
       ...styles.card, 
-      borderLeft: `5px solid ${color}`, // Borde lateral de color
+      borderLeft: `5px solid ${color}`,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      position: 'relative',
-      overflow: 'hidden'
+      padding: '25px'
   }}>
     <div>
-        <h6 style={{ color: colors.textSecondary, fontWeight: '700', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px', marginBottom: '5px' }}>{title}</h6>
-        {/* NÚMERO GRANDE Y LEGIBLE */}
-        <h3 style={{ color: colors.textMain, fontWeight: '900', margin: 0, fontSize: '2.2rem', fontFamily: 'monospace' }}>{value}</h3>
+        <h6 style={{ color: colors.textSecondary, fontWeight: '700', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px' }}>{title}</h6>
+        <h3 style={{ color: colors.textMain, fontWeight: '900', margin: 0, fontSize: '2rem' }}>{value}</h3>
     </div>
-    <div style={{ fontSize: '3rem', color: color, opacity: 0.8 }}>
+    <div style={{ fontSize: '2.5rem', color: color, opacity: 0.8 }}>
       {icon}
     </div>
   </div>
 );
-
-// --- MODAL CONFIRMACIÓN ---
-const ConfirmationModal = ({ show, onClose, onConfirm, title, message, colors }) => {
-    if (!show) return null;
-    return (
-      <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', zIndex: 1050 }}>
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content" style={{ borderRadius: '20px', border: `1px solid ${colors.borderColor}`, backgroundColor: colors.cardBg, color: colors.textMain }}>
-            <div className="modal-header border-0 pb-0 pt-4 px-4">
-              <h5 className="modal-title fw-bold" style={{ color: colors.textHeader }}>{title}</h5>
-              <button type="button" className="btn-close" style={{filter: colors.bg === '#000000' ? 'invert(0.5)' : 'none'}} onClick={onClose}></button>
-            </div>
-            <div className="modal-body px-4 pt-3 pb-4">
-              <p style={{color: colors.textMain, fontSize: '1.1rem'}}>{message}</p>
-            </div>
-            <div className="modal-footer border-0 px-4 pb-4">
-              <button className="btn rounded-pill px-4 fw-bold" style={{backgroundColor: colors.elementBg, color: colors.textMain, border: `1px solid ${colors.borderColor}`}} onClick={onClose}>Cancelar</button>
-              <button className="btn rounded-pill px-4 fw-bold shadow" style={{backgroundColor: colors.primary, color: 'white', border: 'none'}} onClick={onConfirm}>Confirmar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-};
 
 function AdminPage() {
   const { theme } = useTheme(); 
@@ -138,7 +111,7 @@ function AdminPage() {
     container: {
       backgroundColor: colors.bg,
       minHeight: '100vh',
-      fontFamily: '"Nunito", sans-serif', // Fuente redonda tipo dona
+      fontFamily: '"Nunito", sans-serif',
       padding: '40px 20px',
       color: colors.textMain,
       transition: 'all 0.3s ease'
@@ -150,33 +123,29 @@ function AdminPage() {
       fontWeight: '900',
       fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
       marginBottom: '30px',
-      letterSpacing: '-1px',
+      textAlign: 'center'
     },
     navPillsContainer: {
-      backgroundColor: 'transparent',
-      padding: '0',
       display: 'flex',
       flexWrap: 'wrap',
       justifyContent: 'center',
-      gap: '15px',
+      gap: '10px',
       marginBottom: '40px',
     },
     navLink: {
       color: colors.textSecondary,
-      borderRadius: '50px',
+      borderRadius: '25px',
       padding: '10px 25px',
       fontWeight: '700',
       border: `2px solid ${colors.borderColor}`,
       background: colors.cardBg,
       transition: 'all 0.2s ease',
-      fontSize: '0.9rem'
     },
     navLinkActive: {
       background: colors.primary,
       borderColor: colors.primary,
-      color: 'white', // Texto blanco solo en el botón activo solido
-      transform: 'translateY(-2px)',
-      boxShadow: colors.cardShadow
+      color: 'white',
+      boxShadow: '0 4px 15px rgba(233, 30, 99, 0.4)'
     },
     card: {
       backgroundColor: colors.cardBg,
@@ -187,64 +156,55 @@ function AdminPage() {
       padding: '30px',
       marginBottom: '30px',
     },
-    // --- ESTILOS DE TABLA (Negra en dark, Blanca en light) ---
+    // --- TABLAS ARREGLADAS ---
     table: {
        '--bs-table-bg': 'transparent', 
        width: '100%',
        borderCollapse: 'separate', 
-       borderSpacing: '0 8px' 
+       borderSpacing: '0' 
     },
     tableHeader: {
-      backgroundColor: 'transparent',
-      color: colors.tableHeaderText,
+      backgroundColor: colors.tableHeaderBg, // ROSA PÁLIDO O DARK
+      color: colors.tableHeaderText,         // ROJO O NARANJA
       fontWeight: '800',
-      border: 'none',
+      borderBottom: `2px solid ${colors.borderColor}`,
       textTransform: 'uppercase',
       fontSize: '0.8rem',
-      padding: '15px'
+      padding: '18px',
+      letterSpacing: '1px'
     },
     tableRow: {
-       backgroundColor: colors.elementBg, // Gris Oscuro en Dark, Blanco en Light
-       borderRadius: '12px',
-       boxShadow: isDark ? 'none' : '0 2px 5px rgba(0,0,0,0.05)',
+       backgroundColor: 'transparent', 
+       transition: 'background-color 0.2s',
     },
     tableCell: {
-       padding: '20px 15px',
+       padding: '20px 18px',
        verticalAlign: 'middle',
-       border: 'none', 
-       color: colors.textMain, // Gris Plata en Dark, Café en Light
-       fontSize: '0.95rem'
-    },
-    input: {
-       backgroundColor: colors.elementBg,
-       color: colors.textMain,
-       border: `1px solid ${colors.borderColor}`,
-       padding: '12px',
-       borderRadius: '10px',
-       width: '100%',
-       outline: 'none'
+       borderBottom: `1px solid ${colors.borderColor}`, 
+       color: colors.textMain, // AQUÍ ESTABA EL ERROR ANTES
+       fontSize: '0.95rem',
+       fontWeight: '600'
     },
     btnAdd: {
-      background: colors.primary,
+      background: colors.primaryGradient,
       border: 'none',
       borderRadius: '50px',
       color: 'white',
-      padding: '10px 30px',
+      padding: '12px 30px',
       fontWeight: '700',
-      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+      boxShadow: '0 5px 15px rgba(233, 30, 99, 0.3)',
       textTransform: 'uppercase'
     },
     btnControl: (bgColor, textColor) => ({
         backgroundColor: bgColor,
         color: textColor,
         border: 'none',
-        padding: '8px 12px',
+        padding: '6px 12px',
         borderRadius: '8px',
         fontWeight: '700',
         fontSize: '0.75rem',
         textTransform: 'uppercase',
         marginRight: '5px',
-        cursor: 'pointer'
     }),
     btnAction: (color, isOutline = true) => ({
       backgroundColor: isOutline ? 'transparent' : color,
@@ -255,18 +215,16 @@ function AdminPage() {
       fontWeight: '700',
       fontSize: '0.8rem',
       marginRight: '8px',
-      cursor: 'pointer'
     }),
     renderBadge: (text, bg, txt) => (
         <span style={{
             backgroundColor: bg,
             color: txt,
-            padding: '6px 12px',
-            borderRadius: '8px',
+            padding: '8px 14px',
+            borderRadius: '20px',
             fontSize: '0.75rem',
             fontWeight: '800',
             textTransform: 'uppercase',
-            border: `1px solid ${txt}30`
         }}>
             {text}
         </span>
@@ -308,7 +266,6 @@ function AdminPage() {
 
   useEffect(() => { fetchData(); }, [activeTab]);
   
-  // Handlers
   const handleOpenProductModal = (p = null) => { setProductoActual(p ? { ...p, imagenes: p.imagen_url ? [p.imagen_url] : [] } : null); setShowProductModal(true); };
   const handleSaveProducto = async (p) => { try { const d = { ...p, imagen_url: p.imagenes?.[0] || null }; delete d.imagenes; if (d.id) await updateProduct(d.id, d); else await createProduct(d); toast.success('Producto guardado'); fetchData(); setShowProductModal(false); } catch { toast.error('Error al guardar'); } };
   const handleDeleteProducto = (p) => { setConfirmTitle('Ocultar Producto'); setConfirmMessage(`¿Ocultar "${p.nombre}"?`); setConfirmAction(() => async () => { await deleteProduct(p.id); toast.success('Ocultado'); fetchData(); setShowConfirmModal(false); }); setShowConfirmModal(true); };
@@ -325,7 +282,6 @@ function AdminPage() {
         {/* HEADER */}
         <div className="text-center mb-4 pt-3">
           <h1 style={styles.headerTitle}>🍩 Miss Donitas Admin</h1>
-          {/* Se eliminó el texto de "Modo Dulce/Picante" como solicitaste */}
         </div>
 
         {/* NAV */}
@@ -351,46 +307,45 @@ function AdminPage() {
           {loading && <div className="text-center py-5"><div className="spinner-border" style={{color: colors.primary}} role="status"></div></div>}
           {error && <div className="alert alert-danger">{error}</div>}
 
-          {/* === INVENTARIO === */}
+          {/* === INVENTARIO (TABLA QUE SE VEÍA MAL EN LA FOTO) === */}
           {!loading && !error && activeTab === 'productos' && (
             <div>
               <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                 <h3 className="fw-bold m-0" style={{color: colors.textHeader}}>Catálogo de Donas</h3>
-                <button style={styles.btnAdd} onClick={() => handleOpenProductModal()}>+ Agregar Dona</button>
+                <button style={styles.btnAdd} onClick={() => handleOpenProductModal()}>+ Nueva Dona</button>
               </div>
               <div className="table-responsive">
                 <table className="table" style={styles.table}>
                   <thead>
                     <tr>
-                      <th style={{...styles.tableHeader, borderRadius: '12px 0 0 12px'}}>Producto</th>
+                      <th style={styles.tableHeader}>Producto</th>
                       <th style={styles.tableHeader}>Precio</th>
                       <th style={styles.tableHeader}>Stock</th>
                       <th style={styles.tableHeader}>Estado</th>
-                      <th style={{...styles.tableHeader, borderRadius: '0 12px 12px 0', textAlign: 'center'}}>Editar</th>
+                      <th style={{...styles.tableHeader, textAlign: 'center'}}>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {productos.map((p) => (
                       <tr key={p.id} style={styles.tableRow}>
-                        <td style={{...styles.tableCell, borderRadius: '12px 0 0 12px'}}>
-                            <div className="fw-bold" style={{fontSize: '1.05rem'}}>{p.nombre}</div>
+                        <td style={styles.tableCell}>
+                            <div className="fw-bold" style={{fontSize: '1.05rem', color: colors.textMain}}>{p.nombre}</div>
                             <small style={{color: colors.textSecondary}}>{p.categoria}</small>
                         </td>
-                        {/* DINERO EN COLOR ORO EN DARK */}
-                        <td style={{...styles.tableCell, color: colors.money, fontWeight: '900', fontSize: '1.2rem', fontFamily: 'monospace'}}>
+                        <td style={{...styles.tableCell, color: colors.money, fontWeight: '900', fontSize: '1.2rem'}}>
                             ${Number(p.precio).toFixed(2)}
                         </td>
                         <td style={styles.tableCell}>
                             {p.stock <= 5 
                              ? styles.renderBadge(`Bajo: ${p.stock}`, colors.badgeDangerBg, colors.badgeDangerTxt)
-                             : <span style={{fontWeight: 'bold'}}>{p.stock} pza.</span>}
+                             : <span style={{fontWeight: 'bold', color: colors.textMain}}>{p.stock} pza.</span>}
                         </td>
                         <td style={styles.tableCell}>
                             {p.en_oferta 
-                             ? styles.renderBadge(`-${p.descuento_porcentaje}% Oferta`, colors.badgeInfoBg, colors.badgeInfoTxt)
+                             ? styles.renderBadge(`Oferta -${p.descuento_porcentaje}%`, colors.badgeInfoBg, colors.badgeInfoTxt)
                              : <span style={{color: colors.textSecondary}}>Normal</span>}
                         </td>
-                        <td style={{...styles.tableCell, borderRadius: '0 12px 12px 0'}} className="text-center">
+                        <td style={styles.tableCell} className="text-center">
                           <button style={styles.btnAction(colors.textSecondary, true)} onClick={() => handleOpenProductModal(p)}>Editar</button>
                           <button style={styles.btnAction(colors.primary, true)} onClick={() => handleDeleteProducto(p)}>Ocultar</button>
                         </td>
@@ -406,7 +361,7 @@ function AdminPage() {
           {!loading && !error && activeTab === 'pedidosEnLinea' && (
              <div>
              <div className="d-flex justify-content-between align-items-center mb-4">
-               <h3 className="fw-bold m-0" style={{color: colors.textHeader}}>Entrantes</h3>
+               <h3 className="fw-bold m-0" style={{color: colors.textHeader}}>Pedidos Entrantes</h3>
                {pedidos.filter(p => p.estado === 'Pendiente').length > 0 && (
                    <span style={{
                        backgroundColor: colors.primary, color: 'white', padding: '8px 20px', 
@@ -420,26 +375,26 @@ function AdminPage() {
                <table className="table" style={styles.table}>
                  <thead>
                    <tr>
-                     <th style={{...styles.tableHeader, borderRadius: '12px 0 0 12px'}}>Ticket / Cliente</th>
+                     <th style={styles.tableHeader}>ID / Cliente</th>
                      <th style={styles.tableHeader}>Total</th>
-                     <th style={styles.tableHeader}>Tipo</th>
-                     <th style={styles.tableHeader}>Estado</th>
-                     <th style={{...styles.tableHeader, borderRadius: '0 12px 12px 0'}}>Acciones</th>
+                     <th style={styles.tableHeader}>Método</th>
+                     <th style={styles.tableHeader}>Status</th>
+                     <th style={styles.tableHeader}>Acciones</th>
                    </tr>
                  </thead>
                  <tbody>
                    {pedidos.map((p) => (
                      <tr key={p.id} style={styles.tableRow}>
-                       <td style={{...styles.tableCell, borderRadius: '12px 0 0 12px'}}>
+                       <td style={styles.tableCell}>
                           <div className="d-flex align-items-center">
                             <span className="fw-bold me-3" style={{color: colors.primary}}>#{p.id}</span>
                             <div>
-                                <div className="fw-bold">{p.nombre_cliente}</div>
+                                <div className="fw-bold" style={{color: colors.textMain}}>{p.nombre_cliente}</div>
                                 <small style={{color: colors.textSecondary}}>{new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
                             </div>
                           </div>
                        </td>
-                       <td style={{...styles.tableCell, color: colors.money, fontWeight: '900', fontSize: '1.2rem', fontFamily: 'monospace'}}>
+                       <td style={{...styles.tableCell, color: colors.money, fontWeight: '900', fontSize: '1.2rem'}}>
                            ${Number(p.total).toFixed(2)}
                        </td>
                        <td style={styles.tableCell}>
@@ -452,12 +407,12 @@ function AdminPage() {
                              ? styles.renderBadge('Pendiente', colors.badgeDangerBg, colors.badgeDangerTxt)
                              : styles.renderBadge(p.estado, colors.elementBg, colors.textMain)}
                        </td>
-                       <td style={{...styles.tableCell, borderRadius: '0 12px 12px 0'}}>
+                       <td style={styles.tableCell}>
                            <div className="d-flex flex-wrap">
                                <button style={styles.btnControl(colors.elementBg, colors.textMain)} onClick={() => {setSelectedOrderDetails(p); setShowDetailsModal(true);}}>Ver</button>
                                {p.estado !== 'Completado' && (
                                    <>
-                                        <button style={styles.btnControl(colors.badgeWarnBg, colors.badgeWarnTxt)} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Prep</button>
+                                        <button style={styles.btnControl(colors.badgeWarnBg, colors.badgeWarnTxt)} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>Cocinar</button>
                                         {p.tipo_orden === 'domicilio' 
                                             ? <button style={styles.btnControl(colors.badgeInfoBg, colors.badgeInfoTxt)} onClick={() => handleUpdateStatus(p.id, 'En Camino')}>Moto</button> 
                                             : <button style={styles.btnControl(colors.badgeSuccessBg, colors.badgeSuccessTxt)} onClick={() => handleUpdateStatus(p.id, 'Listo')}>Listo</button>}
@@ -498,7 +453,6 @@ function AdminPage() {
                            ? styles.renderBadge('ON', colors.badgeSuccessBg, colors.badgeSuccessTxt)
                            : styles.renderBadge('OFF', colors.badgeDangerBg, colors.badgeDangerTxt)}
                      </div>
-                     
                      <h4 style={{color: colors.money, fontWeight: '900', fontSize: '1.8rem'}}>${Number(combo.precio).toFixed(2)}</h4>
                      <p style={{color: colors.textSecondary, fontSize: '0.9rem'}}>{combo.descripcion}</p>
                      
@@ -522,7 +476,7 @@ function AdminPage() {
                      title="Ventas Totales" 
                      value={`$${reportData.reduce((acc, curr) => acc + Number(curr.total_ventas), 0).toFixed(2)}`} 
                      color={colors.money} 
-                     icon="🍩" 
+                     icon="💰" 
                      styles={styles} 
                      colors={colors} 
                    />
@@ -532,7 +486,7 @@ function AdminPage() {
                      title="Promedio por Ticket" 
                      value="$150.00" 
                      color={colors.primary} 
-                     icon="⭐" 
+                     icon="📈" 
                      styles={styles} 
                      colors={colors} 
                    />
@@ -562,7 +516,7 @@ function AdminPage() {
 
       {/* MODAL PURGAR */}
       {showPurgeModal && (
-        <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+        <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content border-0 rounded-4 overflow-hidden" style={{backgroundColor: colors.cardBg, color: colors.textMain, border: `1px solid ${colors.badgeDangerTxt}`}}>
               <div className="modal-header border-0" style={{backgroundColor: colors.badgeDangerTxt}}><h5 className="modal-title fw-bold text-white">⚠️ Zona de Peligro</h5><button type="button" className="btn-close btn-close-white" onClick={() => setShowPurgeModal(false)}></button></div>
@@ -570,7 +524,8 @@ function AdminPage() {
                 <p>Escribe <strong>ELIMINAR</strong> para confirmar:</p>
                 <input 
                     type="text" 
-                    style={styles.input}
+                    className='form-control'
+                    style={{backgroundColor: colors.elementBg, color: colors.textMain, border: `1px solid ${colors.borderColor}`}}
                     value={purgeConfirmText} 
                     onChange={(e) => setPurgeConfirmText(e.target.value)} 
                 />

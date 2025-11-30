@@ -7,8 +7,9 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
   const [nombreOpcion, setNombreOpcion] = useState('');
   const [precioOpcion, setPrecioOpcion] = useState(0);
 
+  // Mantenemos tus estilos oscuros aquí, que ya estaban bien
   const cardClass = theme === 'dark' ? 'card text-bg-dark border-secondary' : 'card';
-  const inputClass = theme === 'dark' ? 'form-control form-control-dark bg-dark text-white' : 'form-control';
+  const inputClass = theme === 'dark' ? 'form-control bg-dark text-white border-secondary' : 'form-control';
   const listGroupClass = theme === 'dark' ? 'list-group-item bg-dark text-white border-secondary' : 'list-group-item';
 
   const handleAddOption = async () => {
@@ -74,7 +75,7 @@ function GrupoOpcionesCard({ grupo, onOptionAdded, onOptionDeleted, onGroupDelet
         ) : (
           <p className="text-muted small">No hay opciones en este grupo.</p>
         )}
-        <hr />
+        <hr className="border-secondary" />
         <h6 className="card-title">Añadir nueva opción:</h6>
         
         <div className="row g-2">
@@ -128,21 +129,17 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
   const [nombreGrupo, setNombreGrupo] = useState('');
   const [tipoSeleccion, setTipoSeleccion] = useState('unico');
 
-  // 🚨 AQUÍ ESTÁ LA CORRECCIÓN PRINCIPAL 🚨
   useEffect(() => {
     if (show) {
       if (productoActual) {
-        // 1. Cargamos la data básica inmediata para que el usuario vea algo
         setFormData(productoActual);
-        
-        // 2. Solicitamos al Backend los detalles COMPLETOS (Grupos y Opciones)
         setLoadingGrupos(true);
         apiClient.get(`/productos/${productoActual.id}`)
           .then(res => {
             const productoCompleto = res.data;
             if (productoCompleto.grupos_opciones && productoCompleto.grupos_opciones.length > 0) {
               setGrupos(productoCompleto.grupos_opciones);
-              setGestionarOpciones(true); // Activamos el switch si hay grupos
+              setGestionarOpciones(true); 
             } else {
               setGrupos([]);
               setGestionarOpciones(false);
@@ -158,7 +155,6 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
           });
 
       } else {
-        // Modo Crear Nuevo
         setFormData({
           nombre: '',
           descripcion: '',
@@ -261,8 +257,11 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
   };
   // --- Fin Manejadores Grupos y Opciones ---
 
+  // --- DEFINICIÓN DE ESTILOS UNIFICADOS ---
   const theme = 'dark'; 
   const modalContentClass = "modal-content bg-dark text-white"; 
+  // ESTE ES EL CAMBIO CLAVE: Todos los inputs tendrán fondo oscuro y texto blanco
+  const inputStyle = "form-control bg-dark text-white border-secondary";
 
   return (
     <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -281,43 +280,53 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
               {/* --- CAMPOS BÁSICOS DEL PRODUCTO --- */}
               <div className="mb-3">
                 <label className="form-label">Nombre del Producto</label>
-                <input type="text" className="form-control" name="nombre" value={formData.nombre || ''} onChange={handleChange} required />
+                {/* Se aplicó inputStyle */}
+                <input type="text" className={inputStyle} name="nombre" value={formData.nombre || ''} onChange={handleChange} required />
               </div>
               <div className="mb-3">
                 <label className="form-label">Descripción</label>
-                <textarea className="form-control" name="descripcion" rows="2" value={formData.descripcion || ''} onChange={handleChange}></textarea>
+                {/* Se aplicó inputStyle */}
+                <textarea className={inputStyle} name="descripcion" rows="2" value={formData.descripcion || ''} onChange={handleChange}></textarea>
               </div>
-              <div className="row">
+              <div className="row g-3">
                 <div className="col-md-4">
                   <label className="form-label">Precio</label>
-                  <input type="number" step="0.01" className="form-control" name="precio" value={formData.precio || ''} onChange={handleChange} required />
+                  {/* Se aplicó inputStyle */}
+                  <input type="number" step="0.01" className={inputStyle} name="precio" value={formData.precio || ''} onChange={handleChange} required />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label">Stock</label>
-                  <input type="number" className="form-control" name="stock" value={formData.stock || 0} onChange={handleChange} />
+                  {/* Se aplicó inputStyle */}
+                  <input type="number" className={inputStyle} name="stock" value={formData.stock || 0} onChange={handleChange} />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label">Categoría</label>
-                  <input type="text" className="form-control" name="categoria" value={formData.categoria || 'General'} onChange={handleChange} />
+                  {/* Se aplicó inputStyle */}
+                  <input type="text" className={inputStyle} name="categoria" value={formData.categoria || 'General'} onChange={handleChange} />
                 </div>
               </div>
-              <hr />
-              <div className="p-3 mb-3 border border-secondary rounded">
+              
+              <hr className="border-secondary my-4" />
+              
+              <div className="p-3 mb-3 border border-secondary rounded bg-opacity-10 bg-white">
                 <h6 className="mb-3">Imágenes del Producto</h6>
                 {(formData.imagenes || ['']).map((url, index) => (
                   <div key={index} className="d-flex align-items-center mb-2">
-                    <input type="text" className="form-control me-2" placeholder="https://ejemplo.com/imagen.jpg" value={url || ''} onChange={(e) => handleImageChange(index, e.target.value)} />
+                    {/* Se aplicó inputStyle y margen */}
+                    <input type="text" className={`${inputStyle} me-2`} placeholder="https://ejemplo.com/imagen.jpg" value={url || ''} onChange={(e) => handleImageChange(index, e.target.value)} />
                     <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => handleRemoveImageField(index)} disabled={!formData.imagenes || formData.imagenes.length <= 1}>&times;</button>
                   </div>
                 ))}
                 <button type="button" className="btn btn-outline-primary btn-sm mt-2" onClick={handleAddImageField}>Añadir URL de Imagen</button>
               </div>
-              <div className="p-3 mb-3 border border-secondary rounded">
+
+              <div className="p-3 mb-3 border border-secondary rounded bg-opacity-10 bg-white">
                 <h6 className="mb-3">Configuración de Oferta</h6>
                 <div className="row">
                   <div className="col-md-6">
                     <label className="form-label">Porcentaje de Descuento (%)</label>
-                    <input type="number" className="form-control" name="descuento_porcentaje" value={formData.descuento_porcentaje || 0} onChange={handleChange} />
+                    {/* Se aplicó inputStyle */}
+                    <input type="number" className={inputStyle} name="descuento_porcentaje" value={formData.descuento_porcentaje || 0} onChange={handleChange} />
                   </div>
                   <div className="col-md-6 d-flex align-items-center justify-content-center">
                     <div className="form-check form-switch fs-5 mt-3">
@@ -353,19 +362,21 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
                   {gestionarOpciones && formData.id && (
                     <div className="mt-4">
                       {/* Formulario para CREAR NUEVO GRUPO */}
-                      <div className="p-3 mb-4 border rounded text-bg-dark border-secondary"> 
+                      <div className="p-3 mb-4 border rounded text-bg-dark border-secondary bg-opacity-10"> 
                         <h5 className="mb-3">Crear Nuevo Grupo</h5>
                         
                         <div className="row g-3">
                           <div className="col-md-5">
                             <label className="form-label">Nombre del Grupo</label>
-                            <input type="text" className="form-control form-control-dark bg-dark text-white" placeholder="Ej: Elige tu Jarabe" value={nombreGrupo} onChange={(e) => setNombreGrupo(e.target.value)} />
+                            {/* Se aplicó inputStyle */}
+                            <input type="text" className={inputStyle} placeholder="Ej: Elige tu Jarabe" value={nombreGrupo} onChange={(e) => setNombreGrupo(e.target.value)} />
                           </div>
                           <div className="col-md-4">
                             <label className="form-label">Tipo de Selección</label>
-                            <select className="form-select form-control-dark bg-dark text-white" value={tipoSeleccion} onChange={(e) => setTipoSeleccion(e.target.value)}>
-                              <option value="unico">Única (Radio Button)</option>
-                              <option value="multiple">Múltiple (Checkbox)</option>
+                            {/* Se aplicó inputStyle */}
+                            <select className={inputStyle} value={tipoSeleccion} onChange={(e) => setTipoSeleccion(e.target.value)}>
+                              <option value="unico" className="text-dark">Única (Radio Button)</option>
+                              <option value="multiple" className="text-dark">Múltiple (Checkbox)</option>
                             </select>
                           </div>
                           <div className="col-md-3 d-flex align-items-end">
@@ -404,7 +415,8 @@ function ProductModal({ show, handleClose, handleSave, productoActual }) {
             
             <div className="modal-footer border-secondary">
               <button type="button" className="btn btn-secondary" onClick={handleClose}>Cancelar</button>
-              <button type="submit" className="btn btn-primary">Guardar Cambios</button>
+              {/* Botón personalizado con color Rosa */}
+              <button type="submit" className="btn" style={{ backgroundColor: '#ec4899', color: 'white' }}>Guardar Cambios</button>
             </div>
 
           </form>

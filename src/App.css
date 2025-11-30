@@ -768,3 +768,31 @@ footer .text-body-secondary a:hover {
 @media (max-width: 576px) {
   .login-box { width: 95%; padding: 1.5rem; margin: 2rem auto; }
 }
+
+/* ================================================== */
+/* === FIX ESPECÍFICO PARA ADMIN DASHBOARD === */
+/* ================================================== */
+
+/* Asegurar que el fondo del Admin sea NEGRO PURO en Picante */
+[data-bs-theme="picante"] .admin-container {
+    background-color: #050505 !important;
+}
+
+/* Forzar que los números y títulos dentro de tarjetas sean visibles */
+[data-bs-theme="picante"] .card h1,
+[data-bs-theme="picante"] .card h2,
+[data-bs-theme="picante"] .card h3,
+[data-bs-theme="picante"] .card .fw-bold {
+    color: #FFFFFF; /* Texto base blanco */
+}
+
+/* Clases utilitarias para el Rojo Neón y Verde Dinero */
+[data-bs-theme="picante"] .text-neon-red {
+    color: #FF1744 !important;
+    text-shadow: 0 0 10px rgba(255, 23, 68, 0.4);
+}
+
+[data-bs-theme="picante"] .text-neon-green {
+    color: #00E676 !important;
+    text-shadow: 0 0 10px rgba(0, 230, 118, 0.4);
+}

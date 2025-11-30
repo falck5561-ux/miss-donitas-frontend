@@ -160,7 +160,6 @@ function AdminPage() {
       fontWeight: '700',
       boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
     },
-    // Estilo especial para los botones de gestión de pedidos (Compactos)
     btnControl: (bgColor, textColor = 'white') => ({
         backgroundColor: bgColor,
         color: textColor,
@@ -310,7 +309,7 @@ function AdminPage() {
 
   return (
     <div style={styles.container}>
-      <div className="container-fluid px-4"> {/* Ancho completo para que quepan los botones */}
+      <div className="container-fluid px-4">
         
         {/* HEADER */}
         <div className="text-center mb-5">
@@ -394,7 +393,7 @@ function AdminPage() {
             </div>
           )}
 
-          {/* === SECCIÓN: PEDIDOS (AHORA CON TODOS LOS BOTONES) === */}
+          {/* === SECCIÓN: PEDIDOS === */}
           {!loading && !error && activeTab === 'pedidosEnLinea' && (
             <div>
               <div className="d-flex justify-content-between align-items-center mb-4">
@@ -439,7 +438,6 @@ function AdminPage() {
                                return <span className="badge rounded-pill" style={{backgroundColor: bg, color: text, padding: '6px 12px'}}>{p.estado}</span>;
                            })()}
                         </td>
-                        {/* AQUI ESTAN LOS BOTONES QUE PEDISTE (ESTILO JEFE SUPREMO) */}
                         <td>
                             <div className="d-flex flex-wrap gap-2">
                                 <button style={styles.btnControl(colors.btnView)} onClick={() => handleShowDetails(p)}>Ver</button>
@@ -508,16 +506,23 @@ function AdminPage() {
             </div>
           )}
 
-          {/* === SECCIÓN: REPORTES === */}
+          {/* === SECCIÓN: REPORTES (CORREGIDA) === */}
           {!loading && !error && activeTab === 'reporteGeneral' && (
             <div>
               {reportData.length > 0 ? (
                 <div>
                    <div className="row mb-5 g-4">
-                      <div className="col-md-4"><StatCard title="Ventas Totales" value={`$${reportData.reduce((acc, curr) => acc + Number(curr.total_ventas), 0).toFixed(2)}`} color={colors.success} icon="💰" styles={styles} /></div>
-                      <div className="col-md-4"><StatCard title="Transacciones" value={reportData.reduce((acc, curr) => acc + Number(curr.cantidad_pedidos), 0)} color={colors.accent} icon="🧾" styles={styles} /></div>
-                      <div className="col-md-4"><StatCard title="Promedio Venta" value="$150.00" color={colors.primary} icon="📈" styles={styles} /></div>
+                      {/* VENTAS TOTALES */}
+                      <div className="col-md-6">
+                          <StatCard title="Ventas Totales" value={`$${reportData.reduce((acc, curr) => acc + Number(curr.total_ventas), 0).toFixed(2)}`} color={colors.success} icon="💰" styles={styles} />
+                      </div>
+                      
+                      {/* PROMEDIO DE VENTA */}
+                      <div className="col-md-6">
+                          <StatCard title="Promedio Venta" value="$150.00" color={colors.primary} icon="📈" styles={styles} />
+                      </div>
                    </div>
+                   
                    <h5 className="mb-4 fw-bold" style={{color: colors.textMain}}>Gráfica de Rendimiento</h5>
                    <div style={{padding: '20px', backgroundColor: theme === 'dark' ? '#2b1f1f' : '#FAFAFA', borderRadius: '20px', border: `1px solid ${colors.border}`}}>
                         <SalesReportChart reportData={reportData} theme={theme} /> 

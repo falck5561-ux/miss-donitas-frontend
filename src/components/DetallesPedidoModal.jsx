@@ -6,20 +6,18 @@ const getModalColors = (mode) => {
   const isDark = mode === 'dark';
   return {
     overlay: 'rgba(0, 0, 0, 0.75)',
-    bg: isDark ? '#2b1f1f' : '#FFFDF5',          // Chocolate oscuro vs Crema Vainilla
-    textMain: isDark ? '#fff1e6' : '#5D4037',    // Crema vs Café Fuerte
-    textLight: isDark ? '#bcaaa4' : '#8D6E63',   // Café suave
+    bg: isDark ? '#2b1f1f' : '#FFFDF5',          
+    textMain: isDark ? '#fff1e6' : '#5D4037',    
+    textLight: isDark ? '#bcaaa4' : '#8D6E63',   
     border: isDark ? '#4e342e' : '#efebe9',
     
-    // Elementos destacados
-    primary: isDark ? '#ff1744' : '#FF80AB',     // Rojo Neón vs Rosa
-    mapBtnBg: '#29B6F6',                         // Azul Google Maps
+    primary: isDark ? '#ff1744' : '#FF80AB',     
+    mapBtnBg: '#29B6F6',                         
     mapBtnText: '#FFFFFF',
     
-    // Secciones internas
-    cardSection: isDark ? '#3e2723' : '#FFFFFF', // Fondo de tarjetas internas
-    totalText: isDark ? '#69F0AE' : '#2E7D32',   // Verde dinero
-    closeBtn: isDark ? '#ff5252' : '#EF5350'     // Rojo cerrar
+    cardSection: isDark ? '#3e2723' : '#FFFFFF', 
+    totalText: isDark ? '#69F0AE' : '#2E7D32',   
+    closeBtn: isDark ? '#ff5252' : '#EF5350'     
   };
 };
 
@@ -29,12 +27,10 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
 
   if (!pedido) return null;
 
-  // --- LÓGICA ROBUSTA DE DATOS ---
-  // 1. Detectar lista de productos (soporta ambas estructuras por si acaso)
+  // 1. Detectar lista de productos
   const listaProductos = pedido.productos || pedido.detalles || [];
 
-  // 2. Generar URL de Google Maps INTELIGENTE
-  // Prioridad: Coordenadas GPS -> Dirección exacta -> Nada
+  // 2. Generar URL de Google Maps
   let mapUrl = '';
   if (pedido.latitude && pedido.longitude) {
     mapUrl = `https://www.google.com/maps/search/?api=1&query=${pedido.latitude},${pedido.longitude}`;
@@ -43,7 +39,7 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
     mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dir + ", Campeche, Mexico")}`;
   }
 
-  // --- ESTILOS EN LÍNEA (Para garantizar el diseño sin importar Bootstrap) ---
+  // --- ESTILOS EN LÍNEA ---
   const styles = {
     overlay: {
       position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
@@ -69,11 +65,9 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
     
     body: { padding: '25px', overflowY: 'auto' },
     
-    // Filas de información
     row: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.95rem', color: colors.textMain },
     label: { fontWeight: 'bold', color: colors.textLight },
     
-    // Status Badge
     badge: {
       padding: '5px 12px', borderRadius: '50px', fontWeight: 'bold', fontSize: '0.8rem',
       backgroundColor: pedido.estado === 'Pendiente' ? '#FFF8E1' : '#E8F5E9',
@@ -81,7 +75,6 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
       border: `1px solid ${pedido.estado === 'Pendiente' ? '#FFE0B2' : '#C8E6C9'}`
     },
 
-    // Sección Productos
     sectionHeader: { 
       marginTop: '25px', marginBottom: '15px', paddingBottom: '5px',
       borderBottom: `2px solid ${colors.border}`, 
@@ -99,7 +92,6 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
       overflow: 'hidden', flexShrink: 0, fontSize: '0.7rem', color: colors.textLight
     },
     
-    // Sección Envío
     deliveryBox: {
       backgroundColor: colors.cardSection, padding: '20px',
       borderRadius: '16px', marginTop: '10px',
@@ -114,7 +106,6 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
       transition: 'transform 0.2s'
     },
 
-    // Footer
     footer: {
       padding: '20px 25px', borderTop: `1px solid ${colors.border}`,
       backgroundColor: colors.cardSection,
@@ -135,10 +126,10 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
         {/* ENCABEZADO */}
         <div style={styles.header}>
           <h3 style={styles.title}>Pedido #{pedido.id}</h3>
-          <button style={styles.closeX} onClick={onClose}>&times;</button>
+          <button style={styles.closeX} onClick={onClose}>×</button>
         </div>
 
-        {/* CONTENIDO SCROLEABLE */}
+        {/* CONTENIDO */}
         <div style={styles.body}>
           {/* Info Cliente */}
           <div style={styles.row}>
@@ -157,17 +148,24 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
           {/* Lista de Productos */}
           <div style={styles.sectionHeader}>📦 Productos</div>
           {listaProductos.map((prod, idx) => {
-             // Lógica para imagen (soporta array o string)
-             const imgUrl = Array.isArray(prod.imagenes) && prod.imagenes[0] ? prod.imagenes[0] 
-                          : (typeof prod.imagen === 'string' ? prod.imagen : null);
+             // --- CORRECCIÓN DE LA IMAGEN AQUÍ ---
+             // Ahora buscamos 'imagen_url', 'imagen', 'img' y dentro de array 'imagenes'
+             const imgUrl = 
+                prod.imagen_url || 
+                prod.imagen || 
+                prod.img || 
+                (Array.isArray(prod.imagenes) && prod.imagenes[0] ? prod.imagenes[0] : null);
              
-             // Opciones/Toppings
              const opciones = prod.opciones || prod.selectedOptions || [];
 
              return (
                <div key={idx} style={styles.productCard}>
                  <div style={styles.imgBox}>
-                   {imgUrl ? <img src={imgUrl} alt="prod" style={{width:'100%', height:'100%', objectFit:'cover'}}/> : "Sin img"}
+                   {imgUrl ? (
+                      <img src={imgUrl} alt="prod" style={{width:'100%', height:'100%', objectFit:'cover'}} onError={(e) => {e.target.style.display='none'}} />
+                   ) : (
+                      <span>Sin img</span>
+                   )}
                  </div>
                  <div style={{flex: 1}}>
                    <div style={{display:'flex', justifyContent:'space-between', fontWeight:'bold', color: colors.textMain}}>
@@ -186,7 +184,7 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
              );
           })}
 
-          {/* Sección de Envío / Entrega */}
+          {/* Sección de Envío */}
           <div style={styles.sectionHeader}>🛵 Detalles de Entrega</div>
           {pedido.tipo_orden === 'domicilio' ? (
             <div style={styles.deliveryBox}>
@@ -204,7 +202,6 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
                  </div>
               )}
 
-              {/* BOTÓN MÁGICO DE MAPAS */}
               {mapUrl && (
                 <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={styles.mapBtn}>
                   📍 Ver Ubicación en Google Maps
@@ -219,7 +216,7 @@ const DetallesPedidoModal = ({ pedido, onClose }) => {
           )}
         </div>
 
-        {/* PIE DE PÁGINA */}
+        {/* FOOTER */}
         <div style={styles.footer}>
           <div>
             <span style={{display:'block', fontSize:'0.85rem', color: colors.textLight}}>Total a Pagar:</span>

@@ -262,6 +262,7 @@ function PosPage() {
           } catch (error) {
               console.error("Error cargando detalles extra:", error);
           }
+          }
       };
 
   const handleCloseDetailsModal = () => { setShowDetailsModal(false); setSelectedOrderDetails(null); };
@@ -601,6 +602,5 @@ function PosPage() {
       )}
     </div>
   );
-}
 }
 export default PosPage;

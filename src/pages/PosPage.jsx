@@ -222,48 +222,45 @@ function PosPage() {
   };
 
   // --- FUNCIÓN CORREGIDA PARA VER DETALLES ---
+  // --- FUNCIÓN CORREGIDA FINAL (SIN ERROR 404) ---
   const handleShowDetails = async (venta) => {
-      // 1. Datos iniciales para que el modal abra rápido
-      let datosIniciales = { 
+      // 1. Buscamos productos en lo que ya tenemos descargado
+      const posiblesItems = venta.items || venta.detalles || venta.venta_detalles || venta.productos || [];
+
+      let datosParaModal = { 
           ...venta,
           estado: venta.estado || 'Completado',
-          tipo_orden: venta.tipo_orden || 'mostrador',
-          nombre_cliente: venta.nombre_cliente || 'Venta de Mostrador'
+          items: posiblesItems
       };
       
-      // Abrimos modal con lo que tenemos
-      setSelectedOrderDetails(datosIniciales);
+      // 2. Abrimos el modal inmediatamente con lo que tenemos
+      setSelectedOrderDetails(datosParaModal);
       setShowDetailsModal(true);
 
-      // 2. Verificamos si tiene productos
-      const tieneProductos = (datosIniciales.items && datosIniciales.items.length > 0) || 
-                             (datosIniciales.venta_detalles && datosIniciales.venta_detalles.length > 0);
+      // 3. SI ya tenemos items, NO llamamos al servidor (Esto evita el error 404)
+      if (posiblesItems.length > 0) {
+          return; 
+      }
 
-      // 3. Si no tiene productos, los pedimos al servidor
-      if (!tieneProductos) {
-          try {
-              // CORRECCIÓN: Si estamos en la pestaña 'pedidos', buscamos en la tabla de pedidos
-              // Si estamos en 'historial', buscamos en la tabla de ventas
-              const endpoint = activeTab === 'pedidos' 
-                  ? `/pedidos/${venta.id}` 
-                  : `/ventas/${venta.id}`;
+      // 4. Solo si la lista estaba vacía, intentamos buscarla con cuidado
+      try {
+          const endpoint = activeTab === 'pedidos' 
+              ? `/pedidos/${venta.id}/` // Nota la barra al final
+              : `/ventas/${venta.id}/`; 
 
-              const res = await apiClient.get(endpoint);
+          const res = await apiClient.get(endpoint);
 
-              if (res.data) {
-                  const datosCompletos = { 
-                      ...datosIniciales, 
-                      ...res.data,
-                      // Unificamos donde vienen los productos
-                      items: res.data.items || res.data.venta_detalles || res.data.detalles || []
-                  };
-                  setSelectedOrderDetails(datosCompletos);
-              }
-          } catch (error) {
-              console.error("Error cargando detalles extra:", error);
+          if (res.data) {
+              setSelectedOrderDetails({
+                  ...datosParaModal,
+                  ...res.data,
+                  items: res.data.items || res.data.venta_detalles || res.data.detalles || []
+              });
           }
-          }
-      };
+      } catch (error) {
+          console.warn(`Usando datos locales para ID ${venta.id}`);
+      }
+  };
 
   const handleCloseDetailsModal = () => { setShowDetailsModal(false); setSelectedOrderDetails(null); };
 

@@ -3,20 +3,20 @@ import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import { Package, Calendar, Clock, MapPin, ShoppingBag, ChevronRight } from 'lucide-react';
-
-// Asegúrate de que estas rutas sean correctas en tu proyecto
+// Iconos nuevos
+import { Package, Calendar, Clock, MapPin, ShoppingBag, ChevronRight, Hash } from 'lucide-react';
 import CheckoutForm from '../components/CheckoutForm';
 import MapSelector from '../components/MapSelector';
 import apiClient from '../services/api';
 import { useCart } from '../context/CartContext';
 import ProductDetailModal from '../components/ProductDetailModal';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeContext'; // Importante para el modo oscuro/claro
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
-// --- ESTILOS GENERALES ---
+// --- ESTILOS GENERALES (Cupones, etc) ---
 const styles = {
+  recompensasContainer: { padding: '1rem 0' },
   cupon: {
     backgroundColor: '#2a9d8f',
     color: 'white',
@@ -26,6 +26,7 @@ const styles = {
     alignItems: 'center',
     boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
     borderLeft: '10px dashed #264653',
+    position: 'relative',
     marginBottom: '1rem'
   },
   cuponIcon: { fontSize: '3.5rem', marginRight: '2rem' },
@@ -42,17 +43,18 @@ const styles = {
   },
 };
 
+// --- ESTILOS VISUALES PARA LA NUEVA TABLA ---
 const getTableThemeStyles = (isPicante) => ({
-  text: isPicante ? '#FFFFFF' : '#3E2723', 
-  cardBg: isPicante ? '#121212' : '#FFFFFF', 
-  border: isPicante ? '1px solid #333333' : '1px solid #EFEBE9', 
-  accent: isPicante ? '#FF1744' : '#FF4081', 
-  muted: isPicante ? '#888888' : '#8D6E63',
-  tableHeaderBg: isPicante ? '#1E1E1E' : '#FFF0F5', 
-  hoverBg: isPicante ? '#1A1A1A' : '#FAFAFA'
-});
-
-// --- COMPONENTE TABLA MIS PEDIDOS ---
+    text: isPicante ? '#FFFFFF' : '#3E2723', 
+    cardBg: isPicante ? '#121212' : '#FFFFFF', 
+    border: isPicante ? '1px solid #333333' : '1px solid #EFEBE9', 
+    accent: isPicante ? '#FF1744' : '#FF4081', 
+    muted: isPicante ? '#888888' : '#8D6E63',
+    tableHeaderBg: isPicante ? '#1E1E1E' : '#FFF0F5', 
+    hoverBg: isPicante ? '#1A1A1A' : '#FAFAFA'
+  });
+  
+// --- COMPONENTE TABLA MODERNA ---
 const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
     const { theme } = useTheme();
     const isPicante = theme === 'picante';
@@ -124,6 +126,7 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
                     <td className="pe-4 py-3 text-end"><ChevronRight size={16} color={styles.muted} /></td>
                   </motion.tr>
                   
+                  {/* DETALLE EXPANDIBLE */}
                   {ordenExpandida === p.id && (
                       <tr style={{backgroundColor: styles.hoverBg}}>
                           <td colSpan="6" className="p-0">
@@ -167,15 +170,13 @@ const notify = (type, message) => {
   }
 };
 
-// --- COMPONENTE CONTENIDO CARRITO (CON INPUT Y BOTÓN GRANDE) ---
+// --- COMPONENTE CONTENIDO CARRITO ---
 const CarritoContent = ({
   isModal, pedidoActual, decrementarCantidad, incrementarCantidad, eliminarProducto,
   tipoOrden, setTipoOrden, direccionGuardada, usarDireccionGuardada, handleLocationSelect,
   direccion, referencia, setReferencia, guardarDireccion, setGuardarDireccion,
   subtotal, costoEnvio, calculandoEnvio, totalFinal, handleContinue, handleProcederAlPago,
-  paymentLoading, limpiarPedidoCompleto,
-  // Props del teléfono
-  telefono, onTelefonoChange
+  paymentLoading, limpiarPedidoCompleto
 }) => (
   <>
     <div className={isModal ? "modal-body" : "card-body"}>
@@ -234,78 +235,37 @@ const CarritoContent = ({
       )}
 
       <hr />
-      
-      {/* --- INPUT DE TELÉFONO --- */}
-      <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px', fontSize: '0.9rem' }}>
-              Número de Teléfono:
-          </label>
-          <input 
-              type="tel" 
-              placeholder="Ej: 981 123 4567"
-              value={telefono} 
-              onChange={onTelefonoChange} // Usamos la función que guarda en localStorage
-              style={{
-                  width: '100%',
-                  padding: '10px',
-                  backgroundColor: '#f8f9fa',
-                  border: '1px solid #ced4da',
-                  borderRadius: '8px',
-                  outline: 'none'
-              }}
-          />
-      </div>
-      {/* ------------------------- */}
-
       <p className="d-flex justify-content-between">Subtotal: <span>${subtotal.toFixed(2)}</span></p>
       {tipoOrden === 'domicilio' && (<motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="d-flex justify-content-between">Costo de Envío: {calculandoEnvio ? <span className="spinner-border spinner-border-sm"></span> : <span>${costoEnvio.toFixed(2)}</span>}</motion.p>)}
       <h4>Total: ${totalFinal.toFixed(2)}</h4>
     </div>
 
-    <div className={isModal ? "modal-footer d-block" : "card-footer d-block mt-auto"}>
+    <div className={isModal ? "modal-footer d-grid gap-2" : "card-footer d-grid gap-2 mt-auto"}>
       {isModal ? (
-        <button 
-            className="btn btn-primary" 
-            onClick={handleContinue} 
-            disabled={pedidoActual.length === 0 || paymentLoading}
-            style={{ width: '100%', padding: '12px', borderRadius: '8px', fontWeight: 'bold', backgroundColor: '#FF1744', border: 'none' }}
-        >
+        <button className="btn btn-primary" onClick={handleContinue} disabled={pedidoActual.length === 0 || paymentLoading}>
           {tipoOrden === 'domicilio' ? 'Siguiente' : 'Proceder al Pago'}
         </button>
       ) : (
-        <button 
-            className="btn btn-primary" 
-            onClick={handleProcederAlPago} 
-            disabled={pedidoActual.length === 0 || paymentLoading || (tipoOrden === 'domicilio' && !direccion) || calculandoEnvio}
-            style={{ width: '100%', padding: '12px', borderRadius: '8px', fontWeight: 'bold', backgroundColor: '#FF1744', border: 'none' }}
-        >
+        <button className="btn btn-primary" onClick={handleProcederAlPago} disabled={pedidoActual.length === 0 || paymentLoading || (tipoOrden === 'domicilio' && !direccion) || calculandoEnvio}>
           {paymentLoading ? 'Iniciando...' : 'Proceder al Pago'}
         </button>
       )}
-      <button className="btn btn-outline-danger w-100 mt-2" onClick={limpiarPedidoCompleto}>Vaciar Carrito</button>
+      <button className="btn btn-outline-danger" onClick={limpiarPedidoCompleto}>Vaciar Carrito</button>
     </div>
   </>
 );
 
+
 // ===================================================================
-// ===                     CLIENTE PAGE                            ===
+// ===                       CLIENTE PAGE                          ===
 // ===================================================================
 function ClientePage() {
-  const { 
-    pedidoActual, 
-    subtotal, 
-    incrementarCantidad, 
-    decrementarCantidad, 
-    eliminarProducto, 
-    limpiarPedido,
-    agregarProductoAPedido 
-  } = useCart();
+  const { pedidoActual, subtotal, incrementarCantidad, decrementarCantidad, eliminarProducto, limpiarPedido, agregarProductoAPedido } = useCart();
 
   const [activeTab, setActiveTab] = useState('crear');
   const [ordenExpandida, setOrdenExpandida] = useState(null);
-  
-  const [menuItems, setMenuItems] = useState([]); 
-
+  const [menuItems, setMenuItems] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [tipoOrden, setTipoOrden] = useState('llevar');
   const [direccion, setDireccion] = useState(null);
   const [costoEnvio, setCostoEnvio] = useState(0);
@@ -314,7 +274,6 @@ function ClientePage() {
   const [misRecompensas, setMisRecompensas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
   const [datosParaCheckout, setDatosParaCheckout] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [clientSecret, setClientSecret] = useState('');
@@ -326,92 +285,48 @@ function ClientePage() {
   const [modalView, setModalView] = useState('cart');
   const [productoSeleccionadoParaModal, setProductoSeleccionadoParaModal] = useState(null);
 
-  // --- ESTADO DEL TELÉFONO ---
-  const [telefono, setTelefono] = useState('');
-
-  // --- EFECTO PARA CARGAR TELÉFONO GUARDADO ---
-  useEffect(() => {
-    const telefonoGuardado = localStorage.getItem('userPhone');
-    if (telefonoGuardado) {
-        setTelefono(telefonoGuardado);
-    }
-  }, []);
-
-  // --- FUNCIÓN PARA GUARDAR TELÉFONO AL ESCRIBIR ---
-  const handleTelefonoChange = (e) => {
-    const val = e.target.value;
-    setTelefono(val);
-    localStorage.setItem('userPhone', val); // Guarda automáticamente
-  };
-
   const totalFinal = subtotal + costoEnvio;
 
-  // --- CARGA DE PRODUCTOS Y COMBOS (CORREGIDO PARA QUE APAREZCAN) ---
   useEffect(() => {
     const fetchInitialData = async () => {
+      if (activeTab !== 'crear') return;
       setLoading(true);
       setError('');
       try {
-        const [productosRes, combosRes, direccionRes] = await Promise.allSettled([
+        const [productosRes, combosRes, direccionRes] = await Promise.all([
           apiClient.get('/productos'),
           apiClient.get('/combos'),
           apiClient.get('/usuarios/mi-direccion')
         ]);
-
-        let combinedMenu = [];
-
-        // Procesar productos
-        if (productosRes.status === 'fulfilled') {
-          const productosData = productosRes.value.data.map(p => ({
-              ...p, 
-              tipo: 'producto',
-              categoria: p.categoria || 'General' // Asegura categoría
-          }));
-          combinedMenu = [...combinedMenu, ...productosData];
-        } else {
-          console.error("Error cargando productos:", productosRes.reason);
-        }
-
-        // Procesar combos (IMPORTANTE: Asignar categoría 'Combos')
-        if (combosRes.status === 'fulfilled') {
-          const combosData = combosRes.value.data.map(c => ({
-            id: `combo-${c.id}`, 
-            nombre: c.titulo,
-            precio: c.precio,
-            descripcion: c.descripcion,
-            imagenes: c.imagenes,
-            en_oferta: c.descuento_porcentaje > 0,
-            descuento_porcentaje: c.descuento_porcentaje,
-            tipo: 'combo',
-            categoria: 'Combos' // <--- ESTO ARREGLA QUE NO APARECIERAN
-          }));
-          combinedMenu = [...combinedMenu, ...combosData];
-        } else {
-          console.error("Error cargando combos:", combosRes.reason);
-        }
-
-        if (combinedMenu.length > 0) {
-          setMenuItems(combinedMenu);
-        } else {
-          throw new Error('No se pudieron cargar los productos.');
-        }
-
-        if (direccionRes.status === 'fulfilled' && direccionRes.value.data) {
-          setDireccionGuardada(direccionRes.value.data);
-        }
+        
+        const estandarizarItem = (item) => {
+          const precioFinal = Number(item.precio);
+          let precioOriginal = precioFinal;
+          if (item.en_oferta && item.descuento_porcentaje > 0) {
+            precioOriginal = precioFinal / (1 - item.descuento_porcentaje / 100);
+          }
+          return {
+            ...item, 
+            precio: precioFinal,
+            precio_original: precioOriginal,
+            nombre: item.nombre || item.titulo,
+            categoria: item.categoria || (item.titulo ? 'Combos' : 'General') 
+          };
+        };
+        const productosEstandarizados = productosRes.data.map(estandarizarItem);
+        const combosEstandarizados = combosRes.data.map(estandarizarItem);
+        setMenuItems([...productosEstandarizados, ...combosEstandarizados]);
+        if (direccionRes.data) { setDireccionGuardada(direccionRes.data); }
       } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+        console.error("Error cargando datos:", err);
+        setError('No se pudieron cargar los productos.');
+      } finally { setLoading(false); }
     };
     fetchInitialData();
-  }, []);
+  }, [activeTab]);
 
-  // --- FILTRADO DE CATEGORÍAS ---
   const categories = ['Todos', ...new Set(menuItems.map(item => item.categoria))];
-  const [selectedCategory, setSelectedCategory] = useState('Todos');
-  const itemsFiltrados = selectedCategory === 'Todos' ? menuItems : menuItems.filter(item => item.categoria === selectedCategory);
+  const filteredItems = selectedCategory === 'Todos' ? menuItems : menuItems.filter(item => item.categoria === selectedCategory);
 
   useEffect(() => {
     const fetchTabData = async () => {
@@ -447,7 +362,6 @@ function ClientePage() {
     setGuardarDireccion(false);
     setReferencia('');
     setShowCartModal(false);
-    // Nota: NO borramos el teléfono aquí para que se mantenga para el próximo pedido
   };
 
   const handleLocationSelect = async (location) => {
@@ -475,13 +389,6 @@ function ClientePage() {
   const handleProcederAlPago = async () => {
     if (totalFinal <= 0) return;
     if (tipoOrden === 'domicilio' && !direccion) { return notify('error', 'Selecciona tu ubicación.'); }
-
-    // --- VALIDACIÓN DE TELÉFONO ---
-    if (!telefono || telefono.length < 10) { 
-        return notify('error', 'Por favor ingresa un número de teléfono válido (10 dígitos).'); 
-    }
-    // -----------------------------
-
     if (calculandoEnvio) { return notify('error', 'Calculando envío...'); }
     setPaymentLoading(true);
     try {
@@ -501,8 +408,7 @@ function ClientePage() {
         direccion_entrega: tipoOrden === 'domicilio' ? direccion?.description : null,
         latitude: tipoOrden === 'domicilio' ? direccion?.lat : null,
         longitude: tipoOrden === 'domicilio' ? direccion?.lng : null,
-        referencia: tipoOrden === 'domicilio' ? referencia : null,
-        telefono: telefono // Se envía al backend
+        referencia: tipoOrden === 'domicilio' ? referencia : null
       };
       
       setDatosParaCheckout(pedidoData);
@@ -561,33 +467,27 @@ function ClientePage() {
                 <button key={cat} className={`btn rounded-pill px-3 ${selectedCategory === cat ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={() => setSelectedCategory(cat)}>{cat}</button>
               ))}
             </div>
-            {itemsFiltrados.length === 0 ? (
+            {filteredItems.length === 0 ? (
                <p className="text-muted text-center mt-4">No hay productos en esta categoría.</p>
             ) : (
               <div className="row g-3">
-                {itemsFiltrados.map(item => {
-                  const precioConDescuento = item.en_oferta 
-                  ? Number(item.precio) * (1 - item.descuento_porcentaje / 100)
-                  : Number(item.precio);
-
-                  return (
-                    <div key={item.id} className="col-6 col-md-4 col-lg-3">
-                        <div className="card h-100 text-center shadow-sm border-0 hover-effect" onClick={() => handleProductClick(item)} style={{ cursor: 'pointer', transition: 'transform 0.2s' }}>
-                        <div className="card-body d-flex flex-column justify-content-center pt-4">
-                            <h5 className="card-title">{item.nombre}</h5>
-                            {item.en_oferta ? (
-                            <div>
-                                <span className="text-muted text-decoration-line-through me-2 small">${Number(item.precio).toFixed(2)}</span>
-                                <span className="card-text fw-bold fs-5 text-success">${precioConDescuento.toFixed(2)}</span>
-                            </div>
-                            ) : (
-                            <p className="card-text fw-bold fs-5">${Number(item.precio).toFixed(2)}</p>
-                            )}
-                        </div>
-                        </div>
+                {filteredItems.map(item => (
+                  <div key={item.id} className="col-6 col-md-4 col-lg-3">
+                    <div className="card h-100 text-center shadow-sm border-0 hover-effect" onClick={() => handleProductClick(item)} style={{ cursor: 'pointer', transition: 'transform 0.2s' }}>
+                      <div className="card-body d-flex flex-column justify-content-center pt-4">
+                        <h5 className="card-title">{item.nombre}</h5>
+                        {item.en_oferta ? (
+                          <div>
+                            <span className="text-muted text-decoration-line-through me-2 small">${Number(item.precio_original).toFixed(2)}</span>
+                            <span className="card-text fw-bold fs-5 text-success">${Number(item.precio).toFixed(2)}</span>
+                          </div>
+                        ) : (
+                          <p className="card-text fw-bold fs-5">${Number(item.precio).toFixed(2)}</p>
+                        )}
+                      </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -600,16 +500,13 @@ function ClientePage() {
                 direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
                 subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
                 paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
-                // PASAR PROPS TELÉFONO
-                telefono={telefono}
-                onTelefonoChange={handleTelefonoChange}
               />
             </div>
           </div>
         </motion.div>
       )}
 
-      {/* --- PESTAÑA: MIS PEDIDOS --- */}
+      {/* --- PESTAÑA: MIS PEDIDOS (NUEVA TABLA) --- */}
       {!loading && activeTab === 'ver' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-2">
            <h2 className="mb-4 fw-bold" style={{ fontFamily: "'Fredoka One', cursive" }}>Mis Pedidos</h2>
@@ -672,9 +569,6 @@ function ClientePage() {
                   direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
                   subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
                   paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
-                  // PASAR PROPS TELÉFONO
-                  telefono={telefono}
-                  onTelefonoChange={handleTelefonoChange}
                 />
               ) : (
                 <>

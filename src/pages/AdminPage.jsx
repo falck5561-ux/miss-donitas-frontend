@@ -64,7 +64,7 @@ function AdminPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
 
-  // --- CARGA DE DATOS CORREGIDA (SOLUCIONA EL 404) ---
+  // --- CARGA DE DATOS ---
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -81,15 +81,13 @@ function AdminPage() {
           setPedidos(res.data); 
       } 
       else if (activeTab === 'combos') { 
-          // CORRECCIÓN: Usamos '/combos' en lugar de '/combos/admin/todos'
           const res = await apiClient.get('/combos'); 
           setCombos(res.data); 
       }
     } catch (err) { 
         console.error("Error cargando datos:", err);
-        // Notificamos si es error 404 u otro
         if (err.response && err.response.status === 404) {
-            toast.error("Error 404: Ruta no encontrada en el servidor.");
+            toast.error("Error 404: Ruta no encontrada.");
         } else {
             toast.error("Error de conexión con el servidor.");
         }
@@ -99,7 +97,7 @@ function AdminPage() {
 
   useEffect(() => { fetchData(); }, [activeTab]);
 
-  // Handlers
+  // Handlers Modales y CRUD
   const handleOpenProductModal = (p = null) => { setProductoActual(p ? { ...p, imagenes: p.imagen_url ? [p.imagen_url] : [] } : null); setShowProductModal(true); };
   const handleSaveProducto = async (p) => { try { const d = { ...p, imagen_url: p.imagenes?.[0] || null }; delete d.imagenes; if (d.id) await updateProduct(d.id, d); else await createProduct(d); toast.success('Guardado'); fetchData(); setShowProductModal(false); } catch { toast.error('Error'); } };
   const handleDeleteProducto = async (id) => { if(window.confirm('¿Ocultar producto?')) { await deleteProduct(id); fetchData(); }};
@@ -107,18 +105,46 @@ function AdminPage() {
   const handleSaveCombo = async (c) => { try { if(c.id) await apiClient.put(`/combos/${c.id}`, c); else await apiClient.post('/combos', c); toast.success('Guardado'); fetchData(); setShowComboModal(false); } catch { toast.error('Error'); } };
   const handleDeleteCombo = async (c) => { if(window.confirm('¿Desactivar combo?')) { await apiClient.patch(`/combos/${c.id}/desactivar`); toast.success('Desactivado'); fetchData(); }};
   
-  // Actualizar estado y recargar datos
+  // Actualizar estado del pedido
   const handleUpdateStatus = async (id, est) => { 
       try { 
           await apiClient.put(`/pedidos/${id}/estado`, { estado: est }); 
           toast.success(`Pedido actualizado a: ${est}`); 
-          fetchData(); // Recarga la lista para ver el cambio
+          fetchData(); 
       } catch { 
           toast.error('Error al actualizar estado'); 
       } 
   };
 
-  // --- LOGICA DEL BOTÓN DE ACCIÓN (Ciclo Completo) ---
+  // --- NUEVA FUNCIÓN: VER DETALLES INTELIGENTE ---
+  // Esta función decide si buscar en /pedidos o /ventas para evitar el error 404
+  const handleShowDetails = async (orden) => {
+      // 1. Usamos la info que ya tenemos como base
+      let datosCompletos = { ...orden };
+      
+      // 2. Definimos dónde buscar según el estado
+      // Si está completado, lo buscamos en el historial de ventas
+      const endpoint = (orden.estado === 'Completado' || orden.estado === 'Entregado')
+          ? `/ventas/${orden.id}`
+          : `/pedidos/${orden.id}`;
+
+      try {
+          // 3. Intentamos traer los detalles frescos
+          const res = await apiClient.get(endpoint);
+          if (res.data) {
+              datosCompletos = { ...datosCompletos, ...res.data };
+          }
+      } catch (error) {
+          console.warn("No se pudieron cargar detalles extra (posible cambio de estado):", error);
+          // No mostramos error al usuario, simplemente abrimos el modal con lo que tenemos
+      }
+
+      // 4. Abrimos el modal
+      setSelectedOrderDetails(datosCompletos);
+      setShowDetailsModal(true);
+  };
+
+  // --- RENDERIZADO DE BOTONES DE ACCIÓN ---
   const renderActionButtons = (p) => {
       const status = p.estado ? p.estado.trim() : '';
       const isDelivery = p.tipo_orden === 'domicilio';
@@ -171,7 +197,6 @@ function AdminPage() {
     <div style={{ backgroundColor: styles.bg, minHeight: '100vh', color: styles.text, fontFamily: "'Nunito', sans-serif" }}>
       
       <div className="container-fluid px-4 py-5">
-        
         {/* HEADER */}
         <div className="d-flex flex-wrap justify-content-between align-items-center mb-5">
           <div>
@@ -262,10 +287,11 @@ function AdminPage() {
                                            </td>
                                            <td className="pe-4 py-4 text-center">
                                                 <div className="d-flex justify-content-center align-items-center gap-2">
+                                                    {/* BOTÓN VER CORREGIDO */}
                                                     <button 
                                                         className="btn btn-sm fw-bold rounded-pill px-3" 
                                                         style={{border: `1px solid ${styles.text}`, color: styles.text, backgroundColor: 'transparent'}} 
-                                                        onClick={() => {setSelectedOrderDetails(p); setShowDetailsModal(true);}}
+                                                        onClick={() => handleShowDetails(p)} 
                                                     >
                                                         Ver
                                                     </button>

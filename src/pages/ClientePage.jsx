@@ -3,16 +3,18 @@ import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
+// Iconos nuevos
+import { Package, Calendar, Clock, MapPin, ShoppingBag, ChevronRight, Hash } from 'lucide-react';
 import CheckoutForm from '../components/CheckoutForm';
 import MapSelector from '../components/MapSelector';
 import apiClient from '../services/api';
 import { useCart } from '../context/CartContext';
 import ProductDetailModal from '../components/ProductDetailModal';
+import { useTheme } from '../context/ThemeContext'; // Importante para el modo oscuro/claro
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-// --- ESTILOS ---
+// --- ESTILOS GENERALES (Cupones, etc) ---
 const styles = {
   recompensasContainer: { padding: '1rem 0' },
   cupon: {
@@ -41,6 +43,125 @@ const styles = {
   },
 };
 
+// --- ESTILOS VISUALES PARA LA NUEVA TABLA ---
+const getTableThemeStyles = (isPicante) => ({
+    text: isPicante ? '#FFFFFF' : '#3E2723', 
+    cardBg: isPicante ? '#121212' : '#FFFFFF', 
+    border: isPicante ? '1px solid #333333' : '1px solid #EFEBE9', 
+    accent: isPicante ? '#FF1744' : '#FF4081', 
+    muted: isPicante ? '#888888' : '#8D6E63',
+    tableHeaderBg: isPicante ? '#1E1E1E' : '#FFF0F5', 
+    hoverBg: isPicante ? '#1A1A1A' : '#FAFAFA'
+  });
+  
+// --- COMPONENTE TABLA MODERNA ---
+const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
+    const { theme } = useTheme();
+    const isPicante = theme === 'picante';
+    const styles = getTableThemeStyles(isPicante);
+  
+    if (!pedidos || pedidos.length === 0) {
+      return (
+          <div className="text-center py-5 rounded-4" style={{backgroundColor: styles.cardBg, border: styles.border}}>
+              <Package size={48} className="mb-3 text-muted opacity-50"/>
+              <h5 className="fw-bold" style={{color: styles.text}}>Aún no tienes pedidos</h5>
+              <p className="small" style={{color: styles.muted}}>Haz tu primer pedido ahora.</p>
+          </div>
+      );
+    }
+  
+    const StatusBadge = ({ status }) => {
+        const st = status ? status.toLowerCase() : '';
+        let className = 'badge rounded-pill fw-bold px-3 py-2 ';
+        if (st === 'pendiente') className += 'bg-danger text-white';
+        else if (st.includes('preparacion')) className += 'bg-warning text-dark';
+        else if (st.includes('camino')) className += 'bg-info text-dark'; 
+        else if (st.includes('listo')) className += 'bg-success text-white';
+        else if (st === 'completado') className += 'bg-dark border border-secondary text-white';
+        else className += 'bg-secondary text-white';
+        return <span className={className} style={{ fontSize: '0.75rem' }}>{status}</span>;
+    };
+  
+    return (
+      <div className="rounded-4 shadow-sm overflow-hidden" style={{ backgroundColor: styles.cardBg, border: styles.border }}>
+        <div className="table-responsive">
+          <table className="table align-middle mb-0" style={{color: styles.text}}>
+            <thead style={{backgroundColor: styles.tableHeaderBg}}>
+              <tr>
+                <th className="py-4 ps-4 text-uppercase small fw-bold" style={{color: styles.muted}}>ID</th>
+                <th className="py-4 text-uppercase small fw-bold" style={{color: styles.muted}}>Fecha</th>
+                <th className="py-4 text-uppercase small fw-bold" style={{color: styles.muted}}>Tipo</th>
+                <th className="py-4 text-uppercase small fw-bold" style={{color: styles.muted}}>Estado</th>
+                <th className="py-4 text-uppercase small fw-bold" style={{color: styles.muted}}>Total</th>
+                <th className="py-4 pe-4 text-end text-uppercase small fw-bold" style={{color: styles.muted}}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {pedidos.map((p) => (
+                <React.Fragment key={p.id}>
+                  <motion.tr 
+                    whileHover={{ backgroundColor: styles.hoverBg }}
+                    onClick={() => onToggleDetalle(p.id)}
+                    style={{ borderBottom: `1px solid ${isPicante ? '#222' : '#f0f0f0'}`, cursor: 'pointer' }}
+                  >
+                    <td className="ps-4 py-3"><span className="fw-bold" style={{color: styles.text}}>#{p.id}</span></td>
+                    <td className="py-3">
+                        <div className="d-flex flex-column">
+                            <span className="fw-bold d-flex align-items-center gap-2" style={{fontSize: '0.85rem'}}>
+                                 <Calendar size={14} className="text-muted"/> {new Date(p.fecha).toLocaleDateString()}
+                            </span>
+                            <span className="small text-muted d-flex align-items-center gap-2">
+                                 <Clock size={12}/> {new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </span>
+                        </div>
+                    </td>
+                    <td className="py-3">
+                        {p.tipo_orden === 'domicilio' ? 
+                          <span className="badge rounded-pill text-dark bg-info bg-opacity-10 border border-info border-opacity-25 px-2 py-1"><MapPin size={12} /> Moto</span> : 
+                          <span className="badge rounded-pill text-dark bg-warning bg-opacity-10 border border-warning border-opacity-25 px-2 py-1"><ShoppingBag size={12} /> Local</span>
+                        }
+                    </td>
+                    <td className="py-3"><StatusBadge status={p.estado} /></td>
+                    <td className="py-3"><span className="fw-bold" style={{color: styles.accent}}>${Number(p.total).toFixed(2)}</span></td>
+                    <td className="pe-4 py-3 text-end"><ChevronRight size={16} color={styles.muted} /></td>
+                  </motion.tr>
+                  
+                  {/* DETALLE EXPANDIBLE */}
+                  {ordenExpandida === p.id && (
+                      <tr style={{backgroundColor: styles.hoverBg}}>
+                          <td colSpan="6" className="p-0">
+                              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="p-4">
+                                  <h6 className="fw-bold mb-3" style={{color: styles.accent}}>Detalle del Pedido</h6>
+                                  <ul className="list-group mb-3">
+                                      {p.productos?.map((prod, idx) => (
+                                          <li key={idx} className="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 ps-0 py-1" style={{color: styles.text}}>
+                                              <div>
+                                                  <span className="fw-bold">{prod.cantidad}x</span> {prod.nombre}
+                                                  {prod.opciones && <small className="text-muted d-block fst-italic ms-3">Extra: {prod.opciones}</small>}
+                                              </div>
+                                              <span>${(prod.cantidad * Number(prod.precio)).toFixed(2)}</span>
+                                          </li>
+                                      ))}
+                                  </ul>
+                                  {p.costo_envio > 0 && (
+                                      <div className="d-flex justify-content-between border-top pt-2" style={{color: styles.text}}>
+                                          <span>Costo de Envío</span>
+                                          <span>${Number(p.costo_envio).toFixed(2)}</span>
+                                      </div>
+                                  )}
+                              </motion.div>
+                          </td>
+                      </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+};
+
 const notify = (type, message) => {
   switch (type) {
     case 'success': toast.success(message); break;
@@ -49,33 +170,13 @@ const notify = (type, message) => {
   }
 };
 
-// ===================================================================
-// ===        COMPONENTE CarritoContent (INTACTO)                  ===
-// ===================================================================
+// --- COMPONENTE CONTENIDO CARRITO ---
 const CarritoContent = ({
-  isModal,
-  pedidoActual,
-  decrementarCantidad,
-  incrementarCantidad,
-  eliminarProducto,
-  tipoOrden,
-  setTipoOrden,
-  direccionGuardada,
-  usarDireccionGuardada,
-  handleLocationSelect,
-  direccion,
-  referencia,
-  setReferencia,
-  guardarDireccion,
-  setGuardarDireccion,
-  subtotal,
-  costoEnvio,
-  calculandoEnvio,
-  totalFinal,
-  handleContinue,
-  handleProcederAlPago,
-  paymentLoading,
-  limpiarPedidoCompleto
+  isModal, pedidoActual, decrementarCantidad, incrementarCantidad, eliminarProducto,
+  tipoOrden, setTipoOrden, direccionGuardada, usarDireccionGuardada, handleLocationSelect,
+  direccion, referencia, setReferencia, guardarDireccion, setGuardarDireccion,
+  subtotal, costoEnvio, calculandoEnvio, totalFinal, handleContinue, handleProcederAlPago,
+  paymentLoading, limpiarPedidoCompleto
 }) => (
   <>
     <div className={isModal ? "modal-body" : "card-body"}>
@@ -90,10 +191,8 @@ const CarritoContent = ({
         
         {pedidoActual.map((item) => (
           <li key={item.cartItemId || item.id} className="list-group-item d-flex align-items-center justify-content-between p-1">
-            
             <div className="me-auto" style={{ paddingRight: '10px' }}> 
               <span className="fw-bold">{item.nombre}</span>
-              {/* Mostrar Toppings si existen */}
               {item.opcionesSeleccionadas && item.opcionesSeleccionadas.length > 0 && (
                 <ul className="list-unstyled small text-muted mb-0" style={{ marginTop: '-2px', fontSize: '0.85em' }}>
                   {item.opcionesSeleccionadas.map((opcion, idx) => (
@@ -102,7 +201,6 @@ const CarritoContent = ({
                 </ul>
               )}
             </div>
-
             <div className="d-flex align-items-center">
               <button className="btn btn-outline-secondary btn-sm py-0 px-2" onClick={() => decrementarCantidad(item.cartItemId || item.id)}>-</button>
               <span className="mx-2">{item.cantidad}</span>
@@ -123,15 +221,12 @@ const CarritoContent = ({
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3">
           <hr />
           {direccionGuardada && (<button className="btn btn-outline-info w-100 mb-3" onClick={usarDireccionGuardada}>Usar mi dirección guardada</button>)}
-
           <label className="form-label">Busca tu dirección:</label>
           <MapSelector onLocationSelect={handleLocationSelect} initialAddress={direccion} />
-
           <div className="mt-3">
             <label htmlFor="referenciaDesktop" className="form-label">Referencia:</label>
             <input type="text" id="referenciaDesktop" className="form-control" value={referencia} onChange={(e) => setReferencia(e.target.value)} />
           </div>
-
           <div className="form-check mt-3">
             <input className="form-check-input" type="checkbox" id="guardarDireccionDesktop" checked={guardarDireccion} onChange={(e) => setGuardarDireccion(e.target.checked)} />
             <label className="form-check-label" htmlFor="guardarDireccionDesktop">Guardar dirección</label>
@@ -147,19 +242,11 @@ const CarritoContent = ({
 
     <div className={isModal ? "modal-footer d-grid gap-2" : "card-footer d-grid gap-2 mt-auto"}>
       {isModal ? (
-        <button
-          className="btn btn-primary"
-          onClick={handleContinue}
-          disabled={pedidoActual.length === 0 || paymentLoading}
-        >
+        <button className="btn btn-primary" onClick={handleContinue} disabled={pedidoActual.length === 0 || paymentLoading}>
           {tipoOrden === 'domicilio' ? 'Siguiente' : 'Proceder al Pago'}
         </button>
       ) : (
-        <button
-          className="btn btn-primary"
-          onClick={handleProcederAlPago}
-          disabled={pedidoActual.length === 0 || paymentLoading || (tipoOrden === 'domicilio' && !direccion) || calculandoEnvio}
-        >
+        <button className="btn btn-primary" onClick={handleProcederAlPago} disabled={pedidoActual.length === 0 || paymentLoading || (tipoOrden === 'domicilio' && !direccion) || calculandoEnvio}>
           {paymentLoading ? 'Iniciando...' : 'Proceder al Pago'}
         </button>
       )}
@@ -170,26 +257,15 @@ const CarritoContent = ({
 
 
 // ===================================================================
-// ===             COMPONENTE PRINCIPAL ClientePage                ===
+// ===                       CLIENTE PAGE                          ===
 // ===================================================================
 function ClientePage() {
-  const {
-    pedidoActual,
-    subtotal,
-    incrementarCantidad,
-    decrementarCantidad,
-    eliminarProducto,
-    limpiarPedido,
-    agregarProductoAPedido
-  } = useCart();
+  const { pedidoActual, subtotal, incrementarCantidad, decrementarCantidad, eliminarProducto, limpiarPedido, agregarProductoAPedido } = useCart();
 
   const [activeTab, setActiveTab] = useState('crear');
   const [ordenExpandida, setOrdenExpandida] = useState(null);
-  
-  // Datos del menú y Filtros
   const [menuItems, setMenuItems] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('Todos'); // <--- NUEVO: Estado para categoría seleccionada
-
+  const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [tipoOrden, setTipoOrden] = useState('llevar');
   const [direccion, setDireccion] = useState(null);
   const [costoEnvio, setCostoEnvio] = useState(0);
@@ -207,13 +283,10 @@ function ClientePage() {
   const [referencia, setReferencia] = useState('');
   const [showCartModal, setShowCartModal] = useState(false);
   const [modalView, setModalView] = useState('cart');
-  
-  // Modal de Producto
   const [productoSeleccionadoParaModal, setProductoSeleccionadoParaModal] = useState(null);
 
   const totalFinal = subtotal + costoEnvio;
 
-  // --- Carga de Datos Iniciales ---
   useEffect(() => {
     const fetchInitialData = async () => {
       if (activeTab !== 'crear') return;
@@ -237,37 +310,24 @@ function ClientePage() {
             precio: precioFinal,
             precio_original: precioOriginal,
             nombre: item.nombre || item.titulo,
-            // Asegurar que siempre tenga una categoría
             categoria: item.categoria || (item.titulo ? 'Combos' : 'General') 
           };
         };
         const productosEstandarizados = productosRes.data.map(estandarizarItem);
         const combosEstandarizados = combosRes.data.map(estandarizarItem);
-        
         setMenuItems([...productosEstandarizados, ...combosEstandarizados]);
-        
-        if (direccionRes.data) {
-          setDireccionGuardada(direccionRes.data);
-        }
+        if (direccionRes.data) { setDireccionGuardada(direccionRes.data); }
       } catch (err) {
-        console.error("Error cargando datos iniciales:", err);
-        setError('No se pudieron cargar los productos en este momento.');
-      } finally {
-        setLoading(false);
-      }
+        console.error("Error cargando datos:", err);
+        setError('No se pudieron cargar los productos.');
+      } finally { setLoading(false); }
     };
     fetchInitialData();
   }, [activeTab]);
 
-  // --- Lógica de Filtrado por Categoría (NUEVO) ---
   const categories = ['Todos', ...new Set(menuItems.map(item => item.categoria))];
-  
-  const filteredItems = selectedCategory === 'Todos' 
-    ? menuItems 
-    : menuItems.filter(item => item.categoria === selectedCategory);
+  const filteredItems = selectedCategory === 'Todos' ? menuItems : menuItems.filter(item => item.categoria === selectedCategory);
 
-
-  // --- Carga de Mis Pedidos / Recompensas ---
   useEffect(() => {
     const fetchTabData = async () => {
       if (activeTab === 'crear') return;
@@ -282,11 +342,8 @@ function ClientePage() {
           setMisRecompensas(Array.isArray(res.data) ? res.data : []);
         }
       } catch (err) {
-        setError('No se pudieron cargar los datos de la pestaña.');
-        console.error("Error en fetchTabData:", err);
-      } finally {
-        setLoading(false);
-      }
+        setError('No se pudieron cargar los datos.');
+      } finally { setLoading(false); }
     };
     fetchTabData();
   }, [activeTab]);
@@ -307,7 +364,6 @@ function ClientePage() {
     setShowCartModal(false);
   };
 
-  // ... Funciones de Pago y Mapa (sin cambios) ...
   const handleLocationSelect = async (location) => {
     setDireccion(location);
     setCalculandoEnvio(true);
@@ -317,27 +373,23 @@ function ClientePage() {
       setCostoEnvio(res.data.deliveryCost);
       notify('success', `Costo de envío: $${res.data.deliveryCost.toFixed(2)}`);
     } catch (err) {
-      notify('error', err.response?.data?.msg || 'No se pudo calcular el costo de envío.');
+      notify('error', err.response?.data?.msg || 'Error al calcular envío.');
       setDireccion(null);
-    } finally {
-      setCalculandoEnvio(false);
-    }
+    } finally { setCalculandoEnvio(false); }
   };
 
   const usarDireccionGuardada = () => {
     if (direccionGuardada) {
       handleLocationSelect(direccionGuardada);
-      if (direccionGuardada.referencia) {
-        setReferencia(direccionGuardada.referencia);
-      }
+      if (direccionGuardada.referencia) { setReferencia(direccionGuardada.referencia); }
       notify('success', 'Usando dirección guardada.');
     }
   };
 
   const handleProcederAlPago = async () => {
     if (totalFinal <= 0) return;
-    if (tipoOrden === 'domicilio' && !direccion) { return notify('error', 'Por favor, selecciona o escribe tu ubicación.'); }
-    if (calculandoEnvio) { return notify('error', 'Espera a que termine el cálculo del envío.'); }
+    if (tipoOrden === 'domicilio' && !direccion) { return notify('error', 'Selecciona tu ubicación.'); }
+    if (calculandoEnvio) { return notify('error', 'Calculando envío...'); }
     setPaymentLoading(true);
     try {
       const productosParaEnviar = pedidoActual.map(item => ({ 
@@ -345,10 +397,7 @@ function ClientePage() {
         cantidad: item.cantidad, 
         precio: Number(item.precio), 
         nombre: item.nombre,
-        // Enviar los toppings como string para guardarlos fácil en el historial
-        opciones: item.opcionesSeleccionadas 
-          ? item.opcionesSeleccionadas.map(op => op.nombre).join(', ') 
-          : null
+        opciones: item.opcionesSeleccionadas ? item.opcionesSeleccionadas.map(op => op.nombre).join(', ') : null
       }));
 
       const pedidoData = {
@@ -369,18 +418,12 @@ function ClientePage() {
       setClientSecret(res.data.clientSecret);
       setShowPaymentModal(true);
     } catch (err) {
-      notify('error', 'No se pudo iniciar el proceso de pago.');
-    } finally {
-      setPaymentLoading(false);
-    }
+      notify('error', 'Error al iniciar pago.');
+    } finally { setPaymentLoading(false); }
   };
 
   const handleContinue = () => {
-    if (tipoOrden !== 'domicilio') {
-      handleProcederAlPago();
-    } else {
-      setModalView('address');
-    }
+    if (tipoOrden !== 'domicilio') { handleProcederAlPago(); } else { setModalView('address'); }
   };
 
   const handleSuccessfulPayment = async () => {
@@ -388,35 +431,23 @@ function ClientePage() {
       try {
         const datosParaGuardar = { ...direccion, referencia };
         await apiClient.put('/usuarios/mi-direccion', datosParaGuardar);
-        notify('success', 'Dirección y referencia guardadas.');
         setDireccionGuardada(datosParaGuardar);
-      } catch (err) {
-        notify('error', 'No se pudo guardar la dirección y referencia.');
-      }
+      } catch (err) { console.error(err); }
     }
-    notify('success', '¡Pedido realizado y pagado con éxito!');
+    notify('success', '¡Pedido realizado con éxito!');
     limpiarPedidoCompleto();
     setShowPaymentModal(false);
     setClientSecret('');
     setActiveTab('ver');
   };
 
-  // --- ABRIR MODAL AL CLIC ---
-  const handleProductClick = (item) => {
-    setProductoSeleccionadoParaModal(item);
-  };
-
-  const getStatusBadge = (estado) => { switch (estado) { case 'Pendiente': return 'bg-warning text-dark'; case 'En Preparacion': return 'bg-info text-dark'; case 'Listo para Recoger': return 'bg-success text-white'; case 'Completado': return 'bg-secondary text-white'; case 'En Camino': return 'bg-primary text-white'; default: return 'bg-light text-dark'; } };
+  const handleProductClick = (item) => { setProductoSeleccionadoParaModal(item); };
   const handleToggleDetalle = (pedidoId) => { setOrdenExpandida(ordenExpandida === pedidoId ? null : pedidoId); };
   const totalItemsEnCarrito = pedidoActual.reduce((sum, item) => sum + item.cantidad, 0);
-
-  const pageStyle = {
-    pointerEvents: (productoSeleccionadoParaModal || showPaymentModal || showCartModal) ? 'none' : 'auto'
-  };
+  const pageStyle = { pointerEvents: (productoSeleccionadoParaModal || showPaymentModal || showCartModal) ? 'none' : 'auto' };
 
   return (
     <div style={pageStyle}> 
-      {/* --- TABS PRINCIPALES --- */}
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item"><button className={`nav-link ${activeTab === 'crear' ? 'active' : ''}`} onClick={() => setActiveTab('crear')}>Hacer un Pedido</button></li>
         <li className="nav-item"><button className={`nav-link ${activeTab === 'ver' ? 'active' : ''}`} onClick={() => setActiveTab('ver')}>Mis Pedidos</button></li>
@@ -431,32 +462,18 @@ function ClientePage() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="row">
           <div className="col-md-8">
             <h2>Elige tus Productos</h2>
-
-            {/* === BARRA DE CATEGORÍAS (NUEVO) === */}
             <div className="d-flex overflow-auto mb-3 pb-2 align-items-center" style={{ whiteSpace: 'nowrap', gap: '10px', scrollbarWidth: 'none' }}>
               {categories.map(cat => (
-                <button
-                  key={cat}
-                  className={`btn rounded-pill px-3 ${selectedCategory === cat ? 'btn-primary' : 'btn-outline-secondary'}`}
-                  onClick={() => setSelectedCategory(cat)}
-                >
-                  {cat}
-                </button>
+                <button key={cat} className={`btn rounded-pill px-3 ${selectedCategory === cat ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={() => setSelectedCategory(cat)}>{cat}</button>
               ))}
             </div>
-
-            {/* GRID DE PRODUCTOS (Filtrados) */}
             {filteredItems.length === 0 ? (
                <p className="text-muted text-center mt-4">No hay productos en esta categoría.</p>
             ) : (
               <div className="row g-3">
                 {filteredItems.map(item => (
                   <div key={item.id} className="col-6 col-md-4 col-lg-3">
-                    <div 
-                      className="card h-100 text-center shadow-sm border-0 hover-effect" 
-                      onClick={() => handleProductClick(item)} 
-                      style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
-                    >
+                    <div className="card h-100 text-center shadow-sm border-0 hover-effect" onClick={() => handleProductClick(item)} style={{ cursor: 'pointer', transition: 'transform 0.2s' }}>
                       <div className="card-body d-flex flex-column justify-content-center pt-4">
                         <h5 className="card-title">{item.nombre}</h5>
                         {item.en_oferta ? (
@@ -475,103 +492,33 @@ function ClientePage() {
             )}
           </div>
 
-          {/* SIDEBAR CARRITO (Desktop) */}
           <div className="col-md-4 d-none d-md-block">
             <div className="card shadow-sm position-sticky border-0" style={{ top: '20px' }}>
               <CarritoContent
-                isModal={false}
-                pedidoActual={pedidoActual}
-                decrementarCantidad={decrementarCantidad}
-                incrementarCantidad={incrementarCantidad}
-                eliminarProducto={eliminarProducto}
-                tipoOrden={tipoOrden}
-                setTipoOrden={setTipoOrden}
-                direccionGuardada={direccionGuardada}
-                usarDireccionGuardada={usarDireccionGuardada}
-                handleLocationSelect={handleLocationSelect}
-                direccion={direccion}
-                referencia={referencia}
-                setReferencia={setReferencia}
-                guardarDireccion={guardarDireccion}
-                setGuardarDireccion={setGuardarDireccion}
-                subtotal={subtotal}
-                costoEnvio={costoEnvio}
-                calculandoEnvio={calculandoEnvio}
-                totalFinal={totalFinal}
-                handleContinue={handleContinue}
-                handleProcederAlPago={handleProcederAlPago}
-                paymentLoading={paymentLoading}
-                limpiarPedidoCompleto={limpiarPedidoCompleto}
+                isModal={false} pedidoActual={pedidoActual} decrementarCantidad={decrementarCantidad} incrementarCantidad={incrementarCantidad} eliminarProducto={eliminarProducto}
+                tipoOrden={tipoOrden} setTipoOrden={setTipoOrden} direccionGuardada={direccionGuardada} usarDireccionGuardada={usarDireccionGuardada} handleLocationSelect={handleLocationSelect}
+                direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
+                subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
+                paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
               />
             </div>
           </div>
         </motion.div>
       )}
 
-      {/* --- PESTAÑA: MIS PEDIDOS (INTACTO) --- */}
+      {/* --- PESTAÑA: MIS PEDIDOS (NUEVA TABLA) --- */}
       {!loading && activeTab === 'ver' && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <h2>Mis Pedidos</h2>
-          {(!Array.isArray(misPedidos) || misPedidos.length === 0) ? (
-            <p className="text-center text-muted mt-4">No has realizado ningún pedido aún.</p>
-          ) : (
-            <div className="table-responsive">
-              <table className="table table-hover align-middle">
-                <thead className="table-light">
-                  <tr>
-                    <th>ID</th>
-                    <th>Fecha</th>
-                    <th>Tipo</th>
-                    <th>Estado</th>
-                    <th className="text-end">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {misPedidos?.map(p => (
-                    <React.Fragment key={p.id}>
-                      <tr style={{ cursor: 'pointer' }} onClick={() => handleToggleDetalle(p.id)}>
-                        <td className="fw-bold">#{p.id}</td>
-                        <td>{new Date(p.fecha).toLocaleString('es-MX')}</td>
-                        <td>{p.tipo_orden}</td>
-                        <td><span className={`badge ${getStatusBadge(p.estado)}`}>{p.estado}</span></td>
-                        <td className="text-end fw-bold">${Number(p.total).toFixed(2)}</td>
-                      </tr>
-                      {ordenExpandida === p.id && (
-                        <tr className="bg-light">
-                          <td colSpan="5">
-                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="p-3">
-                              <h6 className="fw-bold mb-3">Detalle del Pedido</h6>
-                              <ul className="list-group">
-                                {p.productos?.map(producto => (
-                                  <li key={`${p.id}-${producto.nombre}`} className="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 ps-0">
-                                    <div>
-                                      <span className="fw-bold">{producto.cantidad}x</span> {producto.nombre}
-                                      {producto.opciones && <small className="text-muted d-block fst-italic ms-3">Extra: {producto.opciones}</small>}
-                                    </div>
-                                    <span>${(producto.cantidad * Number(producto.precio)).toFixed(2)}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                              {p.costo_envio > 0 && (
-                                <div className="d-flex justify-content-between mt-2 pt-2 border-top">
-                                  <span>Costo de Envío</span>
-                                  <span>${Number(p.costo_envio).toFixed(2)}</span>
-                                </div>
-                              )}
-                            </motion.div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-2">
+           <h2 className="mb-4 fw-bold" style={{ fontFamily: "'Fredoka One', cursive" }}>Mis Pedidos</h2>
+           <TablaMisPedidos 
+              pedidos={misPedidos} 
+              onToggleDetalle={handleToggleDetalle} 
+              ordenExpandida={ordenExpandida} 
+           />
         </motion.div>
       )}
 
-      {/* --- PESTAÑA: MIS RECOMPENSAS (INTACTO) --- */}
+      {/* --- PESTAÑA: MIS RECOMPENSAS --- */}
       {!loading && activeTab === 'recompensas' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <h2>Mis Recompensas</h2>
@@ -600,23 +547,15 @@ function ClientePage() {
         </motion.div>
       )}
 
-      {/* --- BOTÓN FLOTANTE CARRITO (Móvil) --- */}
+      {/* --- CARRITO FLOTANTE Y MODALES --- */}
       {activeTab === 'crear' && pedidoActual.length > 0 && (
-        <button 
-          className="boton-carrito-flotante d-md-none" 
-          onClick={() => setShowCartModal(true)}
-          style={{ pointerEvents: 'auto' }}
-        >
+        <button className="boton-carrito-flotante d-md-none" onClick={() => setShowCartModal(true)} style={{ pointerEvents: 'auto' }}>
           🛒 <span className="badge-carrito">{totalItemsEnCarrito}</span>
         </button>
       )}
 
-      {/* --- MODAL CARRITO (Móvil) --- */}
       {showCartModal && (
-        <div 
-          className="modal show" 
-          style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto', zIndex: 1060 }}
-        >
+        <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto', zIndex: 1060 }}>
           <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="modal-dialog modal-dialog-scrollable modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header border-0">
@@ -625,29 +564,11 @@ function ClientePage() {
               </div>
               {modalView === 'cart' ? (
                 <CarritoContent
-                  isModal={true}
-                  pedidoActual={pedidoActual}
-                  decrementarCantidad={decrementarCantidad}
-                  incrementarCantidad={incrementarCantidad}
-                  eliminarProducto={eliminarProducto}
-                  tipoOrden={tipoOrden}
-                  setTipoOrden={setTipoOrden}
-                  direccionGuardada={direccionGuardada}
-                  usarDireccionGuardada={usarDireccionGuardada}
-                  handleLocationSelect={handleLocationSelect}
-                  direccion={direccion}
-                  referencia={referencia}
-                  setReferencia={setReferencia}
-                  guardarDireccion={guardarDireccion}
-                  setGuardarDireccion={setGuardarDireccion}
-                  subtotal={subtotal}
-                  costoEnvio={costoEnvio}
-                  calculandoEnvio={calculandoEnvio}
-                  totalFinal={totalFinal}
-                  handleContinue={handleContinue}
-                  handleProcederAlPago={handleProcederAlPago}
-                  paymentLoading={paymentLoading}
-                  limpiarPedidoCompleto={limpiarPedidoCompleto}
+                  isModal={true} pedidoActual={pedidoActual} decrementarCantidad={decrementarCantidad} incrementarCantidad={incrementarCantidad} eliminarProducto={eliminarProducto}
+                  tipoOrden={tipoOrden} setTipoOrden={setTipoOrden} direccionGuardada={direccionGuardada} usarDireccionGuardada={usarDireccionGuardada} handleLocationSelect={handleLocationSelect}
+                  direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
+                  subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
+                  paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
                 />
               ) : (
                 <>
@@ -675,23 +596,14 @@ function ClientePage() {
         </div>
       )}
 
-      {/* --- MODAL DE DETALLE DE PRODUCTO (Opciones/Toppings) --- */}
       {productoSeleccionadoParaModal && (
         <div style={{ pointerEvents: 'auto' }}>
-          <ProductDetailModal
-            product={productoSeleccionadoParaModal}
-            onClose={() => setProductoSeleccionadoParaModal(null)}
-            onAddToCart={agregarProductoAPedido}
-          />
+          <ProductDetailModal product={productoSeleccionadoParaModal} onClose={() => setProductoSeleccionadoParaModal(null)} onAddToCart={agregarProductoAPedido} />
         </div>
       )}
 
-      {/* --- MODAL DE PAGO STRIPE --- */}
       {showPaymentModal && clientSecret && (
-        <div 
-          className="modal show" 
-          style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto', zIndex: 1070 }}
-        >
+        <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto', zIndex: 1070 }}>
           <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header border-0">
@@ -700,18 +612,13 @@ function ClientePage() {
               </div>
               <div className="modal-body">
                 <Elements stripe={stripePromise} options={{ clientSecret }}>
-                  <CheckoutForm
-                    handleSuccess={handleSuccessfulPayment}
-                    total={totalFinal}
-                    datosPedido={datosParaCheckout}
-                  />
+                  <CheckoutForm handleSuccess={handleSuccessfulPayment} total={totalFinal} datosPedido={datosParaCheckout} />
                 </Elements>
               </div>
             </div>
           </motion.div>
         </div>
       )}
-      
     </div> 
   );
 }

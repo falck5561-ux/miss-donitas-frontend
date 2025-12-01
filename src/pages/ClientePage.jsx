@@ -171,12 +171,15 @@ const notify = (type, message) => {
 };
 
 // --- COMPONENTE CONTENIDO CARRITO ---
+// --- COMPONENTE CONTENIDO CARRITO ACTUALIZADO ---
 const CarritoContent = ({
   isModal, pedidoActual, decrementarCantidad, incrementarCantidad, eliminarProducto,
   tipoOrden, setTipoOrden, direccionGuardada, usarDireccionGuardada, handleLocationSelect,
   direccion, referencia, setReferencia, guardarDireccion, setGuardarDireccion,
   subtotal, costoEnvio, calculandoEnvio, totalFinal, handleContinue, handleProcederAlPago,
-  paymentLoading, limpiarPedidoCompleto
+  paymentLoading, limpiarPedidoCompleto,
+  // AGREGAMOS ESTAS DOS PROPIEDADES NUEVAS:
+  telefono, setTelefono 
 }) => (
   <>
     <div className={isModal ? "modal-body" : "card-body"}>
@@ -212,10 +215,32 @@ const CarritoContent = ({
         ))}
       </ul>
       <hr />
+      
+      {/* SELECCIÓN DE TIPO DE ORDEN */}
       <h5>Elige una opción:</h5>
       <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "llevarModal" : "llevar"} value="llevar" checked={tipoOrden === 'llevar'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "llevarModal" : "llevar"}>Para Recoger</label></div>
       <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "localModal" : "local"} value="local" checked={tipoOrden === 'local'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "localModal" : "local"}>Para Comer Aquí</label></div>
       <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "domicilioModal" : "domicilio"} value="domicilio" checked={tipoOrden === 'domicilio'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "domicilioModal" : "domicilio"}>Entrega a Domicilio</label></div>
+
+      {/* --- AQUÍ ESTÁ EL CAMPO DE TELÉFONO QUE FALTABA --- */}
+      <div className="mt-3">
+        <label className="form-label fw-bold">Número de Teléfono:</label>
+        <div className="input-group">
+           <span className="input-group-text">📞</span>
+           <input 
+             type="tel" 
+             className="form-control" 
+             placeholder="Ej: 981 123 4567" 
+             value={telefono}
+             // AQUÍ ESTÁ EL ONCHANGE CON VALIDACIÓN DE SOLO NÚMEROS
+             onChange={(e) => {
+                const soloNumeros = e.target.value.replace(/[^0-9]/g, '');
+                if (soloNumeros.length <= 10) setTelefono(soloNumeros);
+             }}
+           />
+        </div>
+      </div>
+      {/* -------------------------------------------------- */}
 
       {tipoOrden === 'domicilio' && !isModal && (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3">
@@ -240,17 +265,19 @@ const CarritoContent = ({
       <h4>Total: ${totalFinal.toFixed(2)}</h4>
     </div>
 
-    <div className={isModal ? "modal-footer d-grid gap-2" : "card-footer d-grid gap-2 mt-auto"}>
-      {isModal ? (
-        <button className="btn btn-primary" onClick={handleContinue} disabled={pedidoActual.length === 0 || paymentLoading}>
-          {tipoOrden === 'domicilio' ? 'Siguiente' : 'Proceder al Pago'}
-        </button>
-      ) : (
-        <button className="btn btn-primary" onClick={handleProcederAlPago} disabled={pedidoActual.length === 0 || paymentLoading || (tipoOrden === 'domicilio' && !direccion) || calculandoEnvio}>
-          {paymentLoading ? 'Iniciando...' : 'Proceder al Pago'}
-        </button>
-      )}
-      <button className="btn btn-outline-danger" onClick={limpiarPedidoCompleto}>Vaciar Carrito</button>
+    <div className={isModal ? "modal-footer border-0 p-3" : "card-footer mt-auto"}>
+      <div className="d-grid gap-2 w-100">
+        {isModal ? (
+          <button className="btn btn-primary" onClick={handleContinue} disabled={pedidoActual.length === 0 || paymentLoading}>
+            {tipoOrden === 'domicilio' ? 'Siguiente' : 'Proceder al Pago'}
+          </button>
+        ) : (
+          <button className="btn btn-primary" onClick={handleProcederAlPago} disabled={pedidoActual.length === 0 || paymentLoading || (tipoOrden === 'domicilio' && !direccion) || calculandoEnvio}>
+            {paymentLoading ? 'Iniciando...' : 'Proceder al Pago'}
+          </button>
+        )}
+        <button className="btn btn-outline-danger" onClick={limpiarPedidoCompleto}>Vaciar Carrito</button>
+      </div>
     </div>
   </>
 );
@@ -284,7 +311,7 @@ function ClientePage() {
   const [showCartModal, setShowCartModal] = useState(false);
   const [modalView, setModalView] = useState('cart');
   const [productoSeleccionadoParaModal, setProductoSeleccionadoParaModal] = useState(null);
-
+  const [telefono, setTelefono] = useState('');
   const totalFinal = subtotal + costoEnvio;
 
   useEffect(() => {
@@ -500,6 +527,8 @@ function ClientePage() {
                 direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
                 subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
                 paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
+                telefono={telefono}
+                setTelefono={setTelefono}
               />
             </div>
           </div>
@@ -569,6 +598,8 @@ function ClientePage() {
                   direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
                   subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
                   paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
+                  telefono={telefono}
+                  setTelefono={setTelefono}
                 />
               ) : (
                 <>

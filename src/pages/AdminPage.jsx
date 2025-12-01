@@ -95,7 +95,71 @@ function AdminPage() {
   const handleOpenComboModal = (c = null) => { setComboActual(c); setShowComboModal(true); };
   const handleSaveCombo = async (c) => { try { if(c.id) await apiClient.put(`/combos/${c.id}`, c); else await apiClient.post('/combos', c); toast.success('Guardado'); fetchData(); setShowComboModal(false); } catch { toast.error('Error'); } };
   const handleDeleteCombo = async (c) => { if(window.confirm('¿Desactivar combo?')) { await apiClient.patch(`/combos/${c.id}/desactivar`); toast.success('Desactivado'); fetchData(); }};
-  const handleUpdateStatus = async (id, est) => { try { await apiClient.put(`/pedidos/${id}/estado`, { estado: est }); toast.success(`Estado: ${est}`); fetchData(); } catch { toast.error('Error'); } };
+  
+  // Actualizar estado y recargar datos
+  const handleUpdateStatus = async (id, est) => { 
+      try { 
+          await apiClient.put(`/pedidos/${id}/estado`, { estado: est }); 
+          toast.success(`Pedido actualizado a: ${est}`); 
+          fetchData(); // Recarga la lista para ver el cambio
+      } catch { 
+          toast.error('Error al actualizar estado'); 
+      } 
+  };
+
+  // --- FUNCIÓN CORREGIDA: LOGICA DEL BOTÓN DE ACCIÓN ---
+  const renderActionButtons = (p) => {
+      // Normalizamos el string por si viene con espacios
+      const status = p.estado ? p.estado.trim() : '';
+      const isDelivery = p.tipo_orden === 'domicilio';
+
+      // 1. Si está PENDIENTE -> Pasar a EN PREPARACION
+      if (status === 'Pendiente') {
+          return (
+            <button className="btn fw-bold text-white rounded-pill px-3 shadow-sm" 
+                    style={{backgroundColor: styles.accent}} 
+                    onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>
+                👨‍🍳 Preparar
+            </button>
+          );
+      }
+
+      // 2. Si está EN PREPARACION -> Pasar a LISTO (Local) o EN CAMINO (Domicilio)
+      if (status === 'En Preparacion') {
+          if (isDelivery) {
+              return (
+                <button className="btn btn-info text-dark fw-bold rounded-pill px-3 shadow-sm" 
+                        onClick={() => handleUpdateStatus(p.id, 'En Camino')}>
+                    🛵 Enviar Repartidor
+                </button>
+              );
+          } else {
+              return (
+                <button className="btn btn-success text-white fw-bold rounded-pill px-3 shadow-sm" 
+                        onClick={() => handleUpdateStatus(p.id, 'Listo')}>
+                    🥡 Marcar Listo
+                </button>
+              );
+          }
+      }
+
+      // 3. Si está LISTO o EN CAMINO -> FINALIZAR
+      if (status === 'Listo' || status === 'En Camino') {
+          return (
+            <button className="btn btn-dark text-white fw-bold rounded-pill px-3 shadow-sm border border-secondary" 
+                    onClick={() => handleUpdateStatus(p.id, 'Completado')}>
+                ✅ Finalizar Orden
+            </button>
+          );
+      }
+
+      // 4. Si ya está completado
+      if (status === 'Completado') {
+          return <span className="text-muted small fw-bold">- Completado -</span>;
+      }
+
+      return null;
+  };
 
   return (
     <div style={{ backgroundColor: styles.bg, minHeight: '100vh', color: styles.text, fontFamily: "'Nunito', sans-serif" }}>
@@ -150,7 +214,7 @@ function AdminPage() {
         <div className="p-0 rounded-4 shadow-sm overflow-hidden" style={{backgroundColor: styles.cardBg, border: styles.border}}>
            {loading && <div className="text-center py-5"><div className="spinner-border" style={{color: styles.accent}} role="status"></div></div>}
 
-           {/* --- TABLA PEDIDOS (REDISEÑADA) --- */}
+           {/* --- TABLA PEDIDOS (CORREGIDA) --- */}
            {!loading && activeTab === 'pedidosEnLinea' && (
                <div>
                    {/* Header de la Tabla */}
@@ -174,51 +238,48 @@ function AdminPage() {
                            <tbody>
                                {pedidos.map(p => (
                                    <tr key={p.id} style={{borderBottom: `1px solid ${isPicante ? '#222' : '#f0f0f0'}`}}>
-                                       
-                                       {/* ID Destacado */}
-                                       <td className="ps-4 py-4">
-                                            <span className="fw-bold fs-5" style={{color: styles.accent}}>#{p.id}</span>
-                                       </td>
-                                       
-                                       {/* Cliente con Info Extra */}
-                                       <td className="py-4">
-                                            <div className="fw-bold fs-6">{p.nombre_cliente}</div>
-                                            <div className="d-flex align-items-center gap-2 mt-1">
-                                                <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill px-2">
-                                                    ⏰ {new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                                </span>
-                                                {p.tipo_orden === 'domicilio' && <span className="small text-info">🛵 Moto</span>}
-                                            </div>
-                                       </td>
-                                       
-                                       {/* Total Grande */}
-                                       <td className="py-4">
-                                            <span className="fw-bolder fs-5" style={{letterSpacing: '-0.5px'}}>${Number(p.total).toFixed(2)}</span>
-                                       </td>
-                                       
-                                       {/* Badge Estado */}
-                                       <td className="py-4">
-                                            <StatusBadge status={p.estado} type="order"/>
-                                       </td>
-                                       
-                                       {/* Acciones Centradas y Estilizadas */}
-                                       <td className="pe-4 py-4 text-center">
-                                            <div className="d-flex justify-content-center gap-2">
-                                                <button 
-                                                    className="btn fw-bold rounded-pill px-4" 
-                                                    style={{border: `1px solid ${styles.text}`, color: styles.text, backgroundColor: 'transparent'}} 
-                                                    onClick={() => {setSelectedOrderDetails(p); setShowDetailsModal(true);}}
-                                                >
-                                                    Ver
-                                                </button>
-                                                
-                                                {p.estado === 'Pendiente' && (
-                                                    <button className="btn fw-bold text-white rounded-pill px-4 shadow-sm" style={{backgroundColor: styles.accent}} onClick={() => handleUpdateStatus(p.id, 'En Preparacion')}>
-                                                        Preparar
+                                           
+                                           {/* ID Destacado */}
+                                           <td className="ps-4 py-4">
+                                                <span className="fw-bold fs-5" style={{color: styles.accent}}>#{p.id}</span>
+                                           </td>
+                                           
+                                           {/* Cliente con Info Extra */}
+                                           <td className="py-4">
+                                                <div className="fw-bold fs-6">{p.nombre_cliente}</div>
+                                                <div className="d-flex align-items-center gap-2 mt-1">
+                                                    <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill px-2">
+                                                        ⏰ {new Date(p.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                    </span>
+                                                    {p.tipo_orden === 'domicilio' && <span className="small text-info">🛵 Moto</span>}
+                                                </div>
+                                           </td>
+                                           
+                                           {/* Total Grande */}
+                                           <td className="py-4">
+                                                <span className="fw-bolder fs-5" style={{letterSpacing: '-0.5px'}}>${Number(p.total).toFixed(2)}</span>
+                                           </td>
+                                           
+                                           {/* Badge Estado */}
+                                           <td className="py-4">
+                                                <StatusBadge status={p.estado} type="order"/>
+                                           </td>
+                                           
+                                           {/* Acciones CON LOGICA DINAMICA */}
+                                           <td className="pe-4 py-4 text-center">
+                                                <div className="d-flex justify-content-center align-items-center gap-2">
+                                                    <button 
+                                                        className="btn btn-sm fw-bold rounded-pill px-3" 
+                                                        style={{border: `1px solid ${styles.text}`, color: styles.text, backgroundColor: 'transparent'}} 
+                                                        onClick={() => {setSelectedOrderDetails(p); setShowDetailsModal(true);}}
+                                                    >
+                                                        Ver
                                                     </button>
-                                                )}
-                                            </div>
-                                       </td>
+                                                    
+                                                    {/* LLAMADA A LA FUNCIÓN QUE CORRIGE EL ERROR */}
+                                                    {renderActionButtons(p)}
+                                                </div>
+                                           </td>
                                    </tr>
                                ))}
                            </tbody>
@@ -232,7 +293,7 @@ function AdminPage() {
                </div>
            )}
 
-           {/* --- TABLA INVENTARIO (REDISEÑADA) --- */}
+           {/* --- TABLA INVENTARIO --- */}
            {!loading && activeTab === 'productos' && (
                <div>
                     <div className="d-flex justify-content-between align-items-center p-4 border-bottom" style={{borderColor: isPicante ? '#333' : '#EFEBE9'}}>
@@ -253,14 +314,14 @@ function AdminPage() {
                             <tbody>
                                 {productos.map(p => (
                                     <tr key={p.id} style={{borderBottom: `1px solid ${isPicante ? '#222' : '#f0f0f0'}`}}>
-                                        <td className="ps-4 py-3 fw-bold fs-6">{p.nombre}</td>
-                                        <td className="py-3" style={{color: styles.textMuted}}>{p.categoria}</td>
-                                        <td className="py-3 fw-bold" style={{color: styles.accent}}>${Number(p.precio).toFixed(2)}</td>
-                                        <td className="py-3 fw-bold">{p.stock}</td>
-                                        <td className="pe-4 py-3 text-center">
-                                            <button className="btn btn-sm fw-bold me-2 px-3 rounded-pill" style={{color: styles.text, border: styles.border}} onClick={() => handleOpenProductModal(p)}>Editar</button>
-                                            <button className="btn btn-sm btn-danger opacity-75 fw-bold px-3 rounded-pill" onClick={() => handleDeleteProducto(p.id)}>Ocultar</button>
-                                        </td>
+                                            <td className="ps-4 py-3 fw-bold fs-6">{p.nombre}</td>
+                                            <td className="py-3" style={{color: styles.textMuted}}>{p.categoria}</td>
+                                            <td className="py-3 fw-bold" style={{color: styles.accent}}>${Number(p.precio).toFixed(2)}</td>
+                                            <td className="py-3 fw-bold">{p.stock}</td>
+                                            <td className="pe-4 py-3 text-center">
+                                                <button className="btn btn-sm fw-bold me-2 px-3 rounded-pill" style={{color: styles.text, border: styles.border}} onClick={() => handleOpenProductModal(p)}>Editar</button>
+                                                <button className="btn btn-sm btn-danger opacity-75 fw-bold px-3 rounded-pill" onClick={() => handleDeleteProducto(p.id)}>Ocultar</button>
+                                            </td>
                                     </tr>
                                 ))}
                             </tbody>

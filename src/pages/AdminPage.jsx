@@ -11,23 +11,12 @@ import { useTheme } from '../context/ThemeContext';
 
 // --- ESTILOS REFINADOS ---
 const getThemeStyles = (isPicante) => ({
-  // Fondo general
   bg: isPicante ? '#000000' : '#FFF8E1', 
-  
-  // Texto
   text: isPicante ? '#E0E0E0' : '#3E2723', 
   textMuted: isPicante ? '#9E9E9E' : '#8D6E63',
-
-  // Contenedores (Cards)
   cardBg: isPicante ? '#121212' : '#FFFFFF', 
-  
-  // Bordes (Líneas sutiles)
   border: isPicante ? '1px solid #2C2C2C' : '1px solid #EFEBE9',
-  
-  // Encabezado de la tabla (Para que no se vea vacía)
   tableHeaderBg: isPicante ? '#1A1A1A' : '#FBE9E7',
-  
-  // Acentos
   accent: isPicante ? '#FF1744' : '#FF4081', 
 });
 
@@ -75,14 +64,36 @@ function AdminPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
 
+  // --- CARGA DE DATOS CORREGIDA (SOLUCIONA EL 404) ---
   const fetchData = async () => {
     setLoading(true);
     try {
-      if (activeTab === 'productos') { const res = await getProducts(); setProductos(res); } 
-      else if (activeTab === 'reporteGeneral') { const res = await apiClient.get('/ventas/reporte'); setReportData(res.data); } 
-      else if (activeTab === 'pedidosEnLinea') { const res = await apiClient.get('/pedidos'); setPedidos(res.data); } 
-      else if (activeTab === 'combos') { const res = await apiClient.get('/combos/admin/todos'); setCombos(res.data); }
-    } catch (err) { console.error(err); } 
+      if (activeTab === 'productos') { 
+          const res = await getProducts(); 
+          setProductos(res); 
+      } 
+      else if (activeTab === 'reporteGeneral') { 
+          const res = await apiClient.get('/ventas/reporte'); 
+          setReportData(res.data); 
+      } 
+      else if (activeTab === 'pedidosEnLinea') { 
+          const res = await apiClient.get('/pedidos'); 
+          setPedidos(res.data); 
+      } 
+      else if (activeTab === 'combos') { 
+          // CORRECCIÓN: Usamos '/combos' en lugar de '/combos/admin/todos'
+          const res = await apiClient.get('/combos'); 
+          setCombos(res.data); 
+      }
+    } catch (err) { 
+        console.error("Error cargando datos:", err);
+        // Notificamos si es error 404 u otro
+        if (err.response && err.response.status === 404) {
+            toast.error("Error 404: Ruta no encontrada en el servidor.");
+        } else {
+            toast.error("Error de conexión con el servidor.");
+        }
+    } 
     finally { setLoading(false); }
   };
 
@@ -107,13 +118,11 @@ function AdminPage() {
       } 
   };
 
-  // --- FUNCIÓN CORREGIDA: LOGICA DEL BOTÓN DE ACCIÓN ---
+  // --- LOGICA DEL BOTÓN DE ACCIÓN (Ciclo Completo) ---
   const renderActionButtons = (p) => {
-      // Normalizamos el string por si viene con espacios
       const status = p.estado ? p.estado.trim() : '';
       const isDelivery = p.tipo_orden === 'domicilio';
 
-      // 1. Si está PENDIENTE -> Pasar a EN PREPARACION
       if (status === 'Pendiente') {
           return (
             <button className="btn fw-bold text-white rounded-pill px-3 shadow-sm" 
@@ -124,7 +133,6 @@ function AdminPage() {
           );
       }
 
-      // 2. Si está EN PREPARACION -> Pasar a LISTO (Local) o EN CAMINO (Domicilio)
       if (status === 'En Preparacion') {
           if (isDelivery) {
               return (
@@ -143,7 +151,6 @@ function AdminPage() {
           }
       }
 
-      // 3. Si está LISTO o EN CAMINO -> FINALIZAR
       if (status === 'Listo' || status === 'En Camino') {
           return (
             <button className="btn btn-dark text-white fw-bold rounded-pill px-3 shadow-sm border border-secondary" 
@@ -153,7 +160,6 @@ function AdminPage() {
           );
       }
 
-      // 4. Si ya está completado
       if (status === 'Completado') {
           return <span className="text-muted small fw-bold">- Completado -</span>;
       }
@@ -214,10 +220,9 @@ function AdminPage() {
         <div className="p-0 rounded-4 shadow-sm overflow-hidden" style={{backgroundColor: styles.cardBg, border: styles.border}}>
            {loading && <div className="text-center py-5"><div className="spinner-border" style={{color: styles.accent}} role="status"></div></div>}
 
-           {/* --- TABLA PEDIDOS (CORREGIDA) --- */}
+           {/* --- TABLA PEDIDOS --- */}
            {!loading && activeTab === 'pedidosEnLinea' && (
                <div>
-                   {/* Header de la Tabla */}
                    <div className="p-4 border-bottom" style={{borderColor: isPicante ? '#333' : '#EFEBE9'}}>
                        <h4 className="fw-bold m-0" style={{color: styles.text}}>Últimos Pedidos</h4>
                        <p className="m-0 small" style={{color: styles.textMuted}}>Gestiona los pedidos entrantes en tiempo real</p>
@@ -231,20 +236,15 @@ function AdminPage() {
                                    <th className="py-4 text-uppercase small" style={{color: styles.textMuted}}>Cliente</th>
                                    <th className="py-4 text-uppercase small" style={{color: styles.textMuted}}>Total</th>
                                    <th className="py-4 text-uppercase small" style={{color: styles.textMuted}}>Estado</th>
-                                   {/* Centramos la columna acciones */}
                                    <th className="py-4 pe-4 text-center text-uppercase small" style={{color: styles.textMuted, width: '250px'}}>Acciones</th>
                                </tr>
                            </thead>
                            <tbody>
                                {pedidos.map(p => (
                                    <tr key={p.id} style={{borderBottom: `1px solid ${isPicante ? '#222' : '#f0f0f0'}`}}>
-                                           
-                                           {/* ID Destacado */}
                                            <td className="ps-4 py-4">
                                                 <span className="fw-bold fs-5" style={{color: styles.accent}}>#{p.id}</span>
                                            </td>
-                                           
-                                           {/* Cliente con Info Extra */}
                                            <td className="py-4">
                                                 <div className="fw-bold fs-6">{p.nombre_cliente}</div>
                                                 <div className="d-flex align-items-center gap-2 mt-1">
@@ -254,18 +254,12 @@ function AdminPage() {
                                                     {p.tipo_orden === 'domicilio' && <span className="small text-info">🛵 Moto</span>}
                                                 </div>
                                            </td>
-                                           
-                                           {/* Total Grande */}
                                            <td className="py-4">
                                                 <span className="fw-bolder fs-5" style={{letterSpacing: '-0.5px'}}>${Number(p.total).toFixed(2)}</span>
                                            </td>
-                                           
-                                           {/* Badge Estado */}
                                            <td className="py-4">
                                                 <StatusBadge status={p.estado} type="order"/>
                                            </td>
-                                           
-                                           {/* Acciones CON LOGICA DINAMICA */}
                                            <td className="pe-4 py-4 text-center">
                                                 <div className="d-flex justify-content-center align-items-center gap-2">
                                                     <button 
@@ -275,8 +269,6 @@ function AdminPage() {
                                                     >
                                                         Ver
                                                     </button>
-                                                    
-                                                    {/* LLAMADA A LA FUNCIÓN QUE CORRIGE EL ERROR */}
                                                     {renderActionButtons(p)}
                                                 </div>
                                            </td>

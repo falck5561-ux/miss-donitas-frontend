@@ -116,31 +116,11 @@ function AdminPage() {
       } 
   };
 
-  // --- NUEVA FUNCIÓN: VER DETALLES INTELIGENTE ---
-  // Esta función decide si buscar en /pedidos o /ventas para evitar el error 404
-  const handleShowDetails = async (orden) => {
-      // 1. Usamos la info que ya tenemos como base
-      let datosCompletos = { ...orden };
-      
-      // 2. Definimos dónde buscar según el estado
-      // Si está completado, lo buscamos en el historial de ventas
-      const endpoint = (orden.estado === 'Completado' || orden.estado === 'Entregado')
-          ? `/ventas/${orden.id}`
-          : `/pedidos/${orden.id}`;
-
-      try {
-          // 3. Intentamos traer los detalles frescos
-          const res = await apiClient.get(endpoint);
-          if (res.data) {
-              datosCompletos = { ...datosCompletos, ...res.data };
-          }
-      } catch (error) {
-          console.warn("No se pudieron cargar detalles extra (posible cambio de estado):", error);
-          // No mostramos error al usuario, simplemente abrimos el modal con lo que tenemos
-      }
-
-      // 4. Abrimos el modal
-      setSelectedOrderDetails(datosCompletos);
+  // --- CORRECCIÓN APLICADA: SIN FETCH EXTRA ---
+  // Se ha eliminado la llamada a apiClient.get() que causaba el 404.
+  // Ahora usamos directamente los datos del pedido que ya están en memoria.
+  const handleShowDetails = (orden) => {
+      setSelectedOrderDetails(orden);
       setShowDetailsModal(true);
   };
 

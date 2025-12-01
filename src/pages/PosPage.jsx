@@ -293,27 +293,28 @@ function PosPage() {
   };
 
   const handleAplicarRecompensa = (recompensa) => {
-    if (recompensaAplicadaId) return toast.error('Solo una recompensa por ticket.');
-    let itemParaDescontar = null;
-    let precioMaximo = -1;
-    const nombreRecompensaLower = recompensa.nombre ? recompensa.nombre.toLowerCase() : '';
+    if (recompensaAplicadaId) return toast.error('Solo una recompensa por ticket.');
+    let itemParaDescontar = null;
+    let precioMaximo = -1;
+    const nombreRecompensaLower = recompensa.nombre ? recompensa.nombre.toLowerCase() : '';
 
-    if (nombreRecompensaLower.includes('pikulito') || nombreRecompensaLower.includes('mojadito')) {
-      const productosElegibles = ['Tito Pikulito', 'Tito Mojadito']; 
+    // BLOQUE A INSERTAR
+    // Lógica para encontrar un producto elegible para la recompensa (ej. "Donita")
+    const DONITA_NAME = 'Donita';
+    const esRecompensaDonita = nombreRecompensaLower.includes(DONITA_NAME.toLowerCase());
+
+    if (esRecompensaDonita) {
+      // 1. Si es la recompensa de Donita, buscamos una "Donita" en el ticket
+      itemParaDescontar = ventaActual.find(item => item.nombre.includes(DONITA_NAME) && !item.esRecompensa);
+      if (!itemParaDescontar) return toast.error(`Añade una ${DONITA_NAME} al ticket para aplicar.`);
+    } else {
+      // 2. Si no es la recompensa de Donita, aplicamos al producto más caro (lógica por defecto)
       ventaActual.forEach(item => {
-        if (productosElegibles.includes(item.nombre) && !item.esRecompensa && Number(item.precioFinal) > precioMaximo) {
+        if (!item.esRecompensa && Number(item.precioFinal) > precioMaximo) {
           precioMaximo = Number(item.precioFinal);
           itemParaDescontar = item;
         }
       });
-      if (!itemParaDescontar) return toast.error('Añade un Tito Pikulito o Mojadito para aplicar.');
-    } else {
-        ventaActual.forEach(item => {
-            if (!item.esRecompensa && Number(item.precioFinal) > precioMaximo) {
-                precioMaximo = Number(item.precioFinal);
-                itemParaDescontar = item;
-            }
-        });
     }
 
     if(itemParaDescontar) {
@@ -430,7 +431,7 @@ function PosPage() {
                   <div className="p-2 mb-3 rounded border" style={{borderColor: styles.accent, backgroundColor: isPicante ? '#220000' : '#FFF0F5'}}>
                     <p className="mb-1 small"><strong>Cliente:</strong> {clienteEncontrado.cliente.nombre}</p>
                     {clienteEncontrado.recompensas.map(rec => (
-                        <button key={rec.id} className="btn btn-sm btn-success w-100 mt-1" onClick={() => handleAplicarRecompensa(rec)} disabled={recompensaAplicadaId !== null}>🎁 Usar: {rec.nombre}</button>
+                        <button key={rec.id} className="btn btn-sm btn-success w-100 mt-1" onClick={() => handleAplicarRecompensa(rec)} disabled={recompensaAplicadaId !== null}>🎁 Usar: ¡Felicidades! Una Donita gratis por tus 20 compras.</button>
                     ))}
                   </div>
                 )}

@@ -167,15 +167,15 @@ const notify = (type, message) => {
   }
 };
 
-// --- COMPONENTE CONTENIDO CARRITO (CON MODIFICACIONES: INPUT Y BOTÓN GRANDE) ---
+// --- COMPONENTE CONTENIDO CARRITO (CON INPUT Y BOTÓN GRANDE) ---
 const CarritoContent = ({
   isModal, pedidoActual, decrementarCantidad, incrementarCantidad, eliminarProducto,
   tipoOrden, setTipoOrden, direccionGuardada, usarDireccionGuardada, handleLocationSelect,
   direccion, referencia, setReferencia, guardarDireccion, setGuardarDireccion,
   subtotal, costoEnvio, calculandoEnvio, totalFinal, handleContinue, handleProcederAlPago,
   paymentLoading, limpiarPedidoCompleto,
-  // Props nuevos para el teléfono
-  telefono, setTelefono
+  // Props del teléfono
+  telefono, onTelefonoChange
 }) => (
   <>
     <div className={isModal ? "modal-body" : "card-body"}>
@@ -235,7 +235,7 @@ const CarritoContent = ({
 
       <hr />
       
-      {/* --- NUEVO CAMPO DE TELÉFONO --- */}
+      {/* --- INPUT DE TELÉFONO --- */}
       <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px', fontSize: '0.9rem' }}>
               Número de Teléfono:
@@ -244,7 +244,7 @@ const CarritoContent = ({
               type="tel" 
               placeholder="Ej: 981 123 4567"
               value={telefono} 
-              onChange={(e) => setTelefono(e.target.value)}
+              onChange={onTelefonoChange} // Usamos la función que guarda en localStorage
               style={{
                   width: '100%',
                   padding: '10px',
@@ -255,7 +255,7 @@ const CarritoContent = ({
               }}
           />
       </div>
-      {/* ------------------------------- */}
+      {/* ------------------------- */}
 
       <p className="d-flex justify-content-between">Subtotal: <span>${subtotal.toFixed(2)}</span></p>
       {tipoOrden === 'domicilio' && (<motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="d-flex justify-content-between">Costo de Envío: {calculandoEnvio ? <span className="spinner-border spinner-border-sm"></span> : <span>${costoEnvio.toFixed(2)}</span>}</motion.p>)}
@@ -326,12 +326,27 @@ function ClientePage() {
   const [modalView, setModalView] = useState('cart');
   const [productoSeleccionadoParaModal, setProductoSeleccionadoParaModal] = useState(null);
 
-  // --- ESTADO NUEVO PARA EL TELÉFONO ---
+  // --- ESTADO DEL TELÉFONO ---
   const [telefono, setTelefono] = useState('');
+
+  // --- EFECTO PARA CARGAR TELÉFONO GUARDADO ---
+  useEffect(() => {
+    const telefonoGuardado = localStorage.getItem('userPhone');
+    if (telefonoGuardado) {
+        setTelefono(telefonoGuardado);
+    }
+  }, []);
+
+  // --- FUNCIÓN PARA GUARDAR TELÉFONO AL ESCRIBIR ---
+  const handleTelefonoChange = (e) => {
+    const val = e.target.value;
+    setTelefono(val);
+    localStorage.setItem('userPhone', val); // Guarda automáticamente
+  };
 
   const totalFinal = subtotal + costoEnvio;
 
-  // --- CARGA DE PRODUCTOS Y COMBOS (COMBINADOS) ---
+  // --- CARGA DE PRODUCTOS Y COMBOS (CORREGIDO PARA QUE APAREZCAN) ---
   useEffect(() => {
     const fetchInitialData = async () => {
       setLoading(true);
@@ -347,13 +362,17 @@ function ClientePage() {
 
         // Procesar productos
         if (productosRes.status === 'fulfilled') {
-          const productosData = productosRes.value.data.map(p => ({...p, tipo: 'producto'}));
+          const productosData = productosRes.value.data.map(p => ({
+              ...p, 
+              tipo: 'producto',
+              categoria: p.categoria || 'General' // Asegura categoría
+          }));
           combinedMenu = [...combinedMenu, ...productosData];
         } else {
           console.error("Error cargando productos:", productosRes.reason);
         }
 
-        // Procesar y estandarizar combos
+        // Procesar combos (IMPORTANTE: Asignar categoría 'Combos')
         if (combosRes.status === 'fulfilled') {
           const combosData = combosRes.value.data.map(c => ({
             id: `combo-${c.id}`, 
@@ -363,7 +382,8 @@ function ClientePage() {
             imagenes: c.imagenes,
             en_oferta: c.descuento_porcentaje > 0,
             descuento_porcentaje: c.descuento_porcentaje,
-            tipo: 'combo'
+            tipo: 'combo',
+            categoria: 'Combos' // <--- ESTO ARREGLA QUE NO APARECIERAN
           }));
           combinedMenu = [...combinedMenu, ...combosData];
         } else {
@@ -373,7 +393,7 @@ function ClientePage() {
         if (combinedMenu.length > 0) {
           setMenuItems(combinedMenu);
         } else {
-          throw new Error('No se pudieron cargar los productos. Por favor, intenta más tarde.');
+          throw new Error('No se pudieron cargar los productos.');
         }
 
         if (direccionRes.status === 'fulfilled' && direccionRes.value.data) {
@@ -388,12 +408,10 @@ function ClientePage() {
     fetchInitialData();
   }, []);
 
-  // --- CARGA DE PESTAÑAS (PEDIDOS / RECOMPENSAS) ---
+  // --- FILTRADO DE CATEGORÍAS ---
   const categories = ['Todos', ...new Set(menuItems.map(item => item.categoria))];
-  const filteredItems = selectedCategory => selectedCategory === 'Todos' ? menuItems : menuItems.filter(item => item.categoria === selectedCategory);
-  // Nota: Moví selectedCategory abajo por error, lo redefino aquí para el estado:
   const [selectedCategory, setSelectedCategory] = useState('Todos');
-  const itemsFiltrados = filteredItems(selectedCategory);
+  const itemsFiltrados = selectedCategory === 'Todos' ? menuItems : menuItems.filter(item => item.categoria === selectedCategory);
 
   useEffect(() => {
     const fetchTabData = async () => {
@@ -429,7 +447,7 @@ function ClientePage() {
     setGuardarDireccion(false);
     setReferencia('');
     setShowCartModal(false);
-    setTelefono(''); // Limpiamos el teléfono también
+    // Nota: NO borramos el teléfono aquí para que se mantenga para el próximo pedido
   };
 
   const handleLocationSelect = async (location) => {
@@ -458,11 +476,11 @@ function ClientePage() {
     if (totalFinal <= 0) return;
     if (tipoOrden === 'domicilio' && !direccion) { return notify('error', 'Selecciona tu ubicación.'); }
 
-    // --- VALIDACIÓN DEL TELÉFONO ---
+    // --- VALIDACIÓN DE TELÉFONO ---
     if (!telefono || telefono.length < 10) { 
         return notify('error', 'Por favor ingresa un número de teléfono válido (10 dígitos).'); 
     }
-    // -------------------------------
+    // -----------------------------
 
     if (calculandoEnvio) { return notify('error', 'Calculando envío...'); }
     setPaymentLoading(true);
@@ -484,7 +502,7 @@ function ClientePage() {
         latitude: tipoOrden === 'domicilio' ? direccion?.lat : null,
         longitude: tipoOrden === 'domicilio' ? direccion?.lng : null,
         referencia: tipoOrden === 'domicilio' ? referencia : null,
-        telefono: telefono // Enviamos el teléfono al backend
+        telefono: telefono // Se envía al backend
       };
       
       setDatosParaCheckout(pedidoData);
@@ -582,9 +600,9 @@ function ClientePage() {
                 direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
                 subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
                 paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
-                // Props de teléfono
+                // PASAR PROPS TELÉFONO
                 telefono={telefono}
-                setTelefono={setTelefono}
+                onTelefonoChange={handleTelefonoChange}
               />
             </div>
           </div>
@@ -654,9 +672,9 @@ function ClientePage() {
                   direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
                   subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
                   paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
-                  // Props de teléfono
+                  // PASAR PROPS TELÉFONO
                   telefono={telefono}
-                  setTelefono={setTelefono}
+                  onTelefonoChange={handleTelefonoChange}
                 />
               ) : (
                 <>

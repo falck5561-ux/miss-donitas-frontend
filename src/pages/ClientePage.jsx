@@ -3,18 +3,17 @@ import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-// Iconos nuevos
 import { Package, Calendar, Clock, MapPin, ShoppingBag, ChevronRight, Hash } from 'lucide-react';
 import CheckoutForm from '../components/CheckoutForm';
 import MapSelector from '../components/MapSelector';
 import apiClient from '../services/api';
 import { useCart } from '../context/CartContext';
 import ProductDetailModal from '../components/ProductDetailModal';
-import { useTheme } from '../context/ThemeContext'; // Importante para el modo oscuro/claro
+import { useTheme } from '../context/ThemeContext';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
-// --- ESTILOS GENERALES (Cupones, etc) ---
+// --- ESTILOS ---
 const styles = {
   recompensasContainer: { padding: '1rem 0' },
   cupon: {
@@ -43,7 +42,6 @@ const styles = {
   },
 };
 
-// --- ESTILOS VISUALES PARA LA NUEVA TABLA ---
 const getTableThemeStyles = (isPicante) => ({
     text: isPicante ? '#FFFFFF' : '#3E2723', 
     cardBg: isPicante ? '#121212' : '#FFFFFF', 
@@ -52,9 +50,9 @@ const getTableThemeStyles = (isPicante) => ({
     muted: isPicante ? '#888888' : '#8D6E63',
     tableHeaderBg: isPicante ? '#1E1E1E' : '#FFF0F5', 
     hoverBg: isPicante ? '#1A1A1A' : '#FAFAFA'
-  });
+});
   
-// --- COMPONENTE TABLA MODERNA ---
+// --- COMPONENTE TABLA ---
 const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
     const { theme } = useTheme();
     const isPicante = theme === 'picante';
@@ -126,7 +124,6 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
                     <td className="pe-4 py-3 text-end"><ChevronRight size={16} color={styles.muted} /></td>
                   </motion.tr>
                   
-                  {/* DETALLE EXPANDIBLE */}
                   {ordenExpandida === p.id && (
                       <tr style={{backgroundColor: styles.hoverBg}}>
                           <td colSpan="6" className="p-0">
@@ -171,15 +168,13 @@ const notify = (type, message) => {
 };
 
 // --- COMPONENTE CONTENIDO CARRITO ---
-// --- COMPONENTE CONTENIDO CARRITO ACTUALIZADO ---
 const CarritoContent = ({
   isModal, pedidoActual, decrementarCantidad, incrementarCantidad, eliminarProducto,
   tipoOrden, setTipoOrden, direccionGuardada, usarDireccionGuardada, handleLocationSelect,
   direccion, referencia, setReferencia, guardarDireccion, setGuardarDireccion,
   subtotal, costoEnvio, calculandoEnvio, totalFinal, handleContinue, handleProcederAlPago,
   paymentLoading, limpiarPedidoCompleto,
-  // AGREGAMOS ESTAS DOS PROPIEDADES NUEVAS:
-  telefono, setTelefono 
+  telefono, setTelefono
 }) => (
   <>
     <div className={isModal ? "modal-body" : "card-body"}>
@@ -216,13 +211,12 @@ const CarritoContent = ({
       </ul>
       <hr />
       
-      {/* SELECCIÓN DE TIPO DE ORDEN */}
       <h5>Elige una opción:</h5>
       <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "llevarModal" : "llevar"} value="llevar" checked={tipoOrden === 'llevar'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "llevarModal" : "llevar"}>Para Recoger</label></div>
       <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "localModal" : "local"} value="local" checked={tipoOrden === 'local'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "localModal" : "local"}>Para Comer Aquí</label></div>
       <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "domicilioModal" : "domicilio"} value="domicilio" checked={tipoOrden === 'domicilio'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "domicilioModal" : "domicilio"}>Entrega a Domicilio</label></div>
 
-      {/* --- AQUÍ ESTÁ EL CAMPO DE TELÉFONO QUE FALTABA --- */}
+      {/* INPUT DEL TELÉFONO */}
       <div className="mt-3">
         <label className="form-label fw-bold">Número de Teléfono:</label>
         <div className="input-group">
@@ -232,7 +226,6 @@ const CarritoContent = ({
              className="form-control" 
              placeholder="Ej: 981 123 4567" 
              value={telefono}
-             // AQUÍ ESTÁ EL ONCHANGE CON VALIDACIÓN DE SOLO NÚMEROS
              onChange={(e) => {
                 const soloNumeros = e.target.value.replace(/[^0-9]/g, '');
                 if (soloNumeros.length <= 10) setTelefono(soloNumeros);
@@ -240,7 +233,6 @@ const CarritoContent = ({
            />
         </div>
       </div>
-      {/* -------------------------------------------------- */}
 
       {tipoOrden === 'domicilio' && !isModal && (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3">
@@ -265,23 +257,36 @@ const CarritoContent = ({
       <h4>Total: ${totalFinal.toFixed(2)}</h4>
     </div>
 
+    {/* BOTONES: AQUÍ ESTÁ EL ARREGLO DEL TAMAÑO */}
     <div className={isModal ? "modal-footer border-0 p-3" : "card-footer mt-auto"}>
       <div className="d-grid gap-2 w-100">
         {isModal ? (
-          <button className="btn btn-primary" onClick={handleContinue} disabled={pedidoActual.length === 0 || paymentLoading}>
+          <button 
+            className="btn btn-primary btn-lg w-100" // <--- w-100 PARA QUE SEA GIGANTE
+            onClick={handleContinue} 
+            disabled={pedidoActual.length === 0 || paymentLoading}
+          >
             {tipoOrden === 'domicilio' ? 'Siguiente' : 'Proceder al Pago'}
           </button>
         ) : (
-          <button className="btn btn-primary" onClick={handleProcederAlPago} disabled={pedidoActual.length === 0 || paymentLoading || (tipoOrden === 'domicilio' && !direccion) || calculandoEnvio}>
+          <button 
+            className="btn btn-primary btn-lg w-100" // <--- w-100 AQUÍ TAMBIÉN
+            onClick={handleProcederAlPago} 
+            disabled={pedidoActual.length === 0 || paymentLoading || (tipoOrden === 'domicilio' && !direccion) || calculandoEnvio}
+          >
             {paymentLoading ? 'Iniciando...' : 'Proceder al Pago'}
           </button>
         )}
-        <button className="btn btn-outline-danger" onClick={limpiarPedidoCompleto}>Vaciar Carrito</button>
+        <button 
+            className="btn btn-outline-danger w-100" // <--- w-100 PARA QUE SEA IGUAL AL DE ARRIBA
+            onClick={limpiarPedidoCompleto}
+        >
+            Vaciar Carrito
+        </button>
       </div>
     </div>
   </>
 );
-
 
 // ===================================================================
 // ===                       CLIENTE PAGE                          ===
@@ -311,7 +316,8 @@ function ClientePage() {
   const [showCartModal, setShowCartModal] = useState(false);
   const [modalView, setModalView] = useState('cart');
   const [productoSeleccionadoParaModal, setProductoSeleccionadoParaModal] = useState(null);
-  const [telefono, setTelefono] = useState('');
+  const [telefono, setTelefono] = useState(''); // <--- ESTADO DEL TELÉFONO
+  
   const totalFinal = subtotal + costoEnvio;
 
   useEffect(() => {
@@ -389,6 +395,7 @@ function ClientePage() {
     setGuardarDireccion(false);
     setReferencia('');
     setShowCartModal(false);
+    setTelefono(''); // LIMPIAR TELÉFONO
   };
 
   const handleLocationSelect = async (location) => {
@@ -415,6 +422,13 @@ function ClientePage() {
 
   const handleProcederAlPago = async () => {
     if (totalFinal <= 0) return;
+    
+    // --- VALIDACIÓN DE TELÉFONO ---
+    if (!telefono || telefono.length < 10) { 
+        return notify('error', 'Por favor ingresa un número de teléfono válido.'); 
+    }
+    // -----------------------------
+
     if (tipoOrden === 'domicilio' && !direccion) { return notify('error', 'Selecciona tu ubicación.'); }
     if (calculandoEnvio) { return notify('error', 'Calculando envío...'); }
     setPaymentLoading(true);
@@ -431,6 +445,7 @@ function ClientePage() {
         total: totalFinal,
         productos: productosParaEnviar,
         tipo_orden: tipoOrden,
+        telefono: telefono, // <--- SE ENVÍA EL TELÉFONO AQUÍ
         costo_envio: costoEnvio,
         direccion_entrega: tipoOrden === 'domicilio' ? direccion?.description : null,
         latitude: tipoOrden === 'domicilio' ? direccion?.lat : null,
@@ -527,8 +542,7 @@ function ClientePage() {
                 direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
                 subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
                 paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
-                telefono={telefono}
-                setTelefono={setTelefono}
+                telefono={telefono} setTelefono={setTelefono}
               />
             </div>
           </div>
@@ -540,9 +554,9 @@ function ClientePage() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-2">
            <h2 className="mb-4 fw-bold" style={{ fontFamily: "'Fredoka One', cursive" }}>Mis Pedidos</h2>
            <TablaMisPedidos 
-              pedidos={misPedidos} 
-              onToggleDetalle={handleToggleDetalle} 
-              ordenExpandida={ordenExpandida} 
+             pedidos={misPedidos} 
+             onToggleDetalle={handleToggleDetalle} 
+             ordenExpandida={ordenExpandida} 
            />
         </motion.div>
       )}
@@ -598,8 +612,7 @@ function ClientePage() {
                   direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
                   subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
                   paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
-                  telefono={telefono}
-                  setTelefono={setTelefono}
+                  telefono={telefono} setTelefono={setTelefono}
                 />
               ) : (
                 <>
@@ -643,6 +656,7 @@ function ClientePage() {
               </div>
               <div className="modal-body">
                 <Elements stripe={stripePromise} options={{ clientSecret }}>
+                  {/* AQUÍ SE ENVÍAN LOS DATOS. SI EL TELÉFONO SIGUE SIN LLEGAR, EL PROBLEMA ESTÁ EN ESTE COMPONENTE CHECKOUTFORM */}
                   <CheckoutForm handleSuccess={handleSuccessfulPayment} total={totalFinal} datosPedido={datosParaCheckout} />
                 </Elements>
               </div>

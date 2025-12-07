@@ -10,6 +10,13 @@ import apiClient from '../services/api';
 import { useCart } from '../context/CartContext';
 import ProductDetailModal from '../components/ProductDetailModal';
 import { useTheme } from '../context/ThemeContext';
+// Asegúrate de que CarritoContent esté importado correctamente según tu estructura de carpetas
+// Si está en el mismo archivo o se importa de otro lado, ajusta esta línea si es necesario.
+// En tu código original parecía que CarritoContent venía de otro lado o faltaba importarlo, 
+// asumo que lo tienes importado o definido en otro archivo. 
+// Si CarritoContent es un componente externo, no olvides su import.
+// Si falta, avísame, pero aquí dejo el código lógico del ClientePage.
+import CarritoContent from '../components/CarritoContent'; // <--- VERIFICA ESTA IMPORTACIÓN
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -159,11 +166,14 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
     );
 };
 
-const notify = (type, message) => {
+// --- CORRECCIÓN: Función Notify Mejorada ---
+// Acepta un tercer parámetro 'toastId' para evitar duplicados
+const notify = (type, message, toastId = null) => {
+  const options = toastId ? { id: toastId } : {};
   switch (type) {
-    case 'success': toast.success(message); break;
-    case 'error': toast.error(message); break;
-    default: toast(message); break;
+    case 'success': toast.success(message, options); break;
+    case 'error': toast.error(message, options); break;
+    default: toast(message, options); break;
   }
 };
 
@@ -195,16 +205,16 @@ function ClientePage() {
   const [showCartModal, setShowCartModal] = useState(false);
   const [modalView, setModalView] = useState('cart');
   const [productoSeleccionadoParaModal, setProductoSeleccionadoParaModal] = useState(null);
-  const [telefono, setTelefono] = useState(''); // <--- ESTADO DEL TELÉFONO
+  const [telefono, setTelefono] = useState(''); 
   
-  // --- NUEVOS ESTADOS PARA PAGO ---
+  // --- ESTADOS PARA PAGO ---
   const [metodoPago, setMetodoPago] = useState('tarjeta'); 
   const [montoPago, setMontoPago] = useState('');
   
   // Lógica de Envío Gratis (Mayor a 150)
   const costoEnvioAplicado = (tipoOrden === 'domicilio' && subtotal >= 150) ? 0 : costoEnvio;
   
-  // Total Final (Usando el envío gratis si aplica)
+  // Total Final
   const totalFinal = subtotal + (tipoOrden === 'domicilio' ? costoEnvioAplicado : 0);
 
   // Cálculo del cambio
@@ -285,7 +295,7 @@ function ClientePage() {
     setGuardarDireccion(false);
     setReferencia('');
     setShowCartModal(false);
-    setTelefono(''); // LIMPIAR TELÉFONO
+    setTelefono(''); 
   };
 
   const handleLocationSelect = async (location) => {
@@ -306,12 +316,10 @@ function ClientePage() {
     if (direccionGuardada) {
       handleLocationSelect(direccionGuardada);
       
-      // 1. Cargar Referencia
       if (direccionGuardada.referencia) { 
           setReferencia(direccionGuardada.referencia); 
       }
       
-      // 2. Cargar Teléfono (ESTO ES LO QUE FALTABA)
       if (direccionGuardada.telefono) { 
           setTelefono(direccionGuardada.telefono); 
       }
@@ -346,7 +354,7 @@ function ClientePage() {
         opciones: item.opcionesSeleccionadas ? item.opcionesSeleccionadas.map(op => op.nombre).join(', ') : null
       }));
 
-      // Truco: Agregamos el cambio en la referencia para que lo vea el repartidor
+      // Agregamos el cambio en la referencia para que lo vea el repartidor
       let referenciaFinal = referencia;
       if (metodoPago === 'efectivo') {
          referenciaFinal = `${referencia} (Paga con: $${montoPago}, Cambio: $${cambio.toFixed(2)})`;
@@ -372,11 +380,14 @@ function ClientePage() {
           await apiClient.post('/pedidos', pedidoData);
           
           if (guardarDireccion && direccion) {
+              // --- CORRECCIÓN: Guardar teléfono también en efectivo ---
               apiClient.put('/usuarios/mi-direccion', { ...direccion, referencia, telefono }).catch(console.error);
               setDireccionGuardada({ ...direccion, referencia, telefono });
           }
 
-          notify('success', `Pedido creado. Prepara $${montoPago} para el cambio.`);
+          // --- CORRECCIÓN: ID para evitar notificación doble ---
+          notify('success', `Pedido creado. Prepara $${montoPago} para el cambio.`, 'pedido-exitoso');
+          
           limpiarPedidoCompleto();
           setMontoPago('');
           setActiveTab('ver'); // Te lleva a mis pedidos
@@ -402,15 +413,20 @@ function ClientePage() {
     if (tipoOrden !== 'domicilio') { handleProcederAlPago(); } else { setModalView('address'); }
   };
 
+  // --- CORRECCIÓN PRINCIPAL PARA PAGO CON TARJETA ---
   const handleSuccessfulPayment = async () => {
     if (guardarDireccion && direccion) {
       try {
-        const datosParaGuardar = { ...direccion, referencia };
+        // CORRECCIÓN: Incluir 'telefono' al guardar la dirección
+        const datosParaGuardar = { ...direccion, referencia, telefono };
+        
         await apiClient.put('/usuarios/mi-direccion', datosParaGuardar);
         setDireccionGuardada(datosParaGuardar);
       } catch (err) { console.error(err); }
     }
-    notify('success', '¡Pedido realizado con éxito!');
+    // CORRECCIÓN: ID para evitar notificación doble
+    notify('success', '¡Pedido realizado con éxito!', 'pedido-exitoso');
+    
     limpiarPedidoCompleto();
     setShowPaymentModal(false);
     setClientSecret('');
@@ -471,25 +487,25 @@ function ClientePage() {
           <div className="col-md-4 d-none d-md-block">
             <div className="card shadow-sm position-sticky border-0" style={{ top: '20px' }}>
               <CarritoContent
-  isModal={false} pedidoActual={pedidoActual} decrementarCantidad={decrementarCantidad} incrementarCantidad={incrementarCantidad} eliminarProducto={eliminarProducto}
-  tipoOrden={tipoOrden} setTipoOrden={setTipoOrden} direccionGuardada={direccionGuardada} usarDireccionGuardada={usarDireccionGuardada} handleLocationSelect={handleLocationSelect}
-  direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
-  
-  // --- DATOS ACTUALIZADOS ---
-  subtotal={subtotal} 
-  costoEnvioReal={costoEnvio} 
-  costoEnvioAplicado={costoEnvioAplicado}
-  calculandoEnvio={calculandoEnvio} 
-  totalFinal={totalFinal} 
-  handleProcederAlPago={handleProcederAlPago}
-  paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
-  telefono={telefono} setTelefono={setTelefono}
-  
-  // --- VARIABLES DE PAGO ---
-  metodoPago={metodoPago} setMetodoPago={setMetodoPago}
-  montoPago={montoPago} setMontoPago={setMontoPago}
-  cambio={cambio}
-/>
+                isModal={false} pedidoActual={pedidoActual} decrementarCantidad={decrementarCantidad} incrementarCantidad={incrementarCantidad} eliminarProducto={eliminarProducto}
+                tipoOrden={tipoOrden} setTipoOrden={setTipoOrden} direccionGuardada={direccionGuardada} usarDireccionGuardada={usarDireccionGuardada} handleLocationSelect={handleLocationSelect}
+                direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
+                
+                // --- DATOS ACTUALIZADOS ---
+                subtotal={subtotal} 
+                costoEnvioReal={costoEnvio} 
+                costoEnvioAplicado={costoEnvioAplicado}
+                calculandoEnvio={calculandoEnvio} 
+                totalFinal={totalFinal} 
+                handleProcederAlPago={handleProcederAlPago}
+                paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
+                telefono={telefono} setTelefono={setTelefono}
+                
+                // --- VARIABLES DE PAGO ---
+                metodoPago={metodoPago} setMetodoPago={setMetodoPago}
+                montoPago={montoPago} setMontoPago={setMontoPago}
+                cambio={cambio}
+              />
             </div>
           </div>
         </motion.div>
@@ -602,7 +618,7 @@ function ClientePage() {
               </div>
               <div className="modal-body">
                 <Elements stripe={stripePromise} options={{ clientSecret }}>
-                  {/* AQUÍ SE ENVÍAN LOS DATOS. SI EL TELÉFONO SIGUE SIN LLEGAR, EL PROBLEMA ESTÁ EN ESTE COMPONENTE CHECKOUTFORM */}
+                  {/* AQUÍ SE ENVÍAN LOS DATOS */}
                   <CheckoutForm handleSuccess={handleSuccessfulPayment} total={totalFinal} datosPedido={datosParaCheckout} />
                 </Elements>
               </div>

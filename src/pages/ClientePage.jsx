@@ -237,7 +237,7 @@ const CarritoContent = ({
       {tipoOrden === 'domicilio' && !isModal && (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3">
           <hr />
-          {direccionGuardada && (<button className="btn btn-outline-info w-100 mb-3" onClick={usarDireccionGuardada}>Usar mi dirección guardada</button>)}
+          {direccionGuardada && (<button className="btn btn-outline-info w-100 mb-3" onClick={usarDireccionGuardada}>Usar dirección y número guardados</button>)}
           <label className="form-label">Busca tu dirección:</label>
           <MapSelector onLocationSelect={handleLocationSelect} initialAddress={direccion} />
           <div className="mt-3">
@@ -246,7 +246,7 @@ const CarritoContent = ({
           </div>
           <div className="form-check mt-3">
             <input className="form-check-input" type="checkbox" id="guardarDireccionDesktop" checked={guardarDireccion} onChange={(e) => setGuardarDireccion(e.target.checked)} />
-            <label className="form-check-label" htmlFor="guardarDireccionDesktop">Guardar dirección</label>
+            <label className="form-check-label" htmlFor="guardarDireccionDesktop">Guardar dirección y número</label>
           </div>
         </motion.div>
       )}

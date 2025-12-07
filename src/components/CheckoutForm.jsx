@@ -1,12 +1,10 @@
-// Archivo: src/components/CheckoutForm.jsx (Versión Corregida)
+// Archivo: src/components/CheckoutForm.jsx
 
 import React, { useState } from 'react';
 import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import toast from 'react-hot-toast';
-// IMPORTANTE: Necesitas una función para llamar a tu backend.
 import { crearPedidoAPI } from '../services/api'; // Asegúrate de que la ruta sea correcta
 
-// Pasamos los datos completos del pedido al formulario.
 function CheckoutForm({ total, datosPedido, handleSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -28,7 +26,7 @@ function CheckoutForm({ total, datosPedido, handleSuccess }) {
     });
 
     if (stripeError) {
-      // Errores como "Tu tarjeta fue declinada".
+      // Errores como "Tu tarjeta fue declinada" o datos inválidos.
       setError(stripeError.message);
       toast.error(stripeError.message);
       setProcessing(false);
@@ -39,17 +37,20 @@ function CheckoutForm({ total, datosPedido, handleSuccess }) {
     if (paymentIntent && paymentIntent.status === 'succeeded') {
       try {
         // Añadimos el ID de Stripe al pedido para tener una referencia
+        // 'datosPedido' ya incluye el teléfono, así que el backend lo guardará en el perfil del usuario.
         const pedidoFinal = { ...datosPedido, stripePaymentId: paymentIntent.id };
 
-        // Llamamos a la API que creamos en el backend (pedidosController.js)
+        // Llamamos a la API que conecta con pedidosController.js
         await crearPedidoAPI(pedidoFinal);
         
-        // Si todo sale bien, mostramos el éxito y ejecutamos la función de éxito.
-        toast.success('¡Pedido realizado con éxito!');
-        handleSuccess();
+        // --- CORRECCIÓN: ELIMINADA LA NOTIFICACIÓN DUPLICADA ---
+        // Aquí NO mostramos toast.success. 
+        // Dejamos que 'handleSuccess()' se encargue de limpiar el carrito y avisar al usuario.
+        
+        handleSuccess(); 
 
       } catch (apiError) {
-        // Error si nuestro propio backend falla después de un pago exitoso.
+        // Error si nuestro propio backend falla después de un pago exitoso en Stripe.
         const errorMessage = apiError.response?.data?.msg || 'Tu pago fue exitoso, pero hubo un problema al registrar tu pedido. Por favor, contáctanos.';
         setError(errorMessage);
         toast.error(errorMessage);

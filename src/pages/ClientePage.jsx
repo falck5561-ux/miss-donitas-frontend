@@ -167,127 +167,6 @@ const notify = (type, message) => {
   }
 };
 
-// --- COMPONENTE CONTENIDO CARRITO ---
-const CarritoContent = ({
-  isModal, pedidoActual, decrementarCantidad, incrementarCantidad, eliminarProducto,
-  tipoOrden, setTipoOrden, direccionGuardada, usarDireccionGuardada, handleLocationSelect,
-  direccion, referencia, setReferencia, guardarDireccion, setGuardarDireccion,
-  subtotal, costoEnvio, calculandoEnvio, totalFinal, handleContinue, handleProcederAlPago,
-  paymentLoading, limpiarPedidoCompleto,
-  telefono, setTelefono
-}) => (
-  <>
-    <div className={isModal ? "modal-body" : "card-body"}>
-      {!isModal && (
-        <>
-          <h3 className="card-title text-center">Mi Pedido</h3>
-          <hr />
-        </>
-      )}
-      <ul className="list-group list-group-flush">
-        {pedidoActual.length === 0 && <li className="list-group-item text-center text-muted">Tu carrito está vacío</li>}
-        
-        {pedidoActual.map((item) => (
-          <li key={item.cartItemId || item.id} className="list-group-item d-flex align-items-center justify-content-between p-1">
-            <div className="me-auto" style={{ paddingRight: '10px' }}> 
-              <span className="fw-bold">{item.nombre}</span>
-              {item.opcionesSeleccionadas && item.opcionesSeleccionadas.length > 0 && (
-                <ul className="list-unstyled small text-muted mb-0" style={{ marginTop: '-2px', fontSize: '0.85em' }}>
-                  {item.opcionesSeleccionadas.map((opcion, idx) => (
-                    <li key={idx}>+ {opcion.nombre}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <div className="d-flex align-items-center">
-              <button className="btn btn-outline-secondary btn-sm py-0 px-2" onClick={() => decrementarCantidad(item.cartItemId || item.id)}>-</button>
-              <span className="mx-2">{item.cantidad}</span>
-              <button className="btn btn-outline-secondary btn-sm py-0 px-2" onClick={() => incrementarCantidad(item.cartItemId || item.id)}>+</button>
-            </div>
-            <span className="mx-2 fw-bold text-end" style={{ minWidth: '60px' }}>${(item.cantidad * Number(item.precio)).toFixed(2)}</span>
-            <button className="btn btn-outline-danger btn-sm py-0 px-2" onClick={() => eliminarProducto(item.cartItemId || item.id)}>&times;</button>
-          </li>
-        ))}
-      </ul>
-      <hr />
-      
-      <h5>Elige una opción:</h5>
-      <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "llevarModal" : "llevar"} value="llevar" checked={tipoOrden === 'llevar'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "llevarModal" : "llevar"}>Para Recoger</label></div>
-      <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "localModal" : "local"} value="local" checked={tipoOrden === 'local'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "localModal" : "local"}>Para Comer Aquí</label></div>
-      <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoOrdenModal" : "tipoOrden"} id={isModal ? "domicilioModal" : "domicilio"} value="domicilio" checked={tipoOrden === 'domicilio'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label" htmlFor={isModal ? "domicilioModal" : "domicilio"}>Entrega a Domicilio</label></div>
-
-      {/* INPUT DEL TELÉFONO */}
-      <div className="mt-3">
-        <label className="form-label fw-bold">Número de Teléfono:</label>
-        <div className="input-group">
-           <span className="input-group-text">📞</span>
-           <input 
-             type="tel" 
-             className="form-control" 
-             placeholder="Ej: 981 123 4567" 
-             value={telefono}
-             onChange={(e) => {
-                const soloNumeros = e.target.value.replace(/[^0-9]/g, '');
-                if (soloNumeros.length <= 10) setTelefono(soloNumeros);
-             }}
-           />
-        </div>
-      </div>
-
-      {tipoOrden === 'domicilio' && !isModal && (
-        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3">
-          <hr />
-          {direccionGuardada && (<button className="btn btn-outline-info w-100 mb-3" onClick={usarDireccionGuardada}>Usar dirección y número guardados</button>)}
-          <label className="form-label">Busca tu dirección:</label>
-          <MapSelector onLocationSelect={handleLocationSelect} initialAddress={direccion} />
-          <div className="mt-3">
-            <label htmlFor="referenciaDesktop" className="form-label">Referencia:</label>
-            <input type="text" id="referenciaDesktop" className="form-control" value={referencia} onChange={(e) => setReferencia(e.target.value)} />
-          </div>
-          <div className="form-check mt-3">
-            <input className="form-check-input" type="checkbox" id="guardarDireccionDesktop" checked={guardarDireccion} onChange={(e) => setGuardarDireccion(e.target.checked)} />
-            <label className="form-check-label" htmlFor="guardarDireccionDesktop">Guardar dirección y número</label>
-          </div>
-        </motion.div>
-      )}
-
-      <hr />
-      <p className="d-flex justify-content-between">Subtotal: <span>${subtotal.toFixed(2)}</span></p>
-      {tipoOrden === 'domicilio' && (<motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="d-flex justify-content-between">Costo de Envío: {calculandoEnvio ? <span className="spinner-border spinner-border-sm"></span> : <span>${costoEnvio.toFixed(2)}</span>}</motion.p>)}
-      <h4>Total: ${totalFinal.toFixed(2)}</h4>
-    </div>
-
-    {/* BOTONES: AQUÍ ESTÁ EL ARREGLO DEL TAMAÑO */}
-    <div className={isModal ? "modal-footer border-0 p-3" : "card-footer mt-auto"}>
-      <div className="d-grid gap-2 w-100">
-        {isModal ? (
-          <button 
-            className="btn btn-primary btn-lg w-100" // <--- w-100 PARA QUE SEA GIGANTE
-            onClick={handleContinue} 
-            disabled={pedidoActual.length === 0 || paymentLoading}
-          >
-            {tipoOrden === 'domicilio' ? 'Siguiente' : 'Proceder al Pago'}
-          </button>
-        ) : (
-          <button 
-            className="btn btn-primary btn-lg w-100" // <--- w-100 AQUÍ TAMBIÉN
-            onClick={handleProcederAlPago} 
-            disabled={pedidoActual.length === 0 || paymentLoading || (tipoOrden === 'domicilio' && !direccion) || calculandoEnvio}
-          >
-            {paymentLoading ? 'Iniciando...' : 'Proceder al Pago'}
-          </button>
-        )}
-        <button 
-            className="btn btn-outline-danger w-100" // <--- w-100 PARA QUE SEA IGUAL AL DE ARRIBA
-            onClick={limpiarPedidoCompleto}
-        >
-            Vaciar Carrito
-        </button>
-      </div>
-    </div>
-  </>
-);
-
 // ===================================================================
 // ===                       CLIENTE PAGE                          ===
 // ===================================================================
@@ -318,7 +197,18 @@ function ClientePage() {
   const [productoSeleccionadoParaModal, setProductoSeleccionadoParaModal] = useState(null);
   const [telefono, setTelefono] = useState(''); // <--- ESTADO DEL TELÉFONO
   
-  const totalFinal = subtotal + costoEnvio;
+  // --- NUEVOS ESTADOS PARA PAGO ---
+  const [metodoPago, setMetodoPago] = useState('tarjeta'); 
+  const [montoPago, setMontoPago] = useState('');
+  
+  // Lógica de Envío Gratis (Mayor a 150)
+  const costoEnvioAplicado = (tipoOrden === 'domicilio' && subtotal >= 150) ? 0 : costoEnvio;
+  
+  // Total Final (Usando el envío gratis si aplica)
+  const totalFinal = subtotal + (tipoOrden === 'domicilio' ? costoEnvioAplicado : 0);
+
+  // Cálculo del cambio
+  const cambio = montoPago ? (Number(montoPago) - totalFinal) : 0;
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -433,16 +323,21 @@ function ClientePage() {
   const handleProcederAlPago = async () => {
     if (totalFinal <= 0) return;
     
-    // --- VALIDACIÓN DE TELÉFONO ---
-    if (!telefono || telefono.length < 10) { 
-        return notify('error', 'Por favor ingresa un número de teléfono válido.'); 
-    }
-    // -----------------------------
+    // Validaciones
+    if (!telefono || telefono.length < 10) return notify('error', 'Ingresa un teléfono válido.');
+    if (tipoOrden === 'domicilio' && !direccion) return notify('error', 'Selecciona tu ubicación.');
+    if (calculandoEnvio) return notify('error', 'Calculando envío...');
 
-    if (tipoOrden === 'domicilio' && !direccion) { return notify('error', 'Selecciona tu ubicación.'); }
-    if (calculandoEnvio) { return notify('error', 'Calculando envío...'); }
+    // Validación de Efectivo
+    if (metodoPago === 'efectivo') {
+       if (totalFinal > 500) return notify('error', 'Pedidos mayores a $500 solo con tarjeta.');
+       if (!montoPago || Number(montoPago) < totalFinal) return notify('error', 'El monto a pagar es insuficiente.');
+    }
+
     setPaymentLoading(true);
+
     try {
+      // 1. Preparar datos del pedido
       const productosParaEnviar = pedidoActual.map(item => ({ 
         id: item.id, 
         cantidad: item.cantidad, 
@@ -451,27 +346,56 @@ function ClientePage() {
         opciones: item.opcionesSeleccionadas ? item.opcionesSeleccionadas.map(op => op.nombre).join(', ') : null
       }));
 
+      // Truco: Agregamos el cambio en la referencia para que lo vea el repartidor
+      let referenciaFinal = referencia;
+      if (metodoPago === 'efectivo') {
+         referenciaFinal = `${referencia} (Paga con: $${montoPago}, Cambio: $${cambio.toFixed(2)})`;
+      }
+
       const pedidoData = {
         total: totalFinal,
         productos: productosParaEnviar,
         tipo_orden: tipoOrden,
-        telefono: telefono, // <--- SE ENVÍA EL TELÉFONO AQUÍ
-        costo_envio: costoEnvio,
+        telefono: telefono,
+        costo_envio: tipoOrden === 'domicilio' ? costoEnvioAplicado : 0, 
         direccion_entrega: tipoOrden === 'domicilio' ? direccion?.description : null,
         latitude: tipoOrden === 'domicilio' ? direccion?.lat : null,
         longitude: tipoOrden === 'domicilio' ? direccion?.lng : null,
-        referencia: tipoOrden === 'domicilio' ? referencia : null
+        referencia: tipoOrden === 'domicilio' ? referenciaFinal : null
       };
       
       setDatosParaCheckout(pedidoData);
-      const res = await apiClient.post('/payments/create-payment-intent', { amount: totalFinal });
-      setShowCartModal(false);
-      setModalView('cart');
-      setClientSecret(res.data.clientSecret);
-      setShowPaymentModal(true);
+
+      // 2. SI ES EFECTIVO: CREAR PEDIDO DIRECTAMENTE
+      if (metodoPago === 'efectivo') {
+          // Usamos apiClient directo para crear el pedido sin pasar por Stripe
+          await apiClient.post('/pedidos', pedidoData);
+          
+          if (guardarDireccion && direccion) {
+              apiClient.put('/usuarios/mi-direccion', { ...direccion, referencia, telefono }).catch(console.error);
+              setDireccionGuardada({ ...direccion, referencia, telefono });
+          }
+
+          notify('success', `Pedido creado. Prepara $${montoPago} para el cambio.`);
+          limpiarPedidoCompleto();
+          setMontoPago('');
+          setActiveTab('ver'); // Te lleva a mis pedidos
+      } 
+      // 3. SI ES TARJETA: INICIAR STRIPE
+      else {
+          const res = await apiClient.post('/payments/create-payment-intent', { amount: totalFinal });
+          setShowCartModal(false);
+          setModalView('cart');
+          setClientSecret(res.data.clientSecret);
+          setShowPaymentModal(true);
+      }
+
     } catch (err) {
-      notify('error', 'Error al iniciar pago.');
-    } finally { setPaymentLoading(false); }
+      notify('error', 'Error al procesar el pedido.');
+      console.error(err);
+    } finally { 
+      setPaymentLoading(false); 
+    }
   };
 
   const handleContinue = () => {
@@ -547,13 +471,25 @@ function ClientePage() {
           <div className="col-md-4 d-none d-md-block">
             <div className="card shadow-sm position-sticky border-0" style={{ top: '20px' }}>
               <CarritoContent
-                isModal={false} pedidoActual={pedidoActual} decrementarCantidad={decrementarCantidad} incrementarCantidad={incrementarCantidad} eliminarProducto={eliminarProducto}
-                tipoOrden={tipoOrden} setTipoOrden={setTipoOrden} direccionGuardada={direccionGuardada} usarDireccionGuardada={usarDireccionGuardada} handleLocationSelect={handleLocationSelect}
-                direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
-                subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
-                paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
-                telefono={telefono} setTelefono={setTelefono}
-              />
+  isModal={false} pedidoActual={pedidoActual} decrementarCantidad={decrementarCantidad} incrementarCantidad={incrementarCantidad} eliminarProducto={eliminarProducto}
+  tipoOrden={tipoOrden} setTipoOrden={setTipoOrden} direccionGuardada={direccionGuardada} usarDireccionGuardada={usarDireccionGuardada} handleLocationSelect={handleLocationSelect}
+  direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
+  
+  // --- DATOS ACTUALIZADOS ---
+  subtotal={subtotal} 
+  costoEnvioReal={costoEnvio} 
+  costoEnvioAplicado={costoEnvioAplicado}
+  calculandoEnvio={calculandoEnvio} 
+  totalFinal={totalFinal} 
+  handleProcederAlPago={handleProcederAlPago}
+  paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
+  telefono={telefono} setTelefono={setTelefono}
+  
+  // --- VARIABLES DE PAGO ---
+  metodoPago={metodoPago} setMetodoPago={setMetodoPago}
+  montoPago={montoPago} setMontoPago={setMontoPago}
+  cambio={cambio}
+/>
             </div>
           </div>
         </motion.div>

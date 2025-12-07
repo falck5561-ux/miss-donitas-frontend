@@ -10,13 +10,6 @@ import apiClient from '../services/api';
 import { useCart } from '../context/CartContext';
 import ProductDetailModal from '../components/ProductDetailModal';
 import { useTheme } from '../context/ThemeContext';
-// Asegúrate de que CarritoContent esté importado correctamente según tu estructura de carpetas
-// Si está en el mismo archivo o se importa de otro lado, ajusta esta línea si es necesario.
-// En tu código original parecía que CarritoContent venía de otro lado o faltaba importarlo, 
-// asumo que lo tienes importado o definido en otro archivo. 
-// Si CarritoContent es un componente externo, no olvides su import.
-// Si falta, avísame, pero aquí dejo el código lógico del ClientePage.
-import CarritoContent from '../components/CarritoContent'; // <--- VERIFICA ESTA IMPORTACIÓN
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -166,16 +159,184 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
     );
 };
 
-// --- CORRECCIÓN: Función Notify Mejorada ---
-// Acepta un tercer parámetro 'toastId' para evitar duplicados
-const notify = (type, message, toastId = null) => {
-  const options = toastId ? { id: toastId } : {};
+const notify = (type, message) => {
   switch (type) {
-    case 'success': toast.success(message, options); break;
-    case 'error': toast.error(message, options); break;
-    default: toast(message, options); break;
+    case 'success': toast.success(message); break;
+    case 'error': toast.error(message); break;
+    default: toast(message); break;
   }
 };
+
+// --- COMPONENTE CONTENIDO CARRITO ---
+// --- COMPONENTE CONTENIDO CARRITO (VISUAL ACTUALIZADO) ---
+const CarritoContent = ({
+  isModal, pedidoActual, decrementarCantidad, incrementarCantidad, eliminarProducto,
+  tipoOrden, setTipoOrden, direccionGuardada, usarDireccionGuardada, handleLocationSelect,
+  direccion, referencia, setReferencia, guardarDireccion, setGuardarDireccion,
+  subtotal, costoEnvioReal, // <--- OJO: Nombre nuevo
+  calculandoEnvio, totalFinal, costoEnvioAplicado, // <--- OJO: Nombre nuevo
+  handleProcederAlPago, // Usamos la misma función
+  paymentLoading, limpiarPedidoCompleto,
+  telefono, setTelefono,
+  metodoPago, setMetodoPago, // <--- NUEVOS
+  montoPago, setMontoPago,   // <--- NUEVOS
+  cambio                     // <--- NUEVOS
+}) => (
+  <>
+    <div className={isModal ? "modal-body" : "card-body"}>
+      {!isModal && (
+        <>
+          <h3 className="card-title text-center">Mi Pedido</h3>
+          <hr />
+        </>
+      )}
+      
+      {/* LISTA DE PRODUCTOS */}
+      <ul className="list-group list-group-flush">
+        {pedidoActual.length === 0 && <li className="list-group-item text-center text-muted">Tu carrito está vacío</li>}
+        {pedidoActual.map((item) => (
+          <li key={item.cartItemId || item.id} className="list-group-item d-flex align-items-center justify-content-between p-1">
+            <div className="me-auto" style={{ paddingRight: '10px' }}> 
+              <span className="fw-bold">{item.nombre}</span>
+              {item.opcionesSeleccionadas?.length > 0 && (
+                <ul className="list-unstyled small text-muted mb-0" style={{ marginTop: '-2px', fontSize: '0.85em' }}>
+                  {item.opcionesSeleccionadas.map((op, idx) => <li key={idx}>+ {op.nombre}</li>)}
+                </ul>
+              )}
+            </div>
+            <div className="d-flex align-items-center">
+              <button className="btn btn-outline-secondary btn-sm py-0 px-2" onClick={() => decrementarCantidad(item.cartItemId || item.id)}>-</button>
+              <span className="mx-2">{item.cantidad}</span>
+              <button className="btn btn-outline-secondary btn-sm py-0 px-2" onClick={() => incrementarCantidad(item.cartItemId || item.id)}>+</button>
+            </div>
+            <span className="mx-2 fw-bold text-end" style={{ minWidth: '60px' }}>${(item.cantidad * Number(item.precio)).toFixed(2)}</span>
+            <button className="btn btn-outline-danger btn-sm py-0 px-2" onClick={() => eliminarProducto(item.cartItemId || item.id)}>&times;</button>
+          </li>
+        ))}
+      </ul>
+      <hr />
+      
+      {/* TIPO DE ORDEN */}
+      <h5>Elige una opción:</h5>
+      <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoM" : "tipo"} value="llevar" checked={tipoOrden === 'llevar'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label">Para Recoger</label></div>
+      <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoM" : "tipo"} value="local" checked={tipoOrden === 'local'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label">Para Comer Aquí</label></div>
+      <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoM" : "tipo"} value="domicilio" checked={tipoOrden === 'domicilio'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label">Entrega a Domicilio</label></div>
+
+      {/* TELÉFONO */}
+      <div className="mt-3">
+        <label className="form-label fw-bold">Número de Teléfono:</label>
+        <div className="input-group">
+           <span className="input-group-text">📞</span>
+           <input type="tel" className="form-control" placeholder="Ej: 981 123 4567" value={telefono} onChange={(e) => { const n = e.target.value.replace(/[^0-9]/g, ''); if (n.length <= 10) setTelefono(n);}} />
+        </div>
+      </div>
+
+      {/* DIRECCIÓN Y MAPA */}
+      {tipoOrden === 'domicilio' && (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3">
+          <hr />
+          {direccionGuardada && (
+             <button className="btn btn-outline-info w-100 mb-3" onClick={usarDireccionGuardada}>Usar dirección y número guardados</button>
+          )}
+          <label className="form-label">Busca tu dirección:</label>
+          <MapSelector onLocationSelect={handleLocationSelect} initialAddress={direccion} />
+          <div className="mt-3">
+            <label className="form-label">Referencia:</label>
+            <input type="text" className="form-control" value={referencia} onChange={(e) => setReferencia(e.target.value)} />
+          </div>
+          <div className="form-check mt-3">
+            <input className="form-check-input" type="checkbox" checked={guardarDireccion} onChange={(e) => setGuardarDireccion(e.target.checked)} />
+            <label className="form-check-label">Guardar dirección</label>
+          </div>
+        </motion.div>
+      )}
+
+      <hr />
+
+      {/* === SELECCIÓN DE PAGO (ESTO FALTABA) === */}
+      <h6 className="fw-bold mt-3">Método de Pago:</h6>
+      <div className="d-flex gap-2 mb-3">
+          <button className={`btn flex-fill ${metodoPago === 'tarjeta' ? 'btn-primary' : 'btn-outline-secondary'}`} 
+             onClick={() => setMetodoPago('tarjeta')}>💳 Tarjeta</button>
+          
+          <button className={`btn flex-fill ${metodoPago === 'efectivo' ? 'btn-primary' : 'btn-outline-secondary'}`} 
+             onClick={() => {
+                // Validación simple visual
+                if(totalFinal > 500) return; 
+                setMetodoPago('efectivo');
+             }}
+             disabled={totalFinal > 500}
+             style={{opacity: totalFinal > 500 ? 0.5 : 1}}
+          >💵 Efectivo</button>
+      </div>
+
+      {/* INPUT PARA PAGO EN EFECTIVO Y CAMBIO */}
+      {metodoPago === 'efectivo' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="alert alert-warning p-2">
+            <label className="form-label small fw-bold">¿Con cuánto pagarás?</label>
+            <div className="input-group input-group-sm mb-1">
+                <span className="input-group-text">$</span>
+                <input type="number" className="form-control" placeholder="Ej: 200" 
+                  value={montoPago} 
+                  onChange={(e) => setMontoPago(e.target.value)} 
+                />
+            </div>
+            <div className="d-flex justify-content-between small text-primary mt-1">
+                <span>Tu Cambio:</span>
+                <span className="fw-bold">${cambio >= 0 ? cambio.toFixed(2) : '---'}</span>
+            </div>
+        </motion.div>
+      )}
+
+      {/* TOTALES CON LÓGICA DE ENVÍO GRATIS VISUAL */}
+      <div className="mt-3">
+        <p className="d-flex justify-content-between mb-1">Subtotal: <span>${subtotal.toFixed(2)}</span></p>
+        
+        {tipoOrden === 'domicilio' && (
+           <p className="d-flex justify-content-between mb-1">
+              Costo de Envío: 
+              {calculandoEnvio ? <span className="spinner-border spinner-border-sm"></span> : (
+                 // Lógica visual: Si el costo real > 0 pero el aplicado es 0, mostramos GRATIS
+                 costoEnvioAplicado === 0 && costoEnvioReal > 0 ? (
+                    <span>
+                       <span className="text-muted text-decoration-line-through me-2">${costoEnvioReal.toFixed(2)}</span>
+                       <span className="badge bg-success">¡GRATIS!</span>
+                    </span>
+                 ) : (
+                    <span>${costoEnvioReal.toFixed(2)}</span>
+                 )
+              )}
+           </p>
+        )}
+        
+        <h4 className="fw-bold d-flex justify-content-between mt-2">
+            Total: <span>${totalFinal.toFixed(2)}</span>
+        </h4>
+      </div>
+    </div>
+
+    {/* BOTONES */}
+    <div className={isModal ? "modal-footer border-0 p-3" : "card-footer mt-auto"}>
+      <div className="d-grid gap-2 w-100">
+          <button 
+            className="btn btn-primary btn-lg w-100"
+            onClick={handleProcederAlPago} 
+            disabled={
+                pedidoActual.length === 0 || 
+                paymentLoading || 
+                calculandoEnvio ||
+                (tipoOrden === 'domicilio' && !direccion) ||
+                (metodoPago === 'efectivo' && (Number(montoPago) < totalFinal)) 
+            }
+          >
+            {paymentLoading ? 'Procesando...' : (metodoPago === 'efectivo' ? 'Confirmar Pedido' : 'Proceder al Pago')}
+          </button>
+        
+        <button className="btn btn-outline-danger w-100" onClick={limpiarPedidoCompleto}>Vaciar Carrito</button>
+      </div>
+    </div>
+  </>
+);
 
 // ===================================================================
 // ===                       CLIENTE PAGE                          ===
@@ -205,16 +366,16 @@ function ClientePage() {
   const [showCartModal, setShowCartModal] = useState(false);
   const [modalView, setModalView] = useState('cart');
   const [productoSeleccionadoParaModal, setProductoSeleccionadoParaModal] = useState(null);
-  const [telefono, setTelefono] = useState(''); 
+  const [telefono, setTelefono] = useState(''); // <--- ESTADO DEL TELÉFONO
   
-  // --- ESTADOS PARA PAGO ---
+  // --- NUEVOS ESTADOS PARA PAGO ---
   const [metodoPago, setMetodoPago] = useState('tarjeta'); 
   const [montoPago, setMontoPago] = useState('');
   
   // Lógica de Envío Gratis (Mayor a 150)
   const costoEnvioAplicado = (tipoOrden === 'domicilio' && subtotal >= 150) ? 0 : costoEnvio;
   
-  // Total Final
+  // Total Final (Usando el envío gratis si aplica)
   const totalFinal = subtotal + (tipoOrden === 'domicilio' ? costoEnvioAplicado : 0);
 
   // Cálculo del cambio
@@ -295,7 +456,7 @@ function ClientePage() {
     setGuardarDireccion(false);
     setReferencia('');
     setShowCartModal(false);
-    setTelefono(''); 
+    setTelefono(''); // LIMPIAR TELÉFONO
   };
 
   const handleLocationSelect = async (location) => {
@@ -316,10 +477,12 @@ function ClientePage() {
     if (direccionGuardada) {
       handleLocationSelect(direccionGuardada);
       
+      // 1. Cargar Referencia
       if (direccionGuardada.referencia) { 
           setReferencia(direccionGuardada.referencia); 
       }
       
+      // 2. Cargar Teléfono (ESTO ES LO QUE FALTABA)
       if (direccionGuardada.telefono) { 
           setTelefono(direccionGuardada.telefono); 
       }
@@ -354,7 +517,7 @@ function ClientePage() {
         opciones: item.opcionesSeleccionadas ? item.opcionesSeleccionadas.map(op => op.nombre).join(', ') : null
       }));
 
-      // Agregamos el cambio en la referencia para que lo vea el repartidor
+      // Truco: Agregamos el cambio en la referencia para que lo vea el repartidor
       let referenciaFinal = referencia;
       if (metodoPago === 'efectivo') {
          referenciaFinal = `${referencia} (Paga con: $${montoPago}, Cambio: $${cambio.toFixed(2)})`;
@@ -380,14 +543,11 @@ function ClientePage() {
           await apiClient.post('/pedidos', pedidoData);
           
           if (guardarDireccion && direccion) {
-              // --- CORRECCIÓN: Guardar teléfono también en efectivo ---
               apiClient.put('/usuarios/mi-direccion', { ...direccion, referencia, telefono }).catch(console.error);
               setDireccionGuardada({ ...direccion, referencia, telefono });
           }
 
-          // --- CORRECCIÓN: ID para evitar notificación doble ---
-          notify('success', `Pedido creado. Prepara $${montoPago} para el cambio.`, 'pedido-exitoso');
-          
+          notify('success', `Pedido creado. Prepara $${montoPago} para el cambio.`);
           limpiarPedidoCompleto();
           setMontoPago('');
           setActiveTab('ver'); // Te lleva a mis pedidos
@@ -413,20 +573,15 @@ function ClientePage() {
     if (tipoOrden !== 'domicilio') { handleProcederAlPago(); } else { setModalView('address'); }
   };
 
-  // --- CORRECCIÓN PRINCIPAL PARA PAGO CON TARJETA ---
   const handleSuccessfulPayment = async () => {
     if (guardarDireccion && direccion) {
       try {
-        // CORRECCIÓN: Incluir 'telefono' al guardar la dirección
-        const datosParaGuardar = { ...direccion, referencia, telefono };
-        
+        const datosParaGuardar = { ...direccion, referencia };
         await apiClient.put('/usuarios/mi-direccion', datosParaGuardar);
         setDireccionGuardada(datosParaGuardar);
       } catch (err) { console.error(err); }
     }
-    // CORRECCIÓN: ID para evitar notificación doble
-    notify('success', '¡Pedido realizado con éxito!', 'pedido-exitoso');
-    
+    notify('success', '¡Pedido realizado con éxito!');
     limpiarPedidoCompleto();
     setShowPaymentModal(false);
     setClientSecret('');
@@ -490,21 +645,9 @@ function ClientePage() {
                 isModal={false} pedidoActual={pedidoActual} decrementarCantidad={decrementarCantidad} incrementarCantidad={incrementarCantidad} eliminarProducto={eliminarProducto}
                 tipoOrden={tipoOrden} setTipoOrden={setTipoOrden} direccionGuardada={direccionGuardada} usarDireccionGuardada={usarDireccionGuardada} handleLocationSelect={handleLocationSelect}
                 direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
-                
-                // --- DATOS ACTUALIZADOS ---
-                subtotal={subtotal} 
-                costoEnvioReal={costoEnvio} 
-                costoEnvioAplicado={costoEnvioAplicado}
-                calculandoEnvio={calculandoEnvio} 
-                totalFinal={totalFinal} 
-                handleProcederAlPago={handleProcederAlPago}
+                subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
                 paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
                 telefono={telefono} setTelefono={setTelefono}
-                
-                // --- VARIABLES DE PAGO ---
-                metodoPago={metodoPago} setMetodoPago={setMetodoPago}
-                montoPago={montoPago} setMontoPago={setMontoPago}
-                cambio={cambio}
               />
             </div>
           </div>
@@ -618,7 +761,7 @@ function ClientePage() {
               </div>
               <div className="modal-body">
                 <Elements stripe={stripePromise} options={{ clientSecret }}>
-                  {/* AQUÍ SE ENVÍAN LOS DATOS */}
+                  {/* AQUÍ SE ENVÍAN LOS DATOS. SI EL TELÉFONO SIGUE SIN LLEGAR, EL PROBLEMA ESTÁ EN ESTE COMPONENTE CHECKOUTFORM */}
                   <CheckoutForm handleSuccess={handleSuccessfulPayment} total={totalFinal} datosPedido={datosParaCheckout} />
                 </Elements>
               </div>

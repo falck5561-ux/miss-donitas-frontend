@@ -415,7 +415,17 @@ function ClientePage() {
   const usarDireccionGuardada = () => {
     if (direccionGuardada) {
       handleLocationSelect(direccionGuardada);
-      if (direccionGuardada.referencia) { setReferencia(direccionGuardada.referencia); }
+      
+      // 1. Cargar Referencia
+      if (direccionGuardada.referencia) { 
+          setReferencia(direccionGuardada.referencia); 
+      }
+      
+      // 2. Cargar Teléfono (ESTO ES LO QUE FALTABA)
+      if (direccionGuardada.telefono) { 
+          setTelefono(direccionGuardada.telefono); 
+      }
+
       notify('success', 'Usando dirección guardada.');
     }
   };

@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useCallback } from 'react'; // <--- AGREGAR useCallback
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
@@ -459,19 +460,20 @@ function ClientePage() {
     setTelefono(''); // LIMPIAR TELÉFONO
   };
 
-  const handleLocationSelect = async (location) => {
-    setDireccion(location);
-    setCalculandoEnvio(true);
-    setCostoEnvio(0);
-    try {
-      const res = await apiClient.post('/pedidos/calcular-envio', { lat: location.lat, lng: location.lng });
-      setCostoEnvio(res.data.deliveryCost);
-      notify('success', `Costo de envío: $${res.data.deliveryCost.toFixed(2)}`);
-    } catch (err) {
-      notify('error', err.response?.data?.msg || 'Error al calcular envío.');
-      setDireccion(null);
-    } finally { setCalculandoEnvio(false); }
-  };
+  // Envuelve la función con useCallback para evitar el bucle infinito del error #301
+  const handleLocationSelect = useCallback(async (location) => {
+    setDireccion(location);
+    setCalculandoEnvio(true);
+    setCostoEnvio(0);
+    try {
+      const res = await apiClient.post('/pedidos/calcular-envio', { lat: location.lat, lng: location.lng });
+      setCostoEnvio(res.data.deliveryCost);
+      notify('success', `Costo de envío: $${res.data.deliveryCost.toFixed(2)}`);
+    } catch (err) {
+      notify('error', err.response?.data?.msg || 'Error al calcular envío.');
+      setDireccion(null);
+    } finally { setCalculandoEnvio(false); }
+  }, []);
 
   const usarDireccionGuardada = () => {
     if (direccionGuardada) {

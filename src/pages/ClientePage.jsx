@@ -176,30 +176,31 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
                                   )}
                                   
                                   {/* --- SECCIÓN DE TOTALES Y PAGO CORREGIDA --- */}
-                                  <div className="mt-3 pt-2 border-top">
-                                    <div className="d-flex justify-content-between align-items-center">
-                                          <span className="h5 mb-0 fw-bold" style={{color: styles.text}}>
-                                              {/* SI ES EFECTIVO: "Total a Pagar". SI ES TARJETA: "Total Pagado" */}
-                                              {esEfectivo ? "Total a Pagar:" : "Total Pagado:"}
-                                          </span>
-                                          <span className="h4 mb-0 fw-bold" style={{color: styles.accent}}>${Number(p.total).toFixed(2)}</span>
-                                      </div>
+                                  
+                                  {/* REEMPLAZA TODO EL DIV QUE TIENE className="mt-3 pt-2 border-top" POR ESTO: */}
+<div className="mt-3 pt-2 border-top">
+    <div className="d-flex justify-content-between align-items-center">
+        <span className="h5 mb-0 fw-bold" style={{color: styles.text}}>
+            {/* LÓGICA: Cambia el texto si es efectivo */}
+            {esEfectivo ? "Total a Pagar:" : "Total Pagado:"}
+        </span>
+        <span className="h4 mb-0 fw-bold" style={{color: styles.accent}}>${Number(p.total).toFixed(2)}</span>
+    </div>
 
-                                      {/* SI ES EFECTIVO, MOSTRAMOS EL DESGLOSE */}
-                                      {esEfectivo && (
-                                          <div className="alert alert-info mt-3 mb-0 d-flex justify-content-between align-items-center py-2">
-                                              <div>
-                                                  <small className="d-block text-muted">Tú pagas con:</small>
-                                                  <span className="fw-bold fs-5">${datosPago.pagaCon}</span>
-                                              </div>
-                                              <div className="text-end">
-                                                  {/* AQUÍ ESTABA EL ERROR: AHORA DICE CLARAMENTE "Cambio a recibir" */}
-                                                  <small className="d-block text-muted">Cambio a recibir:</small>
-                                                  <span className="fw-bold fs-5 text-primary">${datosPago.cambio}</span>
-                                              </div>
-                                          </div>
-                                      )}
-                                  </div>
+    {/* LÓGICA: Si es efectivo, muestra con cuánto paga y el cambio */}
+    {esEfectivo && (
+        <div className="alert alert-info mt-3 mb-0 d-flex justify-content-between align-items-center py-2">
+            <div>
+                <small className="d-block text-muted">Tú pagas con:</small>
+                <span className="fw-bold fs-5">${datosPago.pagaCon}</span>
+            </div>
+            <div className="text-end">
+                <small className="d-block text-muted">Cambio a recibir:</small>
+                <span className="fw-bold fs-5 text-primary">${datosPago.cambio}</span>
+            </div>
+        </div>
+    )}
+</div>
 
                               </motion.div>
                           </td>

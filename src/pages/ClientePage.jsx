@@ -53,11 +53,30 @@ const getTableThemeStyles = (isPicante) => ({
 });
   
 // --- COMPONENTE TABLA ---
+// --- COMPONENTE TABLA (ACTUALIZADO CON LÓGICA DE EFECTIVO) ---
 const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
     const { theme } = useTheme();
     const isPicante = theme === 'picante';
     const styles = getTableThemeStyles(isPicante);
   
+    // Función auxiliar para extraer datos de efectivo de la referencia
+    const parsearDatosPago = (referencia) => {
+        if (!referencia || !referencia.includes('Paga con:')) return null;
+        try {
+            // Extraemos los números del texto que guardamos antes
+            const pagaConMatch = referencia.match(/Paga con: \$([0-9.]+)/);
+            const cambioMatch = referencia.match(/Cambio: \$([0-9.]+)/);
+            
+            if (pagaConMatch && cambioMatch) {
+                return {
+                    pagaCon: parseFloat(pagaConMatch[1]).toFixed(2),
+                    cambio: parseFloat(cambioMatch[1]).toFixed(2)
+                };
+            }
+            return null;
+        } catch (e) { return null; }
+    };
+
     if (!pedidos || pedidos.length === 0) {
       return (
           <div className="text-center py-5 rounded-4" style={{backgroundColor: styles.cardBg, border: styles.border}}>
@@ -95,7 +114,12 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
               </tr>
             </thead>
             <tbody>
-              {pedidos.map((p) => (
+              {pedidos.map((p) => {
+                // Analizamos si este pedido específico es de efectivo
+                const datosPago = parsearDatosPago(p.referencia);
+                const esEfectivo = !!datosPago;
+
+                return (
                 <React.Fragment key={p.id}>
                   <motion.tr 
                     whileHover={{ backgroundColor: styles.hoverBg }}
@@ -120,7 +144,11 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
                         }
                     </td>
                     <td className="py-3"><StatusBadge status={p.estado} /></td>
-                    <td className="py-3"><span className="fw-bold" style={{color: styles.accent}}>${Number(p.total).toFixed(2)}</span></td>
+                    <td className="py-3">
+                        <span className="fw-bold" style={{color: styles.accent}}>${Number(p.total).toFixed(2)}</span>
+                        {/* Indicador visual pequeño si es efectivo */}
+                        {esEfectivo && <div style={{fontSize: '0.7rem', color: isPicante ? '#aaa' : '#666'}}>Efectivo</div>}
+                    </td>
                     <td className="pe-4 py-3 text-end"><ChevronRight size={16} color={styles.muted} /></td>
                   </motion.tr>
                   
@@ -146,19 +174,44 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
                                           <span>${Number(p.costo_envio).toFixed(2)}</span>
                                       </div>
                                   )}
+                                  
+                                  {/* --- SECCIÓN DE TOTALES Y PAGO --- */}
+                                  <div className="mt-3 pt-2 border-top">
+                                    <div className="d-flex justify-content-between align-items-center">
+                                        <span className="h5 mb-0 fw-bold" style={{color: styles.text}}>
+                                            {/* CAMBIO DE TEXTO DINÁMICO */}
+                                            {esEfectivo ? "Total a Pagar:" : "Total Pagado:"}
+                                        </span>
+                                        <span className="h4 mb-0 fw-bold" style={{color: styles.accent}}>${Number(p.total).toFixed(2)}</span>
+                                    </div>
+
+                                    {/* SI ES EFECTIVO, MOSTRAMOS EL DESGLOSE */}
+                                    {esEfectivo && (
+                                        <div className="alert alert-info mt-3 mb-0 d-flex justify-content-between align-items-center py-2">
+                                            <div>
+                                                <small className="d-block text-muted">Tú pagas con:</small>
+                                                <span className="fw-bold fs-5">${datosPago.pagaCon}</span>
+                                            </div>
+                                            <div className="text-end">
+                                                <small className="d-block text-muted">Tu Cambio:</small>
+                                                <span className="fw-bold fs-5 text-primary">${datosPago.cambio}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                  </div>
+
                               </motion.div>
                           </td>
                       </tr>
                   )}
                 </React.Fragment>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>
       </div>
     );
 };
-
 const notify = (type, message) => {
   switch (type) {
     case 'success': toast.success(message); break;

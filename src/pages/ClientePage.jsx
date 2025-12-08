@@ -169,7 +169,7 @@ const notify = (type, message) => {
 
 // --- COMPONENTE CONTENIDO CARRITO ---
 // --- COMPONENTE CONTENIDO CARRITO (VISUAL ACTUALIZADO) ---
-// --- COMPONENTE CONTENIDO CARRITO (CON BARRA DE PROGRESO) ---
+// --- COMPONENTE CONTENIDO CARRITO (MODO PICANTE + LÓGICA CORREGIDA) ---
 const CarritoContent = ({
   isModal, pedidoActual, decrementarCantidad, incrementarCantidad, eliminarProducto,
   tipoOrden, setTipoOrden, direccionGuardada, usarDireccionGuardada, handleLocationSelect,
@@ -183,46 +183,62 @@ const CarritoContent = ({
   montoPago, setMontoPago,
   cambio
 }) => {
+  const { theme } = useTheme(); // <--- IMPORTANTE: Hook del tema
+  const isPicante = theme === 'picante';
+
   // LÓGICA DE BARRA DE PROGRESO
   const UMBRAL_ENVIO = 150;
   const porcentaje = Math.min((subtotal / UMBRAL_ENVIO) * 100, 100);
   const falta = UMBRAL_ENVIO - subtotal;
   const esEnvioGratis = subtotal >= UMBRAL_ENVIO;
 
+  // ESTILOS DINÁMICOS
+  const inputStyle = isPicante 
+    ? { backgroundColor: '#333', color: '#fff', border: '1px solid #555' } 
+    : {};
+  
+  const cashBoxStyle = isPicante
+    ? { backgroundColor: '#1E1E1E', border: '1px solid #FFD700', color: '#FFD700' }
+    : {}; // Usa clases de bootstrap por defecto si no es picante
+
+  const freeShippingStyle = isPicante
+    ? { backgroundColor: '#1E1E1E', border: '1px solid #00E676', color: '#00E676' }
+    : {};
+
   return (
     <>
-      <div className={isModal ? "modal-body" : "card-body"}>
+      <div className={isModal ? "modal-body" : "card-body"} style={{ color: isPicante ? '#fff' : 'inherit' }}>
         {!isModal && (
           <>
             <h3 className="card-title text-center">Mi Pedido</h3>
-            <hr />
+            <hr className={isPicante ? 'border-secondary' : ''} />
           </>
         )}
         
         {/* LISTA DE PRODUCTOS */}
         <ul className="list-group list-group-flush">
-          {pedidoActual.length === 0 && <li className="list-group-item text-center text-muted">Tu carrito está vacío</li>}
+          {pedidoActual.length === 0 && <li className={`list-group-item text-center ${isPicante ? 'bg-transparent text-white-50' : 'text-muted'}`}>Tu carrito está vacío</li>}
           {pedidoActual.map((item) => (
-            <li key={item.cartItemId || item.id} className="list-group-item d-flex align-items-center justify-content-between p-1">
+            <li key={item.cartItemId || item.id} className={`list-group-item d-flex align-items-center justify-content-between p-1 ${isPicante ? 'bg-transparent text-white border-secondary' : ''}`}>
               <div className="me-auto" style={{ paddingRight: '10px' }}> 
                 <span className="fw-bold">{item.nombre}</span>
                 {item.opcionesSeleccionadas?.length > 0 && (
-                  <ul className="list-unstyled small text-muted mb-0" style={{ marginTop: '-2px', fontSize: '0.85em' }}>
+                  <ul className={`list-unstyled small mb-0 ${isPicante ? 'text-white-50' : 'text-muted'}`} style={{ marginTop: '-2px', fontSize: '0.85em' }}>
                     {item.opcionesSeleccionadas.map((op, idx) => <li key={idx}>+ {op.nombre}</li>)}
                   </ul>
                 )}
               </div>
               <div className="d-flex align-items-center">
-                <button className="btn btn-outline-secondary btn-sm py-0 px-2" onClick={() => decrementarCantidad(item.cartItemId || item.id)}>-</button>
+                <button className={`btn btn-sm py-0 px-2 ${isPicante ? 'btn-outline-light' : 'btn-outline-secondary'}`} onClick={() => decrementarCantidad(item.cartItemId || item.id)}>-</button>
                 <span className="mx-2">{item.cantidad}</span>
-                <button className="btn btn-outline-secondary btn-sm py-0 px-2" onClick={() => incrementarCantidad(item.cartItemId || item.id)}>+</button>
+                <button className={`btn btn-sm py-0 px-2 ${isPicante ? 'btn-outline-light' : 'btn-outline-secondary'}`} onClick={() => incrementarCantidad(item.cartItemId || item.id)}>+</button>
               </div>
               <span className="mx-2 fw-bold text-end" style={{ minWidth: '60px' }}>${(item.cantidad * Number(item.precio)).toFixed(2)}</span>
               <button className="btn btn-outline-danger btn-sm py-0 px-2" onClick={() => eliminarProducto(item.cartItemId || item.id)}>&times;</button>
             </li>
           ))}
         </ul>
-        <hr />
+        <hr className={isPicante ? 'border-secondary' : ''} />
         
         {/* TIPO DE ORDEN */}
         <h5>Elige una opción:</h5>
@@ -234,15 +250,15 @@ const CarritoContent = ({
         <div className="mt-3">
           <label className="form-label fw-bold">Número de Teléfono:</label>
           <div className="input-group">
-             <span className="input-group-text">📞</span>
-             <input type="tel" className="form-control" placeholder="Ej: 981 123 4567" value={telefono} onChange={(e) => { const n = e.target.value.replace(/[^0-9]/g, ''); if (n.length <= 10) setTelefono(n);}} />
+             <span className={`input-group-text ${isPicante ? 'bg-dark text-white border-secondary' : ''}`}>📞</span>
+             <input type="tel" className="form-control" style={inputStyle} placeholder="Ej: 981 123 4567" value={telefono} onChange={(e) => { const n = e.target.value.replace(/[^0-9]/g, ''); if (n.length <= 10) setTelefono(n);}} />
           </div>
         </div>
 
         {/* DIRECCIÓN Y MAPA */}
         {tipoOrden === 'domicilio' && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3">
-            <hr />
+            <hr className={isPicante ? 'border-secondary' : ''} />
             {direccionGuardada && (
                <button className="btn btn-outline-info w-100 mb-3" onClick={usarDireccionGuardada}>Usar dirección y número guardados</button>
             )}
@@ -250,7 +266,7 @@ const CarritoContent = ({
             <MapSelector onLocationSelect={handleLocationSelect} initialAddress={direccion} />
             <div className="mt-3">
               <label className="form-label">Referencia:</label>
-              <input type="text" className="form-control" value={referencia} onChange={(e) => setReferencia(e.target.value)} />
+              <input type="text" className="form-control" style={inputStyle} value={referencia} onChange={(e) => setReferencia(e.target.value)} />
             </div>
             <div className="form-check mt-3">
               <input className="form-check-input" type="checkbox" checked={guardarDireccion} onChange={(e) => setGuardarDireccion(e.target.checked)} />
@@ -259,15 +275,15 @@ const CarritoContent = ({
           </motion.div>
         )}
 
-        <hr />
+        <hr className={isPicante ? 'border-secondary' : ''} />
 
         {/* SELECCIÓN DE PAGO */}
         <h6 className="fw-bold mt-3">Método de Pago:</h6>
         <div className="d-flex gap-2 mb-3">
-            <button className={`btn flex-fill ${metodoPago === 'tarjeta' ? 'btn-primary' : 'btn-outline-secondary'}`} 
+            <button className={`btn flex-fill ${metodoPago === 'tarjeta' ? (isPicante ? 'btn-danger' : 'btn-primary') : 'btn-outline-secondary'}`} 
                onClick={() => setMetodoPago('tarjeta')}>💳 Tarjeta</button>
             
-            <button className={`btn flex-fill ${metodoPago === 'efectivo' ? 'btn-primary' : 'btn-outline-secondary'}`} 
+            <button className={`btn flex-fill ${metodoPago === 'efectivo' ? (isPicante ? 'btn-danger' : 'btn-primary') : 'btn-outline-secondary'}`} 
                onClick={() => {
                   if(totalFinal > 500) return; 
                   setMetodoPago('efectivo');
@@ -277,49 +293,55 @@ const CarritoContent = ({
             >💵 Efectivo</button>
         </div>
 
-        {/* INPUT PARA PAGO EN EFECTIVO Y CAMBIO */}
+        {/* INPUT PARA PAGO EN EFECTIVO Y CAMBIO (ESTILADO PARA PICANTE) */}
         {metodoPago === 'efectivo' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="alert alert-warning p-2">
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className={`alert ${isPicante ? '' : 'alert-warning'} p-2`}
+            style={cashBoxStyle}
+          >
               <label className="form-label small fw-bold">¿Con cuánto pagarás?</label>
               <div className="input-group input-group-sm mb-1">
-                  <span className="input-group-text">$</span>
-                  <input type="number" className="form-control" placeholder="Ej: 200" 
+                  <span className={`input-group-text ${isPicante ? 'bg-dark text-warning border-secondary' : ''}`}>$</span>
+                  <input type="number" className="form-control" style={inputStyle} placeholder="Ej: 200" 
                     value={montoPago} 
                     onChange={(e) => setMontoPago(e.target.value)} 
                   />
               </div>
-              <div className="d-flex justify-content-between small text-primary mt-1">
+              <div className={`d-flex justify-content-between small mt-1 ${isPicante ? 'text-warning' : 'text-primary'}`}>
                   <span>Tu Cambio:</span>
                   <span className="fw-bold">${cambio >= 0 ? cambio.toFixed(2) : '---'}</span>
               </div>
           </motion.div>
         )}
 
-        {/* === NUEVA BARRA DE PROGRESO ENVÍO GRATIS === */}
+        {/* === BARRA DE PROGRESO ENVÍO GRATIS (ESTILADO PARA PICANTE) === */}
         {tipoOrden === 'domicilio' && (
           <div className="mt-4 mb-2">
             {esEnvioGratis ? (
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }} 
                 animate={{ scale: 1, opacity: 1 }}
-                className="alert alert-success py-2 text-center shadow-sm border-0"
+                className={`alert ${isPicante ? '' : 'alert-success'} py-2 text-center shadow-sm border-0`}
+                style={freeShippingStyle}
               >
                 <span className="fw-bold">🎉 ¡Envío GRATIS aplicado!</span>
               </motion.div>
             ) : (
               <div>
                 <div className="d-flex justify-content-between small mb-1">
-                  <span className="text-muted">Meta para envío gratis ($150)</span>
-                  <span className="fw-bold text-primary">Faltan ${falta.toFixed(2)}</span>
+                  <span className={isPicante ? 'text-white-50' : 'text-muted'}>Meta para envío gratis ($150)</span>
+                  <span className={`fw-bold ${isPicante ? 'text-danger' : 'text-primary'}`}>Faltan ${falta.toFixed(2)}</span>
                 </div>
-                <div className="progress" style={{ height: '10px', borderRadius: '10px', backgroundColor: '#e9ecef' }}>
+                <div className="progress" style={{ height: '10px', borderRadius: '10px', backgroundColor: isPicante ? '#333' : '#e9ecef' }}>
                   <div 
-                    className="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                    className={`progress-bar progress-bar-striped progress-bar-animated ${isPicante ? 'bg-danger' : 'bg-success'}`} 
                     role="progressbar" 
                     style={{ width: `${porcentaje}%` }} 
                   ></div>
                 </div>
-                <small className="text-muted mt-1 d-block text-center" style={{fontSize: '0.75rem'}}>
+                <small className={`${isPicante ? 'text-white-50' : 'text-muted'} mt-1 d-block text-center`} style={{fontSize: '0.75rem'}}>
                   ¡Agrega un poco más para ahorrarte el envío!
                 </small>
               </div>
@@ -337,8 +359,8 @@ const CarritoContent = ({
                 {calculandoEnvio ? <span className="spinner-border spinner-border-sm"></span> : (
                    costoEnvioAplicado === 0 && costoEnvioReal > 0 ? (
                       <span>
-                         <span className="text-muted text-decoration-line-through me-2">${costoEnvioReal.toFixed(2)}</span>
-                         <span className="badge bg-success">¡GRATIS!</span>
+                         <span className={`${isPicante ? 'text-white-50' : 'text-muted'} text-decoration-line-through me-2`}>${costoEnvioReal.toFixed(2)}</span>
+                         <span className={`badge ${isPicante ? 'bg-danger' : 'bg-success'}`}>¡GRATIS!</span>
                       </span>
                    ) : (
                       <span>${costoEnvioReal.toFixed(2)}</span>
@@ -357,7 +379,7 @@ const CarritoContent = ({
       <div className={isModal ? "modal-footer border-0 p-3" : "card-footer mt-auto"}>
         <div className="d-grid gap-2 w-100">
             <button 
-              className="btn btn-primary btn-lg w-100"
+              className={`btn btn-lg w-100 ${isPicante ? 'btn-danger' : 'btn-primary'}`}
               onClick={handleProcederAlPago} 
               disabled={
                   pedidoActual.length === 0 || 

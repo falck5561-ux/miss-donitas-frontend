@@ -60,23 +60,22 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
     const styles = getTableThemeStyles(isPicante);
   
     // Función auxiliar para extraer datos de efectivo de la referencia
-    // --- PONER ESTO EN SU LUGAR ---
-    const parsearDatosPago = (referencia) => {
-        if (!referencia) return null;
-        try {
-            // Regex mejorado: tolera mayúsculas, minúsculas y espacios variables
-            const pagaConMatch = referencia.match(/Paga con:?\s*\$?\s*([0-9.]+)/i);
-            const cambioMatch = referencia.match(/Cambio:?\s*\$?\s*([0-9.]+)/i);
-            
-            if (pagaConMatch && cambioMatch) {
-                return {
-                    pagaCon: parseFloat(pagaConMatch[1]).toFixed(2),
-                    cambio: parseFloat(cambioMatch[1]).toFixed(2)
-                };
-            }
-            return null;
-        } catch (e) { return null; }
-    };
+    const parsearDatosPago = (referencia) => {
+        if (!referencia || !referencia.includes('Paga con:')) return null;
+        try {
+            // Extraemos los números del texto que guardamos antes
+            const pagaConMatch = referencia.match(/Paga con: \$([0-9.]+)/);
+            const cambioMatch = referencia.match(/Cambio: \$([0-9.]+)/);
+            
+            if (pagaConMatch && cambioMatch) {
+                return {
+                    pagaCon: parseFloat(pagaConMatch[1]).toFixed(2),
+                    cambio: parseFloat(cambioMatch[1]).toFixed(2)
+                };
+            }
+            return null;
+        } catch (e) { return null; }
+    };
 
     if (!pedidos || pedidos.length === 0) {
       return (
@@ -115,13 +114,9 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
               </tr>
             </thead>
             <tbody>
-              
-              {pedidos.map((p) => {
-                // LOG DE DEPURACIÓN: Abre la consola (F12) y mira qué sale aquí
-                console.log(`Pedido #${p.id} - Referencia recibida:`, p.referencia);
-
-                // Analizamos si este pedido específico es de efectivo
-                const datosPago = parsearDatosPago(p.referencia);
+              {pedidos.map((p) => {
+                // Analizamos si este pedido específico es de efectivo
+                const datosPago = parsearDatosPago(p.referencia);
                 const esEfectivo = !!datosPago;
 
                 return (

@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react'; // <--- Se añade useState y useEffect
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import 'bootstrap/dist/js/bootstrap.bundle.min';

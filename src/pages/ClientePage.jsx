@@ -500,6 +500,8 @@ function ClientePage() {
     }
   };
 
+  // ... (tu función handleLocationSelect y usarDireccionGuardada arriba siguen igual) ...
+
   const handleProcederAlPago = async () => {
     if (totalFinal <= 0) return;
     
@@ -556,7 +558,9 @@ function ClientePage() {
               setDireccionGuardada({ ...direccion, referencia, telefono });
           }
 
+          toast.dismiss(); // Limpiamos toasts anteriores
           notify('success', `Pedido creado. Prepara $${montoPago} para el cambio.`);
+          
           limpiarPedidoCompleto();
           setMontoPago('');
           setActiveTab('ver'); // Te lleva a mis pedidos
@@ -582,31 +586,15 @@ function ClientePage() {
     if (tipoOrden !== 'domicilio') { handleProcederAlPago(); } else { setModalView('address'); }
   };
 
-  // Dentro de handleProcederAlPago, en la sección de efectivo:
-if (metodoPago === 'efectivo') {
-      // ... tu código de crear pedido ...
-
-      if (guardarDireccion && direccion) {
-          // Aquí SÍ tenías el teléfono, está correcto, no lo toques:
-          apiClient.put('/usuarios/mi-direccion', { ...direccion, referencia, telefono }).catch(console.error);
-          setDireccionGuardada({ ...direccion, referencia, telefono });
-      }
-
-      // --- AGREGA ESTO PARA EVITAR DOBLE NOTIFICACIÓN ---
-      toast.dismiss(); 
-      notify('success', `Pedido creado. Prepara $${montoPago} para el cambio.`);
-      
-      limpiarPedidoCompleto();
-      setMontoPago('');
-      setActiveTab('ver');
-}
-  // --- FUNCIÓN QUE FALTABA PARA EL ÉXITO DEL PAGO CON TARJETA ---
   const handleSuccessfulPayment = () => {
     limpiarPedidoCompleto();
     setShowPaymentModal(false);
     notify('success', '¡Pago procesado con éxito!');
-    setActiveTab('ver'); // Te lleva a la pestaña de pedidos
+    setActiveTab('ver'); 
   };
+  
+  // ... resto del componente
+
   const handleProductClick = (item) => { setProductoSeleccionadoParaModal(item); };
   const handleToggleDetalle = (pedidoId) => { setOrdenExpandida(ordenExpandida === pedidoId ? null : pedidoId); };
   const totalItemsEnCarrito = pedidoActual.reduce((sum, item) => sum + item.cantidad, 0);

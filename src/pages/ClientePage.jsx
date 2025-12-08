@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'; // <--- AGREGAR useCallback
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { loadStripe } from '@stripe/stripe-js';

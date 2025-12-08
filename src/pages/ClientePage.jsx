@@ -380,6 +380,14 @@ function ClientePage() {
 
   // Cálculo del cambio
   const cambio = montoPago ? (Number(montoPago) - totalFinal) : 0;
+  // --- CORRECCIÓN ERROR #301: Memoizar opciones de Stripe ---
+  const stripeOptions = useMemo(() => {
+    if (!clientSecret) return null;
+    return {
+      clientSecret,
+      appearance: { theme: 'stripe' }
+    };
+  }, [clientSecret]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -824,10 +832,12 @@ if (metodoPago === 'efectivo') {
                 <button type="button" className="btn-close" onClick={() => setShowPaymentModal(false)}></button>
               </div>
               <div className="modal-body">
-                <Elements stripe={stripePromise} options={{ clientSecret }}>
-                  {/* AQUÍ SE ENVÍAN LOS DATOS. SI EL TELÉFONO SIGUE SIN LLEGAR, EL PROBLEMA ESTÁ EN ESTE COMPONENTE CHECKOUTFORM */}
-                  <CheckoutForm handleSuccess={handleSuccessfulPayment} total={totalFinal} datosPedido={datosParaCheckout} />
-                </Elements>
+                {/* CORREGIDO: Usamos stripeOptions en lugar del objeto directo */}
+{stripeOptions && (
+  <Elements stripe={stripePromise} options={stripeOptions}>
+    <CheckoutForm handleSuccess={handleSuccessfulPayment} total={totalFinal} datosPedido={datosParaCheckout} />
+  </Elements>
+)}
               </div>
             </div>
           </motion.div>

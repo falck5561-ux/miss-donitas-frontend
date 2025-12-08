@@ -115,7 +115,7 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
               </tr>
             </thead>
             <tbody>
-              // --- PONER ESTO EN SU LUGAR ---
+              
               {pedidos.map((p) => {
                 // LOG DE DEPURACIÓN: Abre la consola (F12) y mira qué sale aquí
                 console.log(`Pedido #${p.id} - Referencia recibida:`, p.referencia);

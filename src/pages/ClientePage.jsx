@@ -573,20 +573,24 @@ function ClientePage() {
     if (tipoOrden !== 'domicilio') { handleProcederAlPago(); } else { setModalView('address'); }
   };
 
-  const handleSuccessfulPayment = async () => {
-    if (guardarDireccion && direccion) {
-      try {
-        const datosParaGuardar = { ...direccion, referencia };
-        await apiClient.put('/usuarios/mi-direccion', datosParaGuardar);
-        setDireccionGuardada(datosParaGuardar);
-      } catch (err) { console.error(err); }
-    }
-    notify('success', '¡Pedido realizado con éxito!');
-    limpiarPedidoCompleto();
-    setShowPaymentModal(false);
-    setClientSecret('');
-    setActiveTab('ver');
-  };
+  // Dentro de handleProcederAlPago, en la sección de efectivo:
+if (metodoPago === 'efectivo') {
+      // ... tu código de crear pedido ...
+
+      if (guardarDireccion && direccion) {
+          // Aquí SÍ tenías el teléfono, está correcto, no lo toques:
+          apiClient.put('/usuarios/mi-direccion', { ...direccion, referencia, telefono }).catch(console.error);
+          setDireccionGuardada({ ...direccion, referencia, telefono });
+      }
+
+      // --- AGREGA ESTO PARA EVITAR DOBLE NOTIFICACIÓN ---
+      toast.dismiss(); 
+      notify('success', `Pedido creado. Prepara $${montoPago} para el cambio.`);
+      
+      limpiarPedidoCompleto();
+      setMontoPago('');
+      setActiveTab('ver');
+}
 
   const handleProductClick = (item) => { setProductoSeleccionadoParaModal(item); };
   const handleToggleDetalle = (pedidoId) => { setOrdenExpandida(ordenExpandida === pedidoId ? null : pedidoId); };

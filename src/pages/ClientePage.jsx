@@ -567,9 +567,18 @@ function ClientePage() {
       }));
 
       // Truco: Agregamos el cambio en la referencia para que lo vea el repartidor
-      let referenciaFinal = referencia;
+      // Truco: Agregamos el cambio en la referencia para que lo vea el repartidor
+      let referenciaFinal = '';
+      
+      // 1. Si es domicilio, usamos la referencia de ubicación que escribió el usuario
+      if (tipoOrden === 'domicilio') {
+          referenciaFinal = referencia;
+      }
+
+      // 2. Si es efectivo, LE AGREGAMOS la info del pago, sea domicilio o local
       if (metodoPago === 'efectivo') {
-         referenciaFinal = `${referencia} (Paga con: $${montoPago}, Cambio: $${cambio.toFixed(2)})`;
+          const infoPago = ` (Paga con: $${montoPago}, Cambio: $${cambio.toFixed(2)})`;
+          referenciaFinal = referenciaFinal + infoPago;
       }
 
       const pedidoData = {
@@ -581,7 +590,8 @@ function ClientePage() {
         direccion_entrega: tipoOrden === 'domicilio' ? direccion?.description : null,
         latitude: tipoOrden === 'domicilio' ? direccion?.lat : null,
         longitude: tipoOrden === 'domicilio' ? direccion?.lng : null,
-        referencia: tipoOrden === 'domicilio' ? referenciaFinal : null
+        // CORRECCIÓN: Enviamos la referenciaFinal siempre que tenga texto (sea dirección o datos de pago)
+        referencia: referenciaFinal.trim() !== '' ? referenciaFinal : null 
       };
       
       setDatosParaCheckout(pedidoData);

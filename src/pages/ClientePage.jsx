@@ -53,7 +53,7 @@ const getTableThemeStyles = (isPicante) => ({
 });
   
 // --- COMPONENTE TABLA ---
-// --- COMPONENTE TABLA (ACTUALIZADO CON LÓGICA DE EFECTIVO) ---
+// --- COMPONENTE TABLA (CORREGIDO) ---
 const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
     const { theme } = useTheme();
     const isPicante = theme === 'picante';
@@ -175,29 +175,30 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
                                       </div>
                                   )}
                                   
-                                  {/* --- SECCIÓN DE TOTALES Y PAGO --- */}
+                                  {/* --- SECCIÓN DE TOTALES Y PAGO CORREGIDA --- */}
                                   <div className="mt-3 pt-2 border-top">
                                     <div className="d-flex justify-content-between align-items-center">
-                                        <span className="h5 mb-0 fw-bold" style={{color: styles.text}}>
-                                            {/* CAMBIO DE TEXTO DINÁMICO */}
-                                            {esEfectivo ? "Total a Pagar:" : "Total Pagado:"}
-                                        </span>
-                                        <span className="h4 mb-0 fw-bold" style={{color: styles.accent}}>${Number(p.total).toFixed(2)}</span>
-                                    </div>
+                                          <span className="h5 mb-0 fw-bold" style={{color: styles.text}}>
+                                              {/* SI ES EFECTIVO: "Total a Pagar". SI ES TARJETA: "Total Pagado" */}
+                                              {esEfectivo ? "Total a Pagar:" : "Total Pagado:"}
+                                          </span>
+                                          <span className="h4 mb-0 fw-bold" style={{color: styles.accent}}>${Number(p.total).toFixed(2)}</span>
+                                      </div>
 
-                                    {/* SI ES EFECTIVO, MOSTRAMOS EL DESGLOSE */}
-                                    {esEfectivo && (
-                                        <div className="alert alert-info mt-3 mb-0 d-flex justify-content-between align-items-center py-2">
-                                            <div>
-                                                <small className="d-block text-muted">Tú pagas con:</small>
-                                                <span className="fw-bold fs-5">${datosPago.pagaCon}</span>
-                                            </div>
-                                            <div className="text-end">
-                                                <small className="d-block text-muted">Tu Cambio:</small>
-                                                <span className="fw-bold fs-5 text-primary">${datosPago.cambio}</span>
-                                            </div>
-                                        </div>
-                                    )}
+                                      {/* SI ES EFECTIVO, MOSTRAMOS EL DESGLOSE */}
+                                      {esEfectivo && (
+                                          <div className="alert alert-info mt-3 mb-0 d-flex justify-content-between align-items-center py-2">
+                                              <div>
+                                                  <small className="d-block text-muted">Tú pagas con:</small>
+                                                  <span className="fw-bold fs-5">${datosPago.pagaCon}</span>
+                                              </div>
+                                              <div className="text-end">
+                                                  {/* AQUÍ ESTABA EL ERROR: AHORA DICE CLARAMENTE "Cambio a recibir" */}
+                                                  <small className="d-block text-muted">Cambio a recibir:</small>
+                                                  <span className="fw-bold fs-5 text-primary">${datosPago.cambio}</span>
+                                              </div>
+                                          </div>
+                                      )}
                                   </div>
 
                               </motion.div>

@@ -2,13 +2,11 @@ import React, { useContext, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import AuthContext from '../context/AuthContext';
 import { getProductById } from '../services/productService'; 
-import { useTheme } from '../context/ThemeContext';
 
-// Detectar si es móvil (simple check)
+// Detectar si es móvil para ajustar estilos (simple check)
 const isMobile = window.innerWidth <= 768;
 
-// --- FUNCIÓN DE ESTILOS DINÁMICOS (PICANTE VS NORMAL) ---
-const getModalStyles = (isPicante) => ({
+const modalStyles = {
   backdrop: {
     position: 'fixed',
     top: 0,
@@ -22,22 +20,21 @@ const getModalStyles = (isPicante) => ({
     zIndex: 1050,
   },
   content: {
-    width: isMobile ? '95%' : '90%',
+    width: isMobile ? '95%' : '90%', // En móvil usa casi todo el ancho
     maxWidth: '500px',
-    background: isPicante ? '#1E1E1E' : '#FFFFFF', // Fondo oscuro o blanco
-    color: isPicante ? '#FFFFFF' : '#333333',     // Texto blanco o oscuro
+    background: 'var(--bs-card-bg)',
     borderRadius: '15px',
     maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: isPicante ? '0 10px 30px rgba(255, 23, 68, 0.15)' : '0 10px 30px rgba(0,0,0,0.2)',
-    border: isPicante ? '1px solid #333' : 'none',
-    margin: isMobile ? '10px' : '0',
+    color: 'var(--bs-body-color)',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+    margin: isMobile ? '10px' : '0', // Margen seguro en móviles
   },
   header: {
     position: 'relative',
     width: '100%',
-    height: isMobile ? '180px' : '250px',
+    height: isMobile ? '180px' : '250px', // Imagen un poco más chica en móvil
     flexShrink: 0,
   },
   body: {
@@ -46,8 +43,8 @@ const getModalStyles = (isPicante) => ({
   },
   footer: {
     padding: '1rem 1.5rem',
-    borderTop: isPicante ? '1px solid #333' : '1px solid #dee2e6',
-    backgroundColor: isPicante ? '#252525' : '#f8f9fa',
+    borderTop: '1px solid var(--bs-border-color)',
+    backgroundColor: 'var(--bs-tertiary-bg)',
     borderBottomLeftRadius: '15px',
     borderBottomRightRadius: '15px',
   },
@@ -55,7 +52,7 @@ const getModalStyles = (isPicante) => ({
     position: 'absolute',
     top: '10px',
     right: '10px',
-    background: 'rgba(0,0,0,0.5)',
+    background: 'rgba(0,0,0,0.3)',
     backdropFilter: 'blur(5px)',
     border: 'none',
     borderRadius: '50%',
@@ -67,6 +64,7 @@ const getModalStyles = (isPicante) => ({
     fontSize: '1.2rem',
     color: 'white',
     cursor: 'pointer',
+    transition: 'background-color 0.2s',
     zIndex: 10,
   },
   productImage: {
@@ -75,19 +73,18 @@ const getModalStyles = (isPicante) => ({
     objectFit: 'cover',
     borderTopLeftRadius: '15px',
     borderTopRightRadius: '15px',
-    backgroundColor: isPicante ? '#333' : '#e9ecef',
+    backgroundColor: 'var(--bs-tertiary-bg)',
   },
   productTitle: {
     fontFamily: "'Playfair Display', serif",
     marginBottom: '0.5rem',
-    fontSize: isMobile ? '1.5rem' : '2rem',
-    fontWeight: 'bold',
+    fontSize: isMobile ? '1.5rem' : '2rem', // Título más chico en móvil
   },
   productDescription: {
     margin: '0.5rem 0 1rem 0',
     fontSize: '0.95rem',
     lineHeight: '1.5',
-    color: isPicante ? '#AAAAAA' : '#6c757d',
+    color: 'var(--bs-secondary-color)',
   },
   optionsContainer: {
     marginTop: '1rem',
@@ -95,86 +92,54 @@ const getModalStyles = (isPicante) => ({
   optionGroup: {
     marginBottom: '1rem',
     padding: '0.75rem',
-    border: isPicante ? '1px solid #444' : '1px solid #dee2e6',
+    border: '1px solid var(--bs-border-color)',
     borderRadius: '8px',
-    backgroundColor: isPicante ? '#2C2C2C' : '#FFFFFF',
+    backgroundColor: 'var(--bs-body-bg)',
   },
   optionGroupTitle: {
     fontWeight: 'bold',
     marginBottom: '0.5rem',
     fontSize: '1rem',
-    color: isPicante ? '#FFD700' : '#212529',
+    color: 'var(--bs-heading-color)',
   },
-  priceTag: {
-    color: isPicante ? '#FF1744' : '#000',
-    fontWeight: 'bold',
-    fontSize: '1.2rem',
-  }
-});
+};
 
 function ProductDetailModal({ product, onClose, onAddToCart }) {
   const { user } = useContext(AuthContext); 
-  const { theme } = useTheme(); 
-  const isPicante = theme === 'picante';
-  const styles = getModalStyles(isPicante);
 
   const [fullProduct, setFullProduct] = useState(product); 
   const [selectedOptions, setSelectedOptions] = useState({});
   const [totalPrice, setTotalPrice] = useState(0); 
   const [loadingToppings, setLoadingToppings] = useState(true);
 
-  // --- 1. CARGA DE DATOS + LÓGICA DE APERTURA ---
+  // --- 1. EFECTO PARA BUSCAR DATOS Y DECIDIR ---
   useEffect(() => {
     if (product?.id) {
       setSelectedOptions({}); 
       
-      // Función auxiliar para procesar y decidir
-      const processProductData = (data) => {
-          // Unificación de campos (Combos vs Productos)
-          const productoCompleto = {
-             ...data,
-             descripcion: data.descripcion || data.description || product.descripcion || '',
-             nombre: data.nombre || data.titulo || product.nombre,
-             categoria: data.categoria || product.categoria || (data.titulo ? 'Combos' : 'General')
-          };
+      getProductById(product.id)
+        .then(data => {
+          const tieneOpciones = data.grupos_opciones && data.grupos_opciones.length > 0;
 
-          const tieneOpciones = productoCompleto.grupos_opciones && productoCompleto.grupos_opciones.length > 0;
-          
-          // === CORRECCIÓN CLAVE ===
-          // Abrimos el modal si tiene opciones O SI ES UN COMBO (para ver qué trae)
-          const esCombo = productoCompleto.categoria === 'Combos';
-          const debeAbrirModal = tieneOpciones || esCombo; 
-
-          if (debeAbrirModal) {
-            // CASO 1: Renderizar el Modal
-            setFullProduct(productoCompleto); 
-            setLoadingToppings(false); 
+          if (tieneOpciones) {
+            // CASO 1: SÍ tiene opciones
+            setFullProduct(data); 
+            setLoadingToppings(false); // Deja que el modal se renderice
           } else {
-            // CASO 2: Agregar directo (Producto simple sin opciones)
-            onAddToCart(productoCompleto); 
-            onClose(); 
+            // CASO 2: NO tiene opciones
+            onAddToCart(data); // Añade directo
+            onClose(); // Cierra el modal (que nunca fue visible)
           }
-      };
-
-      // Si ya viene completo desde el componente padre (ej: tiene grupos_opciones), usamos eso
-      if (product.grupos_opciones && product.grupos_opciones.length > 0) {
-         processProductData(product);
-      } else {
-         // Si no, buscamos en el backend
-         getProductById(product.id)
-            .then(data => processProductData(data))
-            .catch(err => {
-              console.error("Error al cargar detalles:", err);
-              // Fallback: intentar abrir con lo que tenemos
-              setFullProduct(product);
-              setLoadingToppings(false);
-            });
-      }
+        })
+        .catch(err => {
+          console.error("Error al cargar detalles del producto:", err);
+          onClose(); 
+        });
     }
   }, [product, onAddToCart, onClose]);
 
   
-  // --- 2. CÁLCULO DE PRECIO ---
+  // --- 2. EFECTO PARA CALCULAR EL PRECIO TOTAL ---
   useEffect(() => {
     if (!fullProduct) return;
 
@@ -183,6 +148,7 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
     
     fullProduct.grupos_opciones?.forEach(grupo => {
       const selection = selectedOptions[grupo.id];
+      
       if (grupo.tipo_seleccion === 'unico' && selection) {
         optionsPrice += parseFloat(selection.precio_adicional);
       } 
@@ -197,20 +163,32 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
 
   }, [fullProduct, selectedOptions]);
 
-  // --- 3. HANDLERS ---
+  // --- 3. MANEJADORES DE SELECCIÓN ---
   const handleRadioChange = (grupo, opcion) => {
-    setSelectedOptions(prev => ({ ...prev, [grupo.id]: opcion }));
+    setSelectedOptions(prev => ({
+      ...prev,
+      [grupo.id]: opcion
+    }));
   };
 
   const handleCheckboxChange = (grupo, opcion, isChecked) => {
     setSelectedOptions(prev => {
       const currentGroupSelections = prev[grupo.id] || {};
-      if (isChecked) currentGroupSelections[opcion.id] = opcion;
-      else delete currentGroupSelections[opcion.id];
-      return { ...prev, [grupo.id]: currentGroupSelections };
+      
+      if (isChecked) {
+        currentGroupSelections[opcion.id] = opcion;
+      } else {
+        delete currentGroupSelections[opcion.id];
+      }
+
+      return {
+        ...prev,
+        [grupo.id]: currentGroupSelections
+      };
     });
   };
 
+  // --- 4. MANEJADOR PARA AÑADIR AL CARRITO ---
   const handleAddToCart = () => {
     const opcionesParaCarrito = [];
     fullProduct.grupos_opciones?.forEach(grupo => {
@@ -229,6 +207,7 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
       ...fullProduct,
       precio: totalPrice, 
       opcionesSeleccionadas: opcionesParaCarrito,
+      // ID ÚNICO: Combinamos ID producto + Timestamp para evitar que se mezclen
       cartItemId: tieneOpciones ? `${fullProduct.id}-${Date.now()}` : null 
     };
 
@@ -237,55 +216,56 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
   };
 
 
-  // --- RENDERIZADO ---
+  // --- Renderizado ---
   if (!product) return null; 
 
-  // Selección de imagen con fallback
-  const displayImage = fullProduct.imagen_url || (fullProduct.imagenes && fullProduct.imagenes[0])
-    ? (fullProduct.imagen_url || fullProduct.imagenes[0])
-    : `https://placehold.co/500x250/333333/CCCCCC?text=${encodeURIComponent(fullProduct.nombre || 'Producto')}`;
+  const displayImage = fullProduct.imagen_url
+    ? fullProduct.imagen_url
+    : `https://placehold.co/500x250/333333/CCCCCC?text=${encodeURIComponent(fullProduct.nombre)}`;
     
-  const placeholderImage = `https://placehold.co/500x250/333333/CCCCCC?text=${encodeURIComponent(fullProduct.nombre || 'Producto')}`;
+  const placeholderImage = `https://placehold.co/500x250/333333/CCCCCC?text=${encodeURIComponent(fullProduct.nombre)}`;
 
+  
+  // Si está cargando, no retornamos NADA (evita el flash)
   if (loadingToppings) {
-    return null; // Spinner opcional
+    return null;
   }
   
   return (
     <motion.div
-      style={styles.backdrop}
+      style={modalStyles.backdrop}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       onClick={onClose}
     >
       <motion.div
-        style={styles.content}
+        style={modalStyles.content}
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={styles.header}>
-          <button style={styles.closeButton} onClick={onClose}>&times;</button>
+        <div style={modalStyles.header}>
+          <button style={modalStyles.closeButton} onClick={onClose}>&times;</button>
           <img 
             src={displayImage} 
             alt={fullProduct.nombre} 
-            style={styles.productImage}
+            style={modalStyles.productImage}
             onError={(e) => { e.target.onerror = null; e.target.src = placeholderImage; }}
           />
         </div>
 
-        <div style={styles.body}>
-          <h2 style={styles.productTitle}>{fullProduct.nombre}</h2>
+        <div style={modalStyles.body}>
+          <h2 style={modalStyles.productTitle}>{fullProduct.nombre}</h2>
         
           {fullProduct.descripcion && (
-            <p style={styles.productDescription}>{fullProduct.descripcion}</p>
+            <p style={modalStyles.productDescription}>{fullProduct.descripcion}</p>
           )}
 
-          <div style={styles.optionsContainer}>
+          <div style={modalStyles.optionsContainer}>
             {!loadingToppings && fullProduct.grupos_opciones?.length > 0 && 
               fullProduct.grupos_opciones.map(grupo => (
-                <div key={grupo.id} style={styles.optionGroup}>
-                  <h5 style={styles.optionGroupTitle}>{grupo.nombre}</h5>
+                <div key={grupo.id} style={modalStyles.optionGroup}>
+                  <h5 style={modalStyles.optionGroupTitle}>{grupo.nombre}</h5>
                   
                   {grupo.tipo_seleccion === 'unico' && (
                     <>
@@ -314,7 +294,7 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
                           />
                           <label className="form-check-label d-flex justify-content-between" htmlFor={`opcion-${opcion.id}`}>
                             <span>{opcion.nombre}</span>
-                            <span className="text-success">+${parseFloat(opcion.precio_adicional).toFixed(2)}</span>
+                            <span className="text-success ms-2">+${parseFloat(opcion.precio_adicional).toFixed(2)}</span>
                           </label>
                         </div>
                       ))}
@@ -332,7 +312,7 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
                       />
                       <label className="form-check-label d-flex justify-content-between" htmlFor={`opcion-${opcion.id}`}>
                         <span>{opcion.nombre}</span>
-                        <span className="text-success">+${parseFloat(opcion.precio_adicional).toFixed(2)}</span>
+                        <span className="text-success ms-2">+${parseFloat(opcion.precio_adicional).toFixed(2)}</span>
                       </label>
                     </div>
                   ))}
@@ -341,23 +321,20 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
           </div>
         </div>
 
-        <div style={styles.footer}>
+        <div style={modalStyles.footer}>
           <div className="d-flex justify-content-between align-items-center">
             <div>
-              <span style={styles.priceTag}>${totalPrice.toFixed(2)}</span>
+              <span className="fs-3 fw-bold">${totalPrice.toFixed(2)}</span>
+              
               {fullProduct.en_oferta && Number(fullProduct.precio_original) > Number(fullProduct.precio) && (
-                <span className="text-muted text-decoration-line-through ms-2" style={{ fontSize: '0.9rem' }}>
-                    ${Number(fullProduct.precio_original).toFixed(2)}
-                </span>
+                <span className="text-muted text-decoration-line-through ms-2">${Number(fullProduct.precio_original).toFixed(2)}</span>
               )}
             </div>
 
-            <button 
-                className={`btn ${isPicante ? 'btn-danger' : 'btn-primary'}`} 
-                onClick={handleAddToCart}
-            >
+            <button className="btn btn-primary" onClick={handleAddToCart}>
               Agregar al Pedido
             </button>
+            
           </div>
         </div>
 

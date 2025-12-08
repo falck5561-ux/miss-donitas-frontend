@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { X, MapPin, Phone, Package, ShoppingBag, Bike, User, Clock, Navigation } from 'lucide-react';
+import { X, MapPin, Phone, Package, ShoppingBag, Bike, User, Clock, Navigation, AlertTriangle, CreditCard, DollarSign } from 'lucide-react';
 
 const getModalColors = (mode) => {
   const isPicante = mode === 'picante';
@@ -26,7 +26,26 @@ const DetallesPedidoModal = ({ pedido, onClose, isPicante }) => {
 
   if (!pedido) return null;
 
-  // --- CORRECCIÓN 1: BÚSQUEDA ROBUSTA DE PRODUCTOS ---
+  // --- 1. LÓGICA DE DETECCIÓN DE PAGO ---
+  const parsearDatosPago = (referencia) => {
+      if (!referencia || !referencia.includes('Paga con:')) return null;
+      try {
+          const pagaConMatch = referencia.match(/Paga con: \$([0-9.]+)/);
+          const cambioMatch = referencia.match(/Cambio: \$([0-9.]+)/);
+          if (pagaConMatch && cambioMatch) {
+              return {
+                  pagaCon: parseFloat(pagaConMatch[1]).toFixed(2),
+                  cambio: parseFloat(cambioMatch[1]).toFixed(2)
+              };
+          }
+          return null;
+      } catch (e) { return null; }
+  };
+
+  const datosPago = parsearDatosPago(pedido.referencia);
+  const esEfectivo = !!datosPago;
+
+  // --- 2. BÚSQUEDA ROBUSTA DE PRODUCTOS ---
   const listaProductos = 
       pedido.items || 
       pedido.detalles_pedido || 
@@ -35,8 +54,7 @@ const DetallesPedidoModal = ({ pedido, onClose, isPicante }) => {
       pedido.venta_detalles || 
       [];
 
-  // --- CORRECCIÓN 2: DETECTAR VENTA DE MOSTRADOR ---
-  // Si es mostrador, ocultaremos la sección de entrega/recogida
+  // --- 3. DETECTAR VENTA DE MOSTRADOR ---
   const esVentaMostrador = 
       pedido.tipo_orden === 'mostrador' || 
       pedido.nombre_cliente === 'Venta de Mostrador' ||
@@ -112,6 +130,14 @@ const DetallesPedidoModal = ({ pedido, onClose, isPicante }) => {
       fontWeight: '600', marginTop: '15px', fontSize: '0.9rem'
     },
 
+    // ESTILOS NUEVOS PARA ALERTAS DE PAGO
+    alertBox: {
+        padding: '15px', borderRadius: '12px', marginBottom: '20px',
+        backgroundColor: esEfectivo ? '#FFF3CD' : '#D1E7DD',
+        border: `1px solid ${esEfectivo ? '#FFEEBA' : '#BADBCC'}`,
+        color: esEfectivo ? '#856404' : '#0F5132'
+    },
+
     footer: {
       padding: '20px 24px', borderTop: `1px solid ${colors.border}`,
       backgroundColor: colors.bg,
@@ -144,6 +170,30 @@ const DetallesPedidoModal = ({ pedido, onClose, isPicante }) => {
         {/* CONTENIDO */}
         <div style={styles.body}>
           
+          {/* --- ALERTA DE PAGO PARA EL ADMIN --- */}
+          {esEfectivo ? (
+              <div style={styles.alertBox}>
+                  <div style={{display:'flex', alignItems:'center', gap:'10px', fontWeight:'bold', marginBottom:'10px', fontSize:'1.1rem'}}>
+                      <AlertTriangle size={20}/> ⚠️ COBRO PENDIENTE (EFECTIVO)
+                  </div>
+                  <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px'}}>
+                      <div>
+                          <small style={{display:'block', opacity:0.8}}>Cliente paga con:</small>
+                          <strong style={{fontSize:'1.2rem'}}>${datosPago.pagaCon}</strong>
+                      </div>
+                      <div>
+                          <small style={{display:'block', opacity:0.8}}>LLEVAR CAMBIO DE:</small>
+                          <strong style={{fontSize:'1.2rem', color:'#dc3545'}}>${datosPago.cambio}</strong>
+                      </div>
+                  </div>
+              </div>
+          ) : (
+             <div style={{...styles.alertBox, marginBottom: '20px', padding: '10px', display:'flex', alignItems:'center', gap:'10px'}}>
+                 <CreditCard size={20}/> 
+                 <span style={{fontWeight:'bold'}}>✅ PAGADO CON TARJETA</span>
+             </div>
+          )}
+
           <div style={styles.infoGrid}>
              <div style={styles.infoItem}>
                 <span style={styles.label}>Cliente</span>
@@ -171,16 +221,12 @@ const DetallesPedidoModal = ({ pedido, onClose, isPicante }) => {
              </div>
           ) : (
             listaProductos.map((prod, idx) => {
-                // --- SOLUCIÓN PANTALLA BLANCA ---
-                // Detectamos si 'opciones' es un array (frontend) o string (backend)
                 let textoOpciones = "";
                 const rawOpciones = prod.opciones || prod.selectedOptions;
 
                 if (Array.isArray(rawOpciones)) {
-                    // Si es Array (ej: antes de guardar), lo unimos con comas
                     textoOpciones = rawOpciones.map(op => (typeof op === 'string' ? op : op.nombre)).join(', ');
                 } else if (typeof rawOpciones === 'string') {
-                    // Si es String (ej: desde la BD), lo usamos directo
                     textoOpciones = rawOpciones;
                 }
 
@@ -194,7 +240,6 @@ const DetallesPedidoModal = ({ pedido, onClose, isPicante }) => {
                         {prod.cantidad} x {prod.nombre || prod.nombre_producto}
                       </div>
                       
-                      {/* Renderizamos el texto de opciones de forma segura */}
                       {textoOpciones && (
                         <div style={{fontSize: '0.8rem', color: colors.textLight, marginTop:'2px'}}>
                            {textoOpciones}
@@ -250,7 +295,7 @@ const DetallesPedidoModal = ({ pedido, onClose, isPicante }) => {
 
         <div style={styles.footer}>
           <div>
-            <span style={styles.totalLabel}>Total Pagado</span>
+            <span style={styles.totalLabel}>{esEfectivo ? "Total a Cobrar" : "Total Pagado"}</span>
             <span style={styles.totalPrice}>${Number(pedido.total).toFixed(2)}</span>
           </div>
           <button style={styles.closeBtn} onClick={onClose}>CERRAR</button>

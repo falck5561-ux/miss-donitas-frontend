@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react'; // <--- Se añade useState y useEffect
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 
-// Importación de Componentes
+// --- COMPONENTES ---
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
-import DinoGame from './components/DinoGame'; // <--- Se importa el componente del juego
+import DinoGame from './components/DinoGame';
 
-// Importación de las Páginas
+// --- PÁGINAS ---
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -17,6 +17,11 @@ import PosPage from './pages/PosPage';
 import ClientePage from './pages/ClientePage';
 import CanjearPage from './pages/CanjearPage';
 import CombosPage from './pages/CombosPage';
+
+// Si usas Contextos globales (CartContext o ThemeContext) envolviendo todo aquí, 
+// recuerda importarlos también (ejemplo):
+// import { CartProvider } from './context/CartContext';
+// import { ThemeProvider } from './context/ThemeContext';
 
 // --- Hook para detectar si el usuario está desconectado ---
 const useOfflineStatus = () => {

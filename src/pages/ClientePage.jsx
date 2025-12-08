@@ -591,12 +591,19 @@ if (metodoPago === 'efectivo') {
       setMontoPago('');
       setActiveTab('ver');
 }
-
+  // --- FUNCIÓN QUE FALTABA PARA EL ÉXITO DEL PAGO CON TARJETA ---
+  const handleSuccessfulPayment = () => {
+    limpiarPedidoCompleto();
+    setShowPaymentModal(false);
+    notify('success', '¡Pago procesado con éxito!');
+    setActiveTab('ver'); // Te lleva a la pestaña de pedidos
+  };
   const handleProductClick = (item) => { setProductoSeleccionadoParaModal(item); };
   const handleToggleDetalle = (pedidoId) => { setOrdenExpandida(ordenExpandida === pedidoId ? null : pedidoId); };
   const totalItemsEnCarrito = pedidoActual.reduce((sum, item) => sum + item.cantidad, 0);
   const pageStyle = { pointerEvents: (productoSeleccionadoParaModal || showPaymentModal || showCartModal) ? 'none' : 'auto' };
 
+  
   return (
     <div style={pageStyle}> 
       <ul className="nav nav-tabs mb-4">
@@ -646,13 +653,39 @@ if (metodoPago === 'efectivo') {
           <div className="col-md-4 d-none d-md-block">
             <div className="card shadow-sm position-sticky border-0" style={{ top: '20px' }}>
               <CarritoContent
-                isModal={false} pedidoActual={pedidoActual} decrementarCantidad={decrementarCantidad} incrementarCantidad={incrementarCantidad} eliminarProducto={eliminarProducto}
-                tipoOrden={tipoOrden} setTipoOrden={setTipoOrden} direccionGuardada={direccionGuardada} usarDireccionGuardada={usarDireccionGuardada} handleLocationSelect={handleLocationSelect}
-                direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
-                subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
-                paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
-                telefono={telefono} setTelefono={setTelefono}
-              />
+              isModal={false}
+              pedidoActual={pedidoActual}
+              decrementarCantidad={decrementarCantidad}
+              incrementarCantidad={incrementarCantidad}
+              eliminarProducto={eliminarProducto}
+              tipoOrden={tipoOrden}
+              setTipoOrden={setTipoOrden}
+              direccionGuardada={direccionGuardada}
+              usarDireccionGuardada={usarDireccionGuardada}
+              handleLocationSelect={handleLocationSelect}
+              direccion={direccion}
+              referencia={referencia}
+              setReferencia={setReferencia}
+              guardarDireccion={guardarDireccion}
+              setGuardarDireccion={setGuardarDireccion}
+              subtotal={subtotal}
+              calculandoEnvio={calculandoEnvio}
+              totalFinal={totalFinal}
+              handleContinue={handleContinue}
+              handleProcederAlPago={handleProcederAlPago}
+              paymentLoading={paymentLoading}
+              limpiarPedidoCompleto={limpiarPedidoCompleto}
+              telefono={telefono}
+              setTelefono={setTelefono}
+              // --- LO NUEVO QUE FALTABA ---
+              costoEnvioReal={costoEnvio}
+              costoEnvioAplicado={costoEnvioAplicado}
+              metodoPago={metodoPago}
+              setMetodoPago={setMetodoPago}
+              montoPago={montoPago}
+              setMontoPago={setMontoPago}
+              cambio={cambio}
+            />
             </div>
           </div>
         </motion.div>
@@ -716,12 +749,38 @@ if (metodoPago === 'efectivo') {
               </div>
               {modalView === 'cart' ? (
                 <CarritoContent
-                  isModal={true} pedidoActual={pedidoActual} decrementarCantidad={decrementarCantidad} incrementarCantidad={incrementarCantidad} eliminarProducto={eliminarProducto}
-                  tipoOrden={tipoOrden} setTipoOrden={setTipoOrden} direccionGuardada={direccionGuardada} usarDireccionGuardada={usarDireccionGuardada} handleLocationSelect={handleLocationSelect}
-                  direccion={direccion} referencia={referencia} setReferencia={setReferencia} guardarDireccion={guardarDireccion} setGuardarDireccion={setGuardarDireccion}
-                  subtotal={subtotal} costoEnvio={costoEnvio} calculandoEnvio={calculandoEnvio} totalFinal={totalFinal} handleContinue={handleContinue} handleProcederAlPago={handleProcederAlPago}
-                  paymentLoading={paymentLoading} limpiarPedidoCompleto={limpiarPedidoCompleto}
-                  telefono={telefono} setTelefono={setTelefono}
+                  isModal={true}
+                  pedidoActual={pedidoActual}
+                  decrementarCantidad={decrementarCantidad}
+                  incrementarCantidad={incrementarCantidad}
+                  eliminarProducto={eliminarProducto}
+                  tipoOrden={tipoOrden}
+                  setTipoOrden={setTipoOrden}
+                  direccionGuardada={direccionGuardada}
+                  usarDireccionGuardada={usarDireccionGuardada}
+                  handleLocationSelect={handleLocationSelect}
+                  direccion={direccion}
+                  referencia={referencia}
+                  setReferencia={setReferencia}
+                  guardarDireccion={guardarDireccion}
+                  setGuardarDireccion={setGuardarDireccion}
+                  subtotal={subtotal}
+                  calculandoEnvio={calculandoEnvio}
+                  totalFinal={totalFinal}
+                  handleContinue={handleContinue}
+                  handleProcederAlPago={handleProcederAlPago}
+                  paymentLoading={paymentLoading}
+                  limpiarPedidoCompleto={limpiarPedidoCompleto}
+                  telefono={telefono}
+                  setTelefono={setTelefono}
+                  // --- LO NUEVO QUE FALTABA ---
+                  costoEnvioReal={costoEnvio}
+                  costoEnvioAplicado={costoEnvioAplicado}
+                  metodoPago={metodoPago}
+                  setMetodoPago={setMetodoPago}
+                  montoPago={montoPago}
+                  setMontoPago={setMontoPago}
+                  cambio={cambio}
                 />
               ) : (
                 <>

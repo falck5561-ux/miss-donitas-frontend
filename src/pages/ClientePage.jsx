@@ -53,30 +53,11 @@ const getTableThemeStyles = (isPicante) => ({
 });
   
 // --- COMPONENTE TABLA ---
-// --- COMPONENTE TABLA (CORREGIDO) ---
 const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
     const { theme } = useTheme();
     const isPicante = theme === 'picante';
     const styles = getTableThemeStyles(isPicante);
   
-    // Función auxiliar para extraer datos de efectivo de la referencia
-    const parsearDatosPago = (referencia) => {
-        if (!referencia || !referencia.includes('Paga con:')) return null;
-        try {
-            // Extraemos los números del texto que guardamos antes
-            const pagaConMatch = referencia.match(/Paga con: \$([0-9.]+)/);
-            const cambioMatch = referencia.match(/Cambio: \$([0-9.]+)/);
-            
-            if (pagaConMatch && cambioMatch) {
-                return {
-                    pagaCon: parseFloat(pagaConMatch[1]).toFixed(2),
-                    cambio: parseFloat(cambioMatch[1]).toFixed(2)
-                };
-            }
-            return null;
-        } catch (e) { return null; }
-    };
-
     if (!pedidos || pedidos.length === 0) {
       return (
           <div className="text-center py-5 rounded-4" style={{backgroundColor: styles.cardBg, border: styles.border}}>
@@ -114,12 +95,7 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
               </tr>
             </thead>
             <tbody>
-              {pedidos.map((p) => {
-                // Analizamos si este pedido específico es de efectivo
-                const datosPago = parsearDatosPago(p.referencia);
-                const esEfectivo = !!datosPago;
-
-                return (
+              {pedidos.map((p) => (
                 <React.Fragment key={p.id}>
                   <motion.tr 
                     whileHover={{ backgroundColor: styles.hoverBg }}
@@ -144,11 +120,7 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
                         }
                     </td>
                     <td className="py-3"><StatusBadge status={p.estado} /></td>
-                    <td className="py-3">
-                        <span className="fw-bold" style={{color: styles.accent}}>${Number(p.total).toFixed(2)}</span>
-                        {/* Indicador visual pequeño si es efectivo */}
-                        {esEfectivo && <div style={{fontSize: '0.7rem', color: isPicante ? '#aaa' : '#666'}}>Efectivo</div>}
-                    </td>
+                    <td className="py-3"><span className="fw-bold" style={{color: styles.accent}}>${Number(p.total).toFixed(2)}</span></td>
                     <td className="pe-4 py-3 text-end"><ChevronRight size={16} color={styles.muted} /></td>
                   </motion.tr>
                   
@@ -174,253 +146,25 @@ const TablaMisPedidos = ({ pedidos, onToggleDetalle, ordenExpandida }) => {
                                           <span>${Number(p.costo_envio).toFixed(2)}</span>
                                       </div>
                                   )}
-                                  
-                                  {/* --- SECCIÓN DE TOTALES Y PAGO CORREGIDA --- */}
-                                  
-                                  {/* REEMPLAZA TODO EL DIV QUE TIENE className="mt-3 pt-2 border-top" POR ESTO: */}
-<div className="mt-3 pt-2 border-top">
-    <div className="d-flex justify-content-between align-items-center">
-        <span className="h5 mb-0 fw-bold" style={{color: styles.text}}>
-            {/* LÓGICA: Cambia el texto si es efectivo */}
-            {esEfectivo ? "Total a Pagar:" : "Total Pagado:"}
-        </span>
-        <span className="h4 mb-0 fw-bold" style={{color: styles.accent}}>${Number(p.total).toFixed(2)}</span>
-    </div>
-
-    {/* LÓGICA: Si es efectivo, muestra con cuánto paga y el cambio */}
-    {esEfectivo && (
-        <div className="alert alert-info mt-3 mb-0 d-flex justify-content-between align-items-center py-2">
-            <div>
-                <small className="d-block text-muted">Tú pagas con:</small>
-                <span className="fw-bold fs-5">${datosPago.pagaCon}</span>
-            </div>
-            <div className="text-end">
-                <small className="d-block text-muted">Cambio a recibir:</small>
-                <span className="fw-bold fs-5 text-primary">${datosPago.cambio}</span>
-            </div>
-        </div>
-    )}
-</div>
-
                               </motion.div>
                           </td>
                       </tr>
                   )}
                 </React.Fragment>
-              )})}
+              ))}
             </tbody>
           </table>
         </div>
       </div>
     );
 };
+
 const notify = (type, message) => {
   switch (type) {
     case 'success': toast.success(message); break;
     case 'error': toast.error(message); break;
     default: toast(message); break;
   }
-};
-
-// --- COMPONENTE CONTENIDO CARRITO (VISUAL ACTUALIZADO CON BARRA DE PROGRESO) ---
-const CarritoContent = ({
-  isModal, pedidoActual, decrementarCantidad, incrementarCantidad, eliminarProducto,
-  tipoOrden, setTipoOrden, direccionGuardada, usarDireccionGuardada, handleLocationSelect,
-  direccion, referencia, setReferencia, guardarDireccion, setGuardarDireccion,
-  subtotal, costoEnvioReal,
-  calculandoEnvio, totalFinal, costoEnvioAplicado,
-  handleProcederAlPago,
-  paymentLoading, limpiarPedidoCompleto,
-  telefono, setTelefono,
-  metodoPago, setMetodoPago,
-  montoPago, setMontoPago,
-  cambio
-}) => {
-  // --- LÓGICA DE ENVÍO GRATIS ---
-  const UMBRAL_ENVIO_GRATIS = 150;
-  const faltaParaGratis = UMBRAL_ENVIO_GRATIS - subtotal;
-  // Calculamos el porcentaje (máximo 100%)
-  const porcentajeProgreso = Math.min((subtotal / UMBRAL_ENVIO_GRATIS) * 100, 100);
-
-  return (
-    <>
-      <div className={isModal ? "modal-body" : "card-body"}>
-        {!isModal && (
-          <>
-            <h3 className="card-title text-center">Mi Pedido</h3>
-            <hr />
-          </>
-        )}
-        
-        {/* LISTA DE PRODUCTOS */}
-        <ul className="list-group list-group-flush">
-          {pedidoActual.length === 0 && <li className="list-group-item text-center text-muted">Tu carrito está vacío</li>}
-          {pedidoActual.map((item) => (
-            <li key={item.cartItemId || item.id} className="list-group-item d-flex align-items-center justify-content-between p-1">
-              <div className="me-auto" style={{ paddingRight: '10px' }}> 
-                <span className="fw-bold">{item.nombre}</span>
-                {item.opcionesSeleccionadas?.length > 0 && (
-                  <ul className="list-unstyled small text-muted mb-0" style={{ marginTop: '-2px', fontSize: '0.85em' }}>
-                    {item.opcionesSeleccionadas.map((op, idx) => <li key={idx}>+ {op.nombre}</li>)}
-                  </ul>
-                )}
-              </div>
-              <div className="d-flex align-items-center">
-                <button className="btn btn-outline-secondary btn-sm py-0 px-2" onClick={() => decrementarCantidad(item.cartItemId || item.id)}>-</button>
-                <span className="mx-2">{item.cantidad}</span>
-                <button className="btn btn-outline-secondary btn-sm py-0 px-2" onClick={() => incrementarCantidad(item.cartItemId || item.id)}>+</button>
-              </div>
-              <span className="mx-2 fw-bold text-end" style={{ minWidth: '60px' }}>${(item.cantidad * Number(item.precio)).toFixed(2)}</span>
-              <button className="btn btn-outline-danger btn-sm py-0 px-2" onClick={() => eliminarProducto(item.cartItemId || item.id)}>&times;</button>
-            </li>
-          ))}
-        </ul>
-        <hr />
-        
-        {/* TIPO DE ORDEN */}
-        <h5>Elige una opción:</h5>
-        <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoM" : "tipo"} value="llevar" checked={tipoOrden === 'llevar'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label">Para Recoger</label></div>
-        <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoM" : "tipo"} value="local" checked={tipoOrden === 'local'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label">Para Comer Aquí</label></div>
-        <div className="form-check"><input className="form-check-input" type="radio" name={isModal ? "tipoM" : "tipo"} value="domicilio" checked={tipoOrden === 'domicilio'} onChange={(e) => setTipoOrden(e.target.value)} /><label className="form-check-label">Entrega a Domicilio</label></div>
-
-        {/* TELÉFONO */}
-        <div className="mt-3">
-          <label className="form-label fw-bold">Número de Teléfono:</label>
-          <div className="input-group">
-             <span className="input-group-text">📞</span>
-             <input type="tel" className="form-control" placeholder="Ej: 981 123 4567" value={telefono} onChange={(e) => { const n = e.target.value.replace(/[^0-9]/g, ''); if (n.length <= 10) setTelefono(n);}} />
-          </div>
-        </div>
-
-        {/* DIRECCIÓN Y MAPA */}
-        {tipoOrden === 'domicilio' && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3">
-            <hr />
-            {direccionGuardada && (
-               <button className="btn btn-outline-info w-100 mb-3" onClick={usarDireccionGuardada}>Usar dirección y número guardados</button>
-            )}
-            <label className="form-label">Busca tu dirección:</label>
-            <MapSelector onLocationSelect={handleLocationSelect} initialAddress={direccion} />
-            <div className="mt-3">
-              <label className="form-label">Referencia:</label>
-              <input type="text" className="form-control" value={referencia} onChange={(e) => setReferencia(e.target.value)} />
-            </div>
-            <div className="form-check mt-3">
-              <input className="form-check-input" type="checkbox" checked={guardarDireccion} onChange={(e) => setGuardarDireccion(e.target.checked)} />
-              <label className="form-check-label">Guardar dirección</label>
-            </div>
-          </motion.div>
-        )}
-
-        <hr />
-
-        {/* === SELECCIÓN DE PAGO === */}
-        <h6 className="fw-bold mt-3">Método de Pago:</h6>
-        <div className="d-flex gap-2 mb-3">
-            <button className={`btn flex-fill ${metodoPago === 'tarjeta' ? 'btn-primary' : 'btn-outline-secondary'}`} 
-               onClick={() => setMetodoPago('tarjeta')}>💳 Tarjeta</button>
-            
-            <button className={`btn flex-fill ${metodoPago === 'efectivo' ? 'btn-primary' : 'btn-outline-secondary'}`} 
-               onClick={() => {
-                  if(totalFinal > 500) return; 
-                  setMetodoPago('efectivo');
-               }}
-               disabled={totalFinal > 500}
-               style={{opacity: totalFinal > 500 ? 0.5 : 1}}
-            >💵 Efectivo</button>
-        </div>
-
-        {/* INPUT PARA PAGO EN EFECTIVO Y CAMBIO */}
-        {metodoPago === 'efectivo' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="alert alert-warning p-2">
-              <label className="form-label small fw-bold">¿Con cuánto pagarás?</label>
-              <div className="input-group input-group-sm mb-1">
-                  <span className="input-group-text">$</span>
-                  <input type="number" className="form-control" placeholder="Ej: 200" 
-                    value={montoPago} 
-                    onChange={(e) => setMontoPago(e.target.value)} 
-                  />
-              </div>
-              <div className="d-flex justify-content-between small text-primary mt-1">
-                  <span>Tu Cambio:</span>
-                  <span className="fw-bold">${cambio >= 0 ? cambio.toFixed(2) : '---'}</span>
-              </div>
-          </motion.div>
-        )}
-
-        {/* TOTALES */}
-        <div className="mt-3">
-          <p className="d-flex justify-content-between mb-1">Subtotal: <span>${subtotal.toFixed(2)}</span></p>
-          
-          {tipoOrden === 'domicilio' && (
-             <>
-              {/* --- BARRA DE PROGRESO DE ENVÍO GRATIS --- */}
-              <div className="mb-3">
-                {faltaParaGratis > 0 ? (
-                  <div className="text-center mb-1">
-                    <span className="small text-muted">
-                      ¡Agrega <span className="fw-bold text-primary">${faltaParaGratis.toFixed(2)}</span> más para <span className="fw-bold text-success">Envío Gratis</span>!
-                    </span>
-                    <div className="progress mt-1" style={{ height: '8px' }}>
-                      <div 
-                        className="progress-bar progress-bar-striped progress-bar-animated bg-warning" 
-                        role="progressbar" 
-                        style={{ width: `${porcentajeProgreso}%` }} 
-                      ></div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="alert alert-success p-1 text-center small mb-2">
-                    🎉 ¡Felicidades! Tienes <b>Envío Gratis</b>
-                  </div>
-                )}
-              </div>
-              {/* ----------------------------------------------- */}
-
-              <p className="d-flex justify-content-between mb-1">
-                Costo de Envío: 
-                {calculandoEnvio ? <span className="spinner-border spinner-border-sm"></span> : (
-                    costoEnvioAplicado === 0 && costoEnvioReal > 0 ? (
-                      <span>
-                         <span className="text-muted text-decoration-line-through me-2">${costoEnvioReal.toFixed(2)}</span>
-                         <span className="badge bg-success">¡GRATIS!</span>
-                      </span>
-                    ) : (
-                      <span>${costoEnvioReal.toFixed(2)}</span>
-                    )
-                )}
-              </p>
-             </>
-          )}
-          
-          <h4 className="fw-bold d-flex justify-content-between mt-2">
-              Total: <span>${totalFinal.toFixed(2)}</span>
-          </h4>
-        </div>
-      </div>
-
-      {/* BOTONES */}
-      <div className={isModal ? "modal-footer border-0 p-3" : "card-footer mt-auto"}>
-        <div className="d-grid gap-2 w-100">
-            <button 
-              className="btn btn-primary btn-lg w-100"
-              onClick={handleProcederAlPago} 
-              disabled={
-                  pedidoActual.length === 0 || 
-                  paymentLoading || 
-                  calculandoEnvio ||
-                  (tipoOrden === 'domicilio' && !direccion) ||
-                  (metodoPago === 'efectivo' && (Number(montoPago) < totalFinal)) 
-              }
-            >
-              {paymentLoading ? 'Procesando...' : (metodoPago === 'efectivo' ? 'Confirmar Pedido' : 'Proceder al Pago')}
-            </button>
-          
-          <button className="btn btn-outline-danger w-100" onClick={limpiarPedidoCompleto}>Vaciar Carrito</button>
-        </div>
-      </div>
-    </>
-  );
 };
 
 // ===================================================================

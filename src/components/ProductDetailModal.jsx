@@ -1,8 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import AuthContext from '../context/AuthContext';
-import { getProductById } from '../services/api'; // Asegúrate de que importas de tu servicio API correcto
-
+import { getProductById } from '../services/productService';
 // Detectar si es móvil para ajustar estilos (simple check)
 const isMobile = window.innerWidth <= 768;
 

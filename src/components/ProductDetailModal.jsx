@@ -20,7 +20,7 @@ const modalStyles = {
     zIndex: 1050,
   },
   content: {
-    width: isMobile ? '95%' : '90%', // En móvil usa casi todo el ancho
+    width: isMobile ? '95%' : '90%',
     maxWidth: '500px',
     background: 'var(--bs-card-bg)',
     borderRadius: '15px',
@@ -29,12 +29,12 @@ const modalStyles = {
     flexDirection: 'column',
     color: 'var(--bs-body-color)',
     boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-    margin: isMobile ? '10px' : '0', // Margen seguro en móviles
+    margin: isMobile ? '10px' : '0',
   },
   header: {
     position: 'relative',
     width: '100%',
-    height: isMobile ? '180px' : '250px', // Imagen un poco más chica en móvil
+    height: isMobile ? '180px' : '250px',
     flexShrink: 0,
   },
   body: {
@@ -78,7 +78,7 @@ const modalStyles = {
   productTitle: {
     fontFamily: "'Playfair Display', serif",
     marginBottom: '0.5rem',
-    fontSize: isMobile ? '1.5rem' : '2rem', // Título más chico en móvil
+    fontSize: isMobile ? '1.5rem' : '2rem',
   },
   productDescription: {
     margin: '0.5rem 0 1rem 0',
@@ -112,6 +112,20 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
   const [totalPrice, setTotalPrice] = useState(0); 
   const [loadingToppings, setLoadingToppings] = useState(true);
 
+  // --- FUNCIÓN AUXILIAR: Calcular precio con descuento ---
+  // Esta función asegura que usamos el precio rebajado si existe descuento
+  const getPrecioBase = (prod) => {
+    const precioOriginal = Number(prod.precio);
+    
+    // Si tienes un campo 'descuento' (porcentaje), úsalo:
+    if (prod.descuento && Number(prod.descuento) > 0) {
+       return precioOriginal - (precioOriginal * (Number(prod.descuento) / 100));
+    }
+    
+    // Si tu backend ya manda el precio final en otro campo, ajústalo aquí.
+    return precioOriginal;
+  };
+
   // --- 1. EFECTO PARA BUSCAR DATOS Y DECIDIR ---
   useEffect(() => {
     if (product?.id) {
@@ -122,13 +136,18 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
           const tieneOpciones = data.grupos_opciones && data.grupos_opciones.length > 0;
 
           if (tieneOpciones) {
-            // CASO 1: SÍ tiene opciones
             setFullProduct(data); 
-            setLoadingToppings(false); // Deja que el modal se renderice
+            setLoadingToppings(false);
           } else {
-            // CASO 2: NO tiene opciones
-            onAddToCart(data); // Añade directo
-            onClose(); // Cierra el modal (que nunca fue visible)
+            // Si NO tiene opciones, calculamos el precio final antes de enviarlo
+            const precioFinal = getPrecioBase(data);
+            const productoListo = {
+                ...data,
+                precio: precioFinal, // Corregimos el precio
+                originalPrice: data.precio // Guardamos referencia del original
+            };
+            onAddToCart(productoListo); 
+            onClose(); 
           }
         })
         .catch(err => {
@@ -143,7 +162,9 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
   useEffect(() => {
     if (!fullProduct) return;
 
-    const basePrice = Number(fullProduct.precio);
+    // CORRECCIÓN: Usamos la función helper en vez del precio crudo
+    const basePrice = getPrecioBase(fullProduct);
+    
     let optionsPrice = 0;
     
     fullProduct.grupos_opciones?.forEach(grupo => {
@@ -205,9 +226,9 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
 
     const cartProduct = {
       ...fullProduct,
-      precio: totalPrice, 
+      precio: totalPrice, // Aquí ya va el precio corregido ($7 + toppings)
+      originalPrice: fullProduct.precio, // Guardamos el de $70 por si acaso
       opcionesSeleccionadas: opcionesParaCarrito,
-      // ID ÚNICO: Combinamos ID producto + Timestamp para evitar que se mezclen
       cartItemId: tieneOpciones ? `${fullProduct.id}-${Date.now()}` : null 
     };
 
@@ -225,12 +246,15 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
     
   const placeholderImage = `https://placehold.co/500x250/333333/CCCCCC?text=${encodeURIComponent(fullProduct.nombre)}`;
 
-  
-  // Si está cargando, no retornamos NADA (evita el flash)
   if (loadingToppings) {
     return null;
   }
   
+  // Variable para mostrar el precio original tachado en el footer
+  const precioOriginal = Number(fullProduct.precio);
+  const precioConDescuento = getPrecioBase(fullProduct);
+  const tieneDescuento = precioConDescuento < precioOriginal;
+
   return (
     <motion.div
       style={modalStyles.backdrop}
@@ -255,7 +279,14 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
         </div>
 
         <div style={modalStyles.body}>
-          <h2 style={modalStyles.productTitle}>{fullProduct.nombre}</h2>
+          <div className="d-flex justify-content-between align-items-center">
+             <h2 style={modalStyles.productTitle}>{fullProduct.nombre}</h2>
+             {tieneDescuento && (
+                 <span className="badge bg-danger">
+                    -{fullProduct.descuento}% OFF
+                 </span>
+             )}
+          </div>
         
           {fullProduct.descripcion && (
             <p style={modalStyles.productDescription}>{fullProduct.descripcion}</p>
@@ -324,10 +355,14 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
         <div style={modalStyles.footer}>
           <div className="d-flex justify-content-between align-items-center">
             <div>
+              {/* Lógica corregida para mostrar precios */}
               <span className="fs-3 fw-bold">${totalPrice.toFixed(2)}</span>
               
-              {fullProduct.en_oferta && Number(fullProduct.precio_original) > Number(fullProduct.precio) && (
-                <span className="text-muted text-decoration-line-through ms-2">${Number(fullProduct.precio_original).toFixed(2)}</span>
+              {tieneDescuento && (
+                <span className="text-muted text-decoration-line-through ms-2" style={{ fontSize: '0.9rem' }}>
+                    {/* El precio tachado es el original + los toppings actuales */}
+                    ${(precioOriginal + (totalPrice - precioConDescuento)).toFixed(2)}
+                </span>
               )}
             </div>
 

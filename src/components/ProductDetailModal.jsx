@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import AuthContext from '../context/AuthContext';
-import { getProductById } from '../services/productService'; 
+import { getProductById } from '../services/api'; // Asegúrate de que importas de tu servicio API correcto
 
 // Detectar si es móvil para ajustar estilos (simple check)
 const isMobile = window.innerWidth <= 768;
@@ -112,25 +112,27 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
   const [totalPrice, setTotalPrice] = useState(0); 
   const [loadingToppings, setLoadingToppings] = useState(true);
 
-  // --- FUNCIÓN AUXILIAR: Calcular precio con descuento ---
-  // Esta función asegura que usamos el precio rebajado si existe descuento
+  // --- 1. FUNCIÓN CORREGIDA: Calcular precio base con descuento ---
+  // Esta función ahora busca 'descuento_porcentaje' y 'en_oferta'
   const getPrecioBase = (prod) => {
     const precioOriginal = Number(prod.precio);
     
-    // Si tienes un campo 'descuento' (porcentaje), úsalo:
-    if (prod.descuento && Number(prod.descuento) > 0) {
-       return precioOriginal - (precioOriginal * (Number(prod.descuento) / 100));
+    // Verificamos si hay oferta y porcentaje > 0
+    if (prod.en_oferta && prod.descuento_porcentaje && Number(prod.descuento_porcentaje) > 0) {
+       // Cálculo: 70 - (70 * 0.90) = 7
+       return precioOriginal - (precioOriginal * (Number(prod.descuento_porcentaje) / 100));
     }
     
-    // Si tu backend ya manda el precio final en otro campo, ajústalo aquí.
     return precioOriginal;
   };
 
-  // --- 1. EFECTO PARA BUSCAR DATOS Y DECIDIR ---
+  // --- 2. EFECTO PARA BUSCAR DATOS Y DECIDIR ---
   useEffect(() => {
     if (product?.id) {
       setSelectedOptions({}); 
       
+      // Nota: Asegúrate de que getProductById apunte a la ruta correcta de tu API
+      // Si usas apiClient directo, ajusta esta llamada.
       getProductById(product.id)
         .then(data => {
           const tieneOpciones = data.grupos_opciones && data.grupos_opciones.length > 0;
@@ -143,8 +145,8 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
             const precioFinal = getPrecioBase(data);
             const productoListo = {
                 ...data,
-                precio: precioFinal, // Corregimos el precio
-                originalPrice: data.precio // Guardamos referencia del original
+                precio: precioFinal, // Precio corregido ($7)
+                originalPrice: data.precio // Precio original ($70)
             };
             onAddToCart(productoListo); 
             onClose(); 
@@ -152,17 +154,19 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
         })
         .catch(err => {
           console.error("Error al cargar detalles del producto:", err);
-          onClose(); 
+          // Fallback: Si falla la red, intenta abrirlo con la info básica que ya tenías
+          setFullProduct(product);
+          setLoadingToppings(false);
         });
     }
   }, [product, onAddToCart, onClose]);
 
   
-  // --- 2. EFECTO PARA CALCULAR EL PRECIO TOTAL ---
+  // --- 3. EFECTO PARA CALCULAR EL PRECIO TOTAL ---
   useEffect(() => {
     if (!fullProduct) return;
 
-    // CORRECCIÓN: Usamos la función helper en vez del precio crudo
+    // Usamos el precio ya con descuento como base ($7.00)
     const basePrice = getPrecioBase(fullProduct);
     
     let optionsPrice = 0;
@@ -184,7 +188,7 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
 
   }, [fullProduct, selectedOptions]);
 
-  // --- 3. MANEJADORES DE SELECCIÓN ---
+  // --- 4. MANEJADORES DE SELECCIÓN ---
   const handleRadioChange = (grupo, opcion) => {
     setSelectedOptions(prev => ({
       ...prev,
@@ -209,7 +213,7 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
     });
   };
 
-  // --- 4. MANEJADOR PARA AÑADIR AL CARRITO ---
+  // --- 5. MANEJADOR PARA AÑADIR AL CARRITO ---
   const handleAddToCart = () => {
     const opcionesParaCarrito = [];
     fullProduct.grupos_opciones?.forEach(grupo => {
@@ -226,8 +230,8 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
 
     const cartProduct = {
       ...fullProduct,
-      precio: totalPrice, // Aquí ya va el precio corregido ($7 + toppings)
-      originalPrice: fullProduct.precio, // Guardamos el de $70 por si acaso
+      precio: totalPrice, // Precio final ($7 + toppings)
+      originalPrice: fullProduct.precio, // Precio base ($70)
       opcionesSeleccionadas: opcionesParaCarrito,
       cartItemId: tieneOpciones ? `${fullProduct.id}-${Date.now()}` : null 
     };
@@ -247,13 +251,18 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
   const placeholderImage = `https://placehold.co/500x250/333333/CCCCCC?text=${encodeURIComponent(fullProduct.nombre)}`;
 
   if (loadingToppings) {
-    return null;
+    return null; // O podrías poner un spinner aquí
   }
   
-  // Variable para mostrar el precio original tachado en el footer
-  const precioOriginal = Number(fullProduct.precio);
-  const precioConDescuento = getPrecioBase(fullProduct);
-  const tieneDescuento = precioConDescuento < precioOriginal;
+  // Lógica Visual para el Footer
+  const precioOriginalBD = Number(fullProduct.precio); // $70
+  const precioBaseCalculado = getPrecioBase(fullProduct); // $7
+  
+  // Calculamos el "Precio Tachado" (Original + Toppings) vs "Precio Final" (Descuento + Toppings)
+  // La diferencia entre el original y el base es lo que te ahorras
+  const ahorro = precioOriginalBD - precioBaseCalculado;
+  const precioTachadoTotal = totalPrice + ahorro;
+  const tieneDescuento = ahorro > 0.1; // Margen de error pequeño
 
   return (
     <motion.div
@@ -283,7 +292,7 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
              <h2 style={modalStyles.productTitle}>{fullProduct.nombre}</h2>
              {tieneDescuento && (
                  <span className="badge bg-danger">
-                    -{fullProduct.descuento}% OFF
+                    -{fullProduct.descuento_porcentaje}% OFF
                  </span>
              )}
           </div>
@@ -355,13 +364,13 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
         <div style={modalStyles.footer}>
           <div className="d-flex justify-content-between align-items-center">
             <div>
-              {/* Lógica corregida para mostrar precios */}
+              {/* PRECIO FINAL GRANDE */}
               <span className="fs-3 fw-bold">${totalPrice.toFixed(2)}</span>
               
+              {/* PRECIO TACHADO (Si aplica) */}
               {tieneDescuento && (
                 <span className="text-muted text-decoration-line-through ms-2" style={{ fontSize: '0.9rem' }}>
-                    {/* El precio tachado es el original + los toppings actuales */}
-                    ${(precioOriginal + (totalPrice - precioConDescuento)).toFixed(2)}
+                    ${precioTachadoTotal.toFixed(2)}
                 </span>
               )}
             </div>
